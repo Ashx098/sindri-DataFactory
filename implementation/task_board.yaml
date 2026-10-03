@@ -31,6 +31,14 @@ tasks:
     title: Base IDs, content hashing, enums and status taxonomy
     phase: P1
     subphase: P1.1
-    status: merged
+    status: verified
     depends_on: [B0.G]
     packet: docs/tasks/SIN-P1.1-001.md
+
+  - id: SIN-P1.1-002
+    title: TaskManifest + Requirement
+    phase: P1
+    subphase: P1.1
+    status: planned
+    depends_on: [SIN-P1.1-001]
+    packet: docs/tasks/SIN-P1.1-002.md

@@ -11,14 +11,30 @@ python scripts/show_ready_tasks.py --all
 ```
 
 ## Notes for the active phase
-- B0 complete; exception B0-E004 closed (branch protection with required `fast-gate`).
-- `SIN-P1.1-001` merged (PR #2, `7cf0fd8`) and awaiting coordinator verification.
-- No other P1 task is authorized until the coordinator opens it. Per the breakdown below, 002–007
-  become eligible once 001 is merged; they still need packets and `ready` status from the coordinator.
+- `SIN-P1.1-001` verified (coordinator, 2026-10-04). Kept at `verified`, not `closed`, until the
+  float/identity follow-up is carried forward (SIN-P1.1-002 decision D5, P1.1-G).
+- `SIN-P1.1-002` packet drafted for coordinator review; status `planned`. Not authorized to start.
+- No other P1 task is authorized.
+
+## P1.1 order (coordinator sequencing refinement, 2026-10-04; not an ADR change)
+```
+001 primitives (verified)
+ └─ 002 TaskManifest + Requirement
+     ├─ 003 EvaluationPolicy ─┐   (003 and 004 may run in parallel)
+     └─ 004 CandidateManifest ┘
+          └─ 005 Observation
+              ├─ 006 Finding ─┐   (006 and 007 may run in parallel)
+              └─ 007 EpisodeState ┘
+                  └─ 008 serialization/versioning
+                      └─ 009 cross-record invariants
+                          └─ P1.1-G
+```
+Rationale: EvaluationPolicy references RequirementId; CandidateManifest references the task; Observation
+needs stable candidate/policy/check references; Finding points to real Observations; 008/009 test the
+network of records, not isolated classes. The coordinator still opens each packet; this order only
+says which may be opened.
 
 ## Planned P1.1 breakdown (coordinator opens packets one at a time)
-Records are separate tasks so no agent is handed "all schemas". 002–007 may run in parallel only
-after 001 has merged and its primitives are frozen.
 
 | Task | Outcome | Evidence beyond "the class exists" |
 |---|---|---|
@@ -31,7 +47,7 @@ after 001 has merged and its primitives are frozen.
 | SIN-P1.1-007 | EpisodeState | budgets spent/remaining consistent; WAITING representable; pending jobs recorded |
 | SIN-P1.1-008 | Serialization and schema-versioning tests | round-trip of every master §20 example; schema_version stored; old versions never silently reinterpreted |
 | SIN-P1.1-009 | Cross-record invariant tests | claims of pass/fail reference Observation IDs (master §8.7); IDs resolve across records |
-| SIN-P1.1-G | Subphase integration verification | all P1.1 tasks verified on main; exported JSON Schemas match models |
+| SIN-P1.1-G | Subphase integration verification | all P1.1 tasks verified on main; exported JSON Schemas match models; float/identity rule (SIN-P1.1-001 follow-up) applied consistently across records |
 
 ## Rule
 Only tasks with status `ready` on the task board may be assigned to coding agents.
