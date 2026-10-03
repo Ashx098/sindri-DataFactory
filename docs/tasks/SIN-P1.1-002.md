@@ -10,18 +10,18 @@
 ## Outcome
 `TaskManifest` and `Requirement` exist as strict, versioned, immutable Pydantic records that make a
 task's meaning and provenance explicit: authority mode, family/lineage/task/variant identity, split,
-source rights, and requirements that keep the original wording separate from the normalized
-semantics. Nothing about authority, split or lineage can be defaulted silently. Later records
-(EvaluationPolicy, CandidateManifest, Observation) can then reference tasks and requirements without
-inventing their shape.
+structured source rights, edit scope, and requirements that keep the original wording separate from
+the normalized semantics. Nothing about authority, split, lineage or rights can be defaulted
+silently. Later records (EvaluationPolicy, CandidateManifest, Observation) can then reference tasks
+and requirements without inventing their shape.
 
 ## Why / architecture references
-- Master architecture: §4 principles 8–9 and the authority rule; §8.7 authority records ("TaskManifest: task/version, authority mode, family/lineage, source rights, split, approved contract hash, allowed edits and budgets"; "Requirement: original wording, normalized semantics, legal environment, assumptions, applicability and disposition"); §9 T1–T5 (sources, lineage, split before generation); §9.1 authority modes; §11.6 requirement → obligation traceability; §20.1 and §20.9 examples.
+- Master architecture: §4 principles 8–9 and the authority rule; §8.7 authority records; §9 T1–T5 (sources, task types, lineage, split before generation); §9.1 authority modes; §11.6 traceability; §20.1 and §20.9 examples (as amended by the decisions below).
 - Phase/subphase: P1.1; order in `docs/implementation/CURRENT_PHASE.md` (001 → **002** → {003, 004} → …).
-- ADRs/RFCs: ADR-0001 (stack), ADR-0002 (`AuthorityMode`, statuses).
+- ADRs/RFCs: ADR-0001 (stack), ADR-0002 (`AuthorityMode`, statuses), **ADR-0004** (Requirement does not own obligations).
 
 ## Owner / coordinator
-- Owner: assigned by coordinator on approval
+- Owner: assigned by coordinator when marked ready
 - Integrator: Avinash
 - Reviewers: Avinash; RTL/DV reviewer for requirement semantics once assigned (role currently unassigned)
 
@@ -34,55 +34,75 @@ inventing their shape.
 - Required completed tasks: SIN-P1.1-001 (verified)
 - Required schemas/contracts: `sindri.core.ids`, `sindri.core.status`
 
-## Decisions needed before READY
-The master architecture underdetermines or contradicts itself on these points. The agent recommends
-an option for each; **the coordinator decides**. Approved choices are copied into Scope before the
-packet is marked ready.
+## Coordinator decisions (PR #4, 2026-10-04; recorded, not made, by the agent)
+| ID | Decision |
+|---|---|
+| D1 | **(b)** TaskManifest is immutable and versioned, and limited to identity, authority, provenance, rights, split, contract and allowed edit scope. Tier, difficulty, evidence level and status history are lifecycle state for the registry/event log (P1.2). |
+| D2 | **(a)** Add `FamilyId`, `LineageId`, `VariantId`, `ContractId` additively; frozen 001 patterns unchanged. IDs without a real consumer are deferred. |
+| D3 | **(a)** A requirement is identified by (`task_id`, `requirement_id`). No `RequirementRef` abstraction until a downstream consumer needs one. |
+| D4 | Disposition enum `proposed / approved / ambiguous / not_applicable / unsupported / rejected`; `ambiguous` blocks qualification. **`obligation_ids` removed from Requirement**: obligations belong to EvaluationPolicy / VerificationPlan (ADR-0004). |
+| D5 | Both records reject binary floats **recursively**. Exact fractions, when needed later, use an exact representation (canonical decimal string, scaled integer or rational schema). `canonical_json_id()` is not changed in this task. |
+| D6 | **(b)** Budgets are episode/experiment-scoped. Task identity does not change when the same task runs under a different budget. EpisodeState (007) records spent/remaining against a later immutable budget configuration. |
+| C1 | `Requirement` is versioned: `requirement_version ≥ 1`, `supersedes: ContentId \| None`, with the same first-version invariant as TaskManifest. The logical `RequirementId` stays stable; any change to meaning or disposition is a new immutable version. |
+| C2 | Rights are structured and explicit (see Scope). Missing rights are invalid; rights never default to training-allowed. |
+| C3 | Edit scope depends on task type: mutating types require a non-empty set of safe relative paths; read-only types require an empty set. |
+| C4 | No `dict[str, Any]` (or `Any`) in authoritative fields; parameter values use exact JSON-native, non-float types. |
+| C5 | P1.1-009 gets an invariant: task/family/lineage/split identity cannot change across manifest versions (recorded in `CURRENT_PHASE.md`). |
 
-| ID | Question | Options | Agent recommendation |
-|---|---|---|---|
-| D1 | §20.1 puts `tier`, `evidence_level`, `difficulty` and `status_history` in TaskManifest; §8.7 lists only identity/authority/rights/split/contract/allowed edits/budgets. These fields change over a task's life (silver → quarantine, difficulty re-profiled every round). | (a) Follow §20.1 and put lifecycle fields in the manifest. (b) Manifest holds immutable identity and authority only (§8.7); lifecycle state lives in the task registry/event log (P1.2). | **(b).** An immutable record that holds mutable state invites in-place edits. A correction would be a new manifest version that supersedes the old one, so tier changes would create noise versions. |
-| D2 | §20.1 IDs use hyphens (`family_id: stream-framing`, `variant_id: maxlen4-64_datasheet`), which the 001 `TaskId` pattern does not allow. There are no ID types yet for family, lineage, variant, contract, spec, suite or certificate. | (a) Add new typed IDs in `core/ids.py` (additive only; no existing pattern changes) that allow hyphens where §20.1 does. (b) Normalize §20.1 examples to underscores. | **(a), additive.** Existing 001 types and patterns stay frozen; new types: `FamilyId`, `LineageId`, `VariantId`, `ContractId` (`ct_…`), `ObligationId` (e.g. `sim_stall_01`). Spec/suite/certificate IDs are deferred to the tasks that create those records. |
-| D3 | `RequirementId` is `R17`, unique only within one task. Other records must not confuse `R17` of two tasks. | (a) Requirements are referenced as the pair (`task_id`, `requirement_id`). (b) Make requirement IDs globally unique. | **(a).** It matches the master examples. `Requirement` carries `task_id`, and 009 cross-record tests enforce pair references. |
-| D4 | Requirement `disposition` values: the master shows only `approved`; verification-forge rules require explicit `not_applicable`/`unsupported`; ambiguity can also be open. | Proposed enum: `proposed`, `approved`, `ambiguous`, `not_applicable`, `unsupported`, `rejected`. | Adopt it. Only `approved` requirements are eligible for obligations; `ambiguous` blocks qualification (master §10, §11.6). |
-| D5 | Floats in identity-bearing fields (SIN-P1.1-001 follow-up). §20.1 `difficulty.pass_rate: 0.25` is a float. | (a) Forbid floats in TaskManifest and Requirement. (b) Allow them, accepting shortest-repr hashing. | **(a)** for these two records. This follows if D1(b) moves `difficulty` out. Record the rule for later records at P1.1-G. |
-| D6 | Budgets (§8.7 lists them in TaskManifest; §8 F3 says budgets are fixed per experiment). | (a) Budgets in TaskManifest. (b) Budgets belong to the episode/experiment configuration (SIN-P1.1-007 EpisodeState). | **(b).** The same task must be run under different matched budgets (the A–E arms). TaskManifest keeps `allowed_edit_paths` only. |
+### Consequences the agent derived (coordinator to confirm when marking ready)
+- **ObligationId deferred to SIN-P1.1-003.** D2 approved adding it, but D4 removed its only consumer from this task. D2's own rule ("defer IDs that have no real consumer yet") then moves it to 003, and ADR-0004 records this.
+- **D7: `comprehension` task type.** Master §9 T1 lists *Comprehension* as a task type, but the §20.1 `task_type` enum omits it, and C3 needs read-only types to exist. Proposal: `TaskType` = §20.1 values + `comprehension`. Read-only types (empty edit scope): `comprehension`, `spec_task`. Mutating types (non-empty scope): `spec_to_rtl`, `completion`, `modification`, `debug`, `testbench`, `assertion`. If the coordinator prefers not to extend the enum, `spec_task` alone is the read-only type.
 
-## Scope (pending D1–D6; written for the recommended options)
+## Scope
 - In scope:
-  - `src/sindri/schemas/__init__.py`, `src/sindri/schemas/_base.py`: a shared frozen base model with `extra="forbid"`, `frozen=True`, strict types and a required `schema_version: Literal[1]`.
+  - `src/sindri/schemas/__init__.py`, `src/sindri/schemas/_base.py`: a shared base model with `extra="forbid"`, `frozen=True`, strict types, and a required `schema_version: Literal[1]`. The base also contains a recursive validator that rejects binary floats anywhere in the record (D5).
   - `src/sindri/schemas/task.py`, `TaskManifest`:
-    - Identity: `task_id`, `family_id`, `lineage_id`, `variant_id`, `manifest_version` (int ≥ 1), `supersedes` (previous manifest's `ContentId` or `None` only when `manifest_version == 1`).
-    - `authority_mode: AuthorityMode`, required, no default.
-    - `split: Split` (`train` | `dev` | `final`), required, no default.
-    - `task_type: TaskType` (master §20.1 values).
-    - `source`: discriminated union on `kind` (`repo_cut`, `commit_feature`, `commit_fix`, `mutation`, `generator`, `use_case`), each with the fields its kind needs. Repo kinds require `repo`, `commit`, `licence`; `mutation` requires the parent task; `generator` requires generator ID and version; `use_case` requires an intake reference. Every kind requires a `rights` statement (training/evaluation use allowed).
-    - `golden_hash: ContentId | None`, which must be present for `reference_behavior` tasks.
+    - Identity: `task_id: TaskId`, `family_id: FamilyId`, `lineage_id: LineageId`, `variant_id: VariantId`.
+    - Versioning: `manifest_version: int ≥ 1`, `supersedes: ContentId | None`. `None` if and only if `manifest_version == 1`.
+    - `authority_mode: AuthorityMode`: required, no default.
+    - `split: Split` (`train` | `dev` | `final`): required, no default.
+    - `task_type: TaskType` (per D7).
+    - `source`: a discriminated union on `kind`, with kind-specific required fields:
+      - `repo_cut`, `commit_feature`, `commit_fix`: `repo`, `commit`;
+      - `mutation`: parent `task_id`, operator;
+      - `generator`: generator ID and version;
+      - `use_case`: intake reference.
+    - `rights: SourceRights` (C2), required for every source kind. All fields are required with no defaults:
+      - `licence` (SPDX identifier, or `null` only with a `written_agreement_ref`);
+      - `written_agreement_ref`;
+      - `training_allowed: bool`, `evaluation_allowed: bool`, `redistribution_allowed: bool`, `customer_restricted: bool`.
+    - `golden_hash: ContentId | None`: required for `reference_behavior`.
     - `contract_id: ContractId`, `approved_contract_hash: ContentId`.
-    - `allowed_edit_paths: tuple[str, ...]`: relative POSIX paths, no `..`, non-empty.
+    - `allowed_edit_paths: tuple[str, ...]` (C3):
+      - each entry is a relative POSIX path with no `..`, no absolute paths and no empty segments;
+      - entries are unique;
+      - non-empty for mutating types, empty for read-only types.
     - `requirement_ids: tuple[RequirementId, ...]`: non-empty, unique.
   - `src/sindri/schemas/requirement.py`, `Requirement`:
-    - `task_id`, `requirement_id`, `source_ref`.
-    - `original_text` (verbatim, non-empty) and `normalized_semantics` (non-empty), kept as distinct fields.
-    - `legal_environment`, `assumptions` (each with a source reference; no source-less assumption).
-    - `applicability`: either `all_supported_configs` or an explicit parameter scope `{param: [values]}`.
-    - `mandatory: bool` (required, no default).
-    - `disposition: RequirementDisposition`.
-    - `obligation_ids: tuple[ObligationId, ...]`: required non-empty when `approved` and `mandatory`; empty otherwise allowed.
-  - `src/sindri/core/ids.py`: additive ID types per D2. No change to existing types or patterns.
+    - Identity: `task_id: TaskId`, `requirement_id: RequirementId`.
+    - Versioning: `requirement_version: int ≥ 1`, `supersedes: ContentId | None` (C1).
+    - `source_ref: str` (non-empty).
+    - `original_text: str` (verbatim, non-empty) and `normalized_semantics: str` (non-empty). These are distinct fields, and neither is derived from the other.
+    - `legal_environment: tuple[EnvironmentRule, ...]`, where each rule has `text` and `source_ref`.
+    - `assumptions: tuple[Assumption, ...]`, where each has `text` and a required `source_ref`.
+    - `applicability`: either `AllSupportedConfigs` or `ParameterScope`. `ParameterScope` maps a parameter name (`[A-Z][A-Z0-9_]*`) to a non-empty tuple of `int | str | bool` values (C4: no float, no `Any`).
+    - `mandatory: bool`: required, no default.
+    - `disposition: RequirementDisposition` (D4).
+    - No `obligation_ids` (ADR-0004).
+  - `src/sindri/core/ids.py`: add `FamilyId`, `LineageId`, `VariantId` (pattern `[a-z0-9]+(?:[-_][a-z0-9]+)*`, which allows the §20.1 hyphens) and `ContractId` (`ct_…`). Additive only.
   - Tests under `tests/contract/` and `tests/unit/`.
 - Allowed paths: `src/sindri/schemas/`, `src/sindri/core/ids.py` (additive only), `tests/contract/`, `tests/unit/`, `docs/REPO_MAP.md`, `components/schemas.yaml`, this packet, `docs/handoffs/SIN-P1.1-002.md`.
 
 ## Forbidden paths / authority boundaries
 - Hidden evaluator/final-eval paths: none may be created. Fixtures must not use real final-eval family names.
-- Other forbidden paths: every `src/sindri/` package other than `schemas` and `core/ids.py`; existing ID patterns in `core/ids.py`; `core/status.py`.
+- Other forbidden paths: every `src/sindri/` package other than `schemas` and `core/ids.py`; existing ID patterns in `core/ids.py`; `core/status.py`; `canonical_json_id()` behaviour.
 
 ## Non-goals
-- No `Observation`, `EvaluationPolicy`, `CandidateManifest`, `Finding`, `EpisodeState` or `Contract` models.
-- No storage, registry, lineage service or split-assignment logic (P1.2, P2.6). The manifest *carries* a split; it does not *decide* it.
-- No cross-record checks that need other records (e.g. family-level split consistency across many manifests). That is SIN-P1.1-009 / P2.6.
-- No JSON Schema export (P1.1-G).
-- No defaults that invent authority, split, lineage, rights or mandatory status.
+- No `Observation`, `EvaluationPolicy`, `CandidateManifest`, `Finding`, `EpisodeState`, `Contract` or `VerificationPlan` models; no `ObligationId`.
+- No storage, registry, lifecycle state, lineage service or split-assignment logic (P1.2, P2.6). The manifest *carries* a split; it does not *decide* it.
+- No cross-record checks that need two or more records (cross-version identity, family-level split consistency, requirement-ID resolution). Those are SIN-P1.1-009 / P2.6.
+- No JSON Schema export (P1.1-G). No budgets (D6).
+- No defaults that invent authority, split, lineage, rights, edit scope or mandatory status.
 
 ## Interfaces touched
 - Schemas: new `TaskManifest` v1, `Requirement` v1.
@@ -91,32 +111,38 @@ packet is marked ready.
 
 ## Acceptance criteria
 Positive:
-- [ ] The §20.1 and §20.9 examples, adapted to the approved decisions, validate and round-trip (model → JSON → model) identically.
+- [ ] The §20.1 and §20.9 examples, adapted to D1–D7 and C1–C4, validate and round-trip (model → JSON → model) identically.
 - [ ] Every source kind validates with its required fields.
-- [ ] A manifest's canonical content ID is stable across key order and changes when any field changes (uses `canonical_json_id`).
+- [ ] A rights combination with training disallowed, evaluation allowed, redistribution disallowed and customer-restricted validates.
+- [ ] A read-only task with empty edit scope validates; a mutating task with safe paths validates.
+- [ ] A record's canonical content ID is stable across key order and changes when any field changes.
 
 Negative (each a separate test):
-- [ ] Missing `authority_mode`, `split`, `family_id`, `lineage_id`, `variant_id`, `mandatory` or a source `rights` statement → rejected (no silent defaults).
-- [ ] Unknown field at any nesting level → rejected.
+- [ ] Missing `authority_mode`, `split`, `family_id`, `lineage_id`, `variant_id`, `rights` (or any rights field), or `mandatory` → rejected. No silent defaults.
+- [ ] Unknown field at any nesting level → rejected, including `obligation_ids` on Requirement (ADR-0004).
 - [ ] Wrong `schema_version` → rejected.
 - [ ] `reference_behavior` without `golden_hash` → rejected.
-- [ ] Source kind missing its required fields (e.g. `repo_cut` without `commit` or `licence`) → rejected.
-- [ ] `manifest_version > 1` without `supersedes`, or `manifest_version == 1` with it → rejected.
-- [ ] `allowed_edit_paths` empty, absolute, or containing `..` → rejected.
+- [ ] Source kind missing its required fields → rejected.
+- [ ] Versioning: version > 1 without `supersedes`, or version 1 with it → rejected (both records).
+- [ ] Edit scope:
+  - mutating type with empty scope → rejected;
+  - read-only type with non-empty scope → rejected;
+  - absolute path, `..`, empty segment or duplicate entry → rejected.
 - [ ] Duplicate `requirement_ids` → rejected.
-- [ ] `original_text` or `normalized_semantics` empty → rejected; the two are never auto-copied into each other.
-- [ ] Assumption without a source reference → rejected.
-- [ ] `approved` + `mandatory` requirement with no `obligation_ids` → rejected.
+- [ ] `original_text` or `normalized_semantics` empty → rejected.
+- [ ] Assumption or environment rule without `source_ref` → rejected.
 - [ ] Unknown disposition, split, task type or source kind → rejected.
-- [ ] Float anywhere in either record → rejected (per D5).
+- [ ] A binary float anywhere, at any depth (including inside `ParameterScope` values), → rejected.
+- [ ] Non-JSON-native or `Any`-typed authoritative values (e.g. a nested dict where a typed model is expected) → rejected.
 - [ ] Records are immutable: attribute assignment raises.
 
 Planted-bug checks (run, record in the handoff, then revert):
 - [ ] Giving `split` a default makes the suite fail.
 - [ ] Allowing extra fields makes the suite fail.
+- [ ] Defaulting `training_allowed=True` makes the suite fail.
 
 General:
-- [ ] `ruff`, `mypy --strict`, full `pytest` green; import-boundary test covers `schemas`.
+- [ ] `ruff`, `mypy --strict`, full `pytest` green; the import-boundary test covers `schemas`.
 - [ ] `docs/REPO_MAP.md` and `components/schemas.yaml` (from the component template) updated.
 - [ ] Handoff written; report ends with "Awaiting coordinator assignment."
 
@@ -132,7 +158,7 @@ uv run pytest -q tests/contract
 `src/sindri/core/ids.py` (additive), `src/sindri/schemas/{__init__,_base,task,requirement}.py`, `tests/contract/__init__.py`, `tests/contract/test_task_manifest.py`, `tests/contract/test_requirement.py`, `tests/contract/examples/{task_manifest,requirement}.json`, `tests/unit/test_ids.py` (new ID types), `components/schemas.yaml`, `docs/REPO_MAP.md`. If this changes materially, stop and ask the coordinator.
 
 ## Status
-`planned`. Draft for coordinator review; not ready (authoritative status: `implementation/task_board.yaml`).
+`planned`. Decisions applied; awaiting the coordinator's final packet review and confirmation of D7 and the ObligationId deferral (authoritative status: `implementation/task_board.yaml`).
 
 ## Completion evidence
 - Files changed:

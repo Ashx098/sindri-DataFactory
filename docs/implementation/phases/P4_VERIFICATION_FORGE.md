@@ -8,6 +8,7 @@ Canonical window: **weeks 9-15**.
 - Deliverable: Map every requirement to directed/random/formal/equivalence/mutation obligations and configurations.
 - Depends on: `P3.2`
 - Exit evidence: No mandatory requirement without disposition/obligation or explicit unsupported state.
+- Ownership (ADR-0004): the VerificationPlan owns the requirement → obligation mapping; `Requirement` records carry no obligations.
 
 ### P4.2 — Reusable DV library
 - Deliverable: clock/reset helpers; drivers/monitors/BFMs; ready-valid/APB/other initial protocol helpers; scoreboard base; trace utilities.
