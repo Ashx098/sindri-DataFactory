@@ -111,41 +111,41 @@ and requirements without inventing their shape.
 
 ## Acceptance criteria
 Positive:
-- [ ] The §20.1 and §20.9 examples, adapted to D1–D7 and C1–C4, validate and round-trip (model → JSON → model) identically.
-- [ ] Every source kind validates with its required fields.
-- [ ] A rights combination with training disallowed, evaluation allowed, redistribution disallowed and customer-restricted validates.
-- [ ] A read-only task with empty edit scope validates; a mutating task with safe paths validates.
-- [ ] A record's canonical content ID is stable across key order and changes when any field changes.
+- [x] The §20.1 and §20.9 examples, adapted to D1–D7 and C1–C4, validate and round-trip (model → JSON → model) identically.
+- [x] Every source kind validates with its required fields.
+- [x] A rights combination with training disallowed, evaluation allowed, redistribution disallowed and customer-restricted validates.
+- [x] A read-only task with empty edit scope validates; a mutating task with safe paths validates.
+- [x] A record's canonical content ID is stable across key order and changes when any field changes.
 
 Negative (each a separate test):
-- [ ] Missing `authority_mode`, `split`, `family_id`, `lineage_id`, `variant_id`, `rights` (or any rights field), or `mandatory` → rejected. No silent defaults.
-- [ ] Unknown field at any nesting level → rejected, including `obligation_ids` on Requirement (ADR-0004).
-- [ ] Wrong `schema_version` → rejected.
-- [ ] `reference_behavior` without `golden_hash` → rejected.
-- [ ] Source kind missing its required fields → rejected.
-- [ ] Versioning: version > 1 without `supersedes`, or version 1 with it → rejected (both records).
-- [ ] Edit scope:
+- [x] Missing `authority_mode`, `split`, `family_id`, `lineage_id`, `variant_id`, `rights` (or any rights field), or `mandatory` → rejected. No silent defaults.
+- [x] Unknown field at any nesting level → rejected, including `obligation_ids` on Requirement (ADR-0004).
+- [x] Wrong `schema_version` → rejected.
+- [x] `reference_behavior` without `golden_hash` → rejected.
+- [x] Source kind missing its required fields → rejected.
+- [x] Versioning: version > 1 without `supersedes`, or version 1 with it → rejected (both records).
+- [x] Edit scope:
   - mutating type with empty scope → rejected;
   - read-only type with non-empty scope → rejected;
   - absolute path, `..`, empty segment or duplicate entry → rejected.
-- [ ] Duplicate `requirement_ids` → rejected.
-- [ ] `original_text` or `normalized_semantics` empty → rejected.
-- [ ] Assumption or environment rule without `source_ref` → rejected.
-- [ ] Unknown disposition, split, task type or source kind → rejected.
-- [ ] A binary float anywhere, at any depth (including inside `ParameterScope` values), → rejected.
-- [ ] `ParameterScope` values are not coerced: `"8"` stays a str, `True` stays a bool and never matches `1` (C6).
-- [ ] Non-JSON-native or `Any`-typed authoritative values (e.g. a nested dict where a typed model is expected) → rejected.
-- [ ] Records are immutable: attribute assignment raises.
+- [x] Duplicate `requirement_ids` → rejected.
+- [x] `original_text` or `normalized_semantics` empty → rejected.
+- [x] Assumption or environment rule without `source_ref` → rejected.
+- [x] Unknown disposition, split, task type or source kind → rejected.
+- [x] A binary float anywhere, at any depth (including inside `ParameterScope` values), → rejected.
+- [x] `ParameterScope` values are not coerced: `"8"` stays a str, `True` stays a bool and never matches `1` (C6).
+- [x] Non-JSON-native or `Any`-typed authoritative values (e.g. a nested dict where a typed model is expected) → rejected.
+- [x] Records are immutable: attribute assignment raises.
 
 Planted-bug checks (run, record in the handoff, then revert):
-- [ ] Giving `split` a default makes the suite fail.
-- [ ] Allowing extra fields makes the suite fail.
-- [ ] Defaulting `training_allowed=True` makes the suite fail.
+- [x] Giving `split` a default makes the suite fail.
+- [x] Allowing extra fields makes the suite fail.
+- [x] Defaulting `training_allowed=True` makes the suite fail.
 
 General:
-- [ ] `ruff`, `mypy --strict`, full `pytest` green; the import-boundary test covers `schemas`.
-- [ ] `docs/REPO_MAP.md` and `components/schemas.yaml` (from the component template) updated.
-- [ ] Handoff written; report ends with "Awaiting coordinator assignment."
+- [x] `ruff`, `mypy --strict`, full `pytest` green; the import-boundary test covers `schemas`.
+- [x] `docs/REPO_MAP.md` and `components/schemas.yaml` (from the component template) updated.
+- [x] Handoff written; report ends with "Awaiting coordinator assignment."
 
 ## Verification commands
 ```bash
@@ -159,11 +159,28 @@ uv run pytest -q tests/contract
 `src/sindri/core/ids.py` (additive), `src/sindri/schemas/{__init__,_base,task,requirement}.py`, `tests/contract/__init__.py`, `tests/contract/test_task_manifest.py`, `tests/contract/test_requirement.py`, `tests/contract/examples/{task_manifest,requirement}.json`, `tests/unit/test_ids.py` (new ID types), `components/schemas.yaml`, `docs/REPO_MAP.md`. If this changes materially, stop and ask the coordinator.
 
 ## Status
-`ready` (coordinator, 2026-10-04). All decisions D1–D8 and C1–C6 are final (authoritative status: `implementation/task_board.yaml`).
+`review` (authoritative status: `implementation/task_board.yaml`). Decisions D1–D8 and C1–C6 implemented as written.
 
 ## Completion evidence
 - Files changed:
-- Tests run/results:
+  - `src/sindri/core/ids.py`: additive `FamilyId`, `LineageId`, `VariantId`, `ContractId`; the 001 types are untouched (diff is insertions only).
+  - `src/sindri/schemas/{__init__,_base,task,requirement}.py` (new).
+  - `tests/contract/{__init__,test_task_manifest,test_requirement}.py`, `tests/contract/examples/{task_manifest,requirement}.json` (new).
+  - `tests/unit/test_ids.py` (new ID types).
+  - `components/schemas.yaml`, `docs/REPO_MAP.md`, `implementation/task_board.yaml`, this packet, handoff.
+- Tests run/results: `ruff` clean; `mypy --strict` clean (13 files); `pytest`: 252 passed, 8 skipped (packages not yet created), including 158 contract tests.
 - Acceptance evidence:
-- Known limitations:
-- Handoff/next action:
+  - The adapted §20.1 and §20.9 examples validate, round-trip and re-serialize to the identical JSON.
+  - Every field (17 TaskManifest, 6 rights, all Requirement fields) is proven required by a dedicated test.
+  - Negative tests confirm each rejection fails for the intended reason (spot-checked error messages: duplicate values, uppercase commit, edit scope, golden, version chain, `schema_version: true`, rights basis).
+  - Planted bugs, each caught and reverted:
+    - `split` default → 1 failure;
+    - `extra="allow"` → 9 failures;
+    - `training_allowed=True` default → 1 failure.
+- Known limitations / implementation notes:
+  - **`Literal[1]` is unsafe in Pydantic**: it accepts `True` and `1.0` as `1` (verified by probe). `schema_version` is therefore a `StrictInt` pinned to 1, with a test. Later records must reuse `Record`, not declare their own `Literal` version.
+  - Source rights sit at manifest level (`rights`), beside `source`; required for every source kind.
+  - Commits must be full 40/64-hex lowercase object IDs; abbreviated SHAs are rejected as non-reproducible.
+  - `repo` is non-blank text, not URL-validated: no consumer defines the URL rules yet.
+  - Cross-record and cross-version rules (C5) are not checked here, by design (SIN-P1.1-009).
+- Handoff/next action: `docs/handoffs/SIN-P1.1-002.md`.

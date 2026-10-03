@@ -1,0 +1,30 @@
+{
+  "schema_version": 1,
+  "task_id": "pktfr_0193",
+  "family_id": "stream-framing",
+  "lineage_id": "pktfr",
+  "variant_id": "maxlen4-64_datasheet",
+  "manifest_version": 1,
+  "supersedes": null,
+  "authority_mode": "reference_behavior",
+  "split": "train",
+  "task_type": "spec_to_rtl",
+  "source": {
+    "kind": "repo_cut",
+    "repo": "https://github.com/example-org/stream-ip",
+    "commit": "3f2a9c1e5b7d4a6f8e0c2b4d6f8a0c2e4b6d8f0a"
+  },
+  "rights": {
+    "licence": "Apache-2.0",
+    "written_agreement_ref": null,
+    "training_allowed": true,
+    "evaluation_allowed": true,
+    "redistribution_allowed": true,
+    "customer_restricted": false
+  },
+  "golden_hash": "sha256:9b1f0c8e2d4a6b8c0e2f4a6b8d0c2e4f6a8b0d2c4e6f8a0b2d4c6e8f0a2b4c6d",
+  "contract_id": "ct_pktfr_0193_v3",
+  "approved_contract_hash": "sha256:1a2b3c4d5e6f708192a3b4c5d6e7f8091a2b3c4d5e6f708192a3b4c5d6e7f809",
+  "allowed_edit_paths": ["rtl/pkt_framer.sv"],
+  "requirement_ids": ["R03", "R17"]
+}

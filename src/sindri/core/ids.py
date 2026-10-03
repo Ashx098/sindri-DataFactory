@@ -8,6 +8,11 @@ the master architecture §20 examples:
     ObservationId  ob_88121             EpisodeId      e17
     RequirementId  R17                  PolicyId       ep_fifo_004
     FindingId      F42                  ContentId      sha256:<64 hex>
+    FamilyId       stream-framing       LineageId      pktfr
+    VariantId      maxlen4-64_datasheet ContractId     ct_pktfr_0193_v3
+
+(Family, lineage, variant and contract IDs were added by SIN-P1.1-002, decision D2; the
+earlier types and patterns are frozen.)
 
 Each ID type is a distinct `str` subclass that validates on construction, so a malformed value
 cannot exist and mypy rejects passing one kind of ID where another is expected.
@@ -88,6 +93,29 @@ class PolicyId(_TypedId):
 class FindingId(_TypedId):
     __slots__ = ()
     PATTERN = re.compile(r"F[0-9]+")
+
+
+_HYPHEN_SLUG = r"[a-z0-9]+(?:[-_][a-z0-9]+)*"
+
+
+class FamilyId(_TypedId):
+    __slots__ = ()
+    PATTERN = re.compile(_HYPHEN_SLUG)
+
+
+class LineageId(_TypedId):
+    __slots__ = ()
+    PATTERN = re.compile(_HYPHEN_SLUG)
+
+
+class VariantId(_TypedId):
+    __slots__ = ()
+    PATTERN = re.compile(_HYPHEN_SLUG)
+
+
+class ContractId(_TypedId):
+    __slots__ = ()
+    PATTERN = re.compile(rf"ct_{_SLUG}")
 
 
 class ContentId(_TypedId):

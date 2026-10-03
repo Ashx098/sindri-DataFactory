@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "task_id": "pktfr_0193",
+  "requirement_id": "R17",
+  "requirement_version": 1,
+  "supersedes": null,
+  "source_ref": "use_case:12 / spec_sentence:S08",
+  "original_text": "data must remain stable while stalled",
+  "normalized_semantics": "While out_valid is high and out_ready is low, out_data holds its value on every subsequent cycle until out_ready is high.",
+  "legal_environment": [
+    {"text": "in_valid stays high until accepted", "source_ref": "contract:ct_pktfr_0193_v3/env_rules/valid_holds_until_ready"}
+  ],
+  "assumptions": [
+    {"text": "reset is applied before traffic starts", "source_ref": "contract:ct_pktfr_0193_v3/reset"}
+  ],
+  "applicability": {"kind": "parameter_scope", "parameters": [{"name": "DATA_W", "values": [8, 32]}, {"name": "MAX_LEN", "values": [4, 8, 64]}]},
+  "mandatory": true,
+  "disposition": "approved"
+}

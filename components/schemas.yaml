@@ -1,0 +1,62 @@
+id: schemas
+version: 1
+owner: Avinash
+kind: deterministic
+purpose: >-
+  Versioned boundary records shared by every component (master architecture ch. 20). Records are
+  closed, immutable, float-free and coercion-free for identity-bearing scalars, so a record's
+  content ID is a stable identity. SIN-P1.1-002 adds TaskManifest and Requirement; later P1.1 tasks
+  add EvaluationPolicy, CandidateManifest, Observation, Finding and EpisodeState.
+inputs:
+  - JSON or Python mappings from other components
+outputs:
+  - TaskManifest
+  - Requirement
+may_read:
+  - sindri.core
+may_write: []
+forbidden_read:
+  - hidden_final_eval
+  - judge internals
+  - solver, triage and forge packages
+forbidden_write:
+  - acceptance_policy
+  - any store (records are values; persistence is P1.2)
+public_interfaces:
+  - name: TaskManifest.model_validate / model_validate_json
+    request: mapping or JSON
+    response: TaskManifest
+  - name: Requirement.model_validate / model_validate_json
+    request: mapping or JSON
+    response: Requirement
+  - name: Record.content_id
+    request: record
+    response: ContentId
+invariants:
+  - id: INV-001
+    text: Unknown fields are rejected at every nesting level.
+  - id: INV-002
+    text: Binary floats are rejected anywhere in a record (decision D5).
+  - id: INV-003
+    text: Authority mode, split, lineage identity, rights and mandatory status are never defaulted.
+  - id: INV-004
+    text: Version 1 has no supersedes; every later version names exactly one predecessor.
+  - id: INV-005
+    text: Read-only task types have an empty edit scope; mutating types a non-empty safe one.
+  - id: INV-006
+    text: Requirement records carry no verification obligations (ADR-0004).
+failure_modes:
+  - id: FM-001
+    symptom: A field gains a default and silently fills authority/split/rights.
+    guard: Required-field tests per field; planted-bug checks in SIN-P1.1-002.
+  - id: FM-002
+    symptom: Pydantic coerces True/1.0 into an int or Literal.
+    guard: StrictInt/StrictBool/StrictStr scalars; schema_version is a StrictInt pinned to 1.
+required_tests:
+  - unit
+  - contract
+observability:
+  spans: []
+  metrics: []
+related_adrs: [ADR-0001, ADR-0002, ADR-0004]
+related_docs: [docs/tasks/SIN-P1.1-002.md]
