@@ -53,11 +53,16 @@ None open. Going `ready → review` in one session was accepted by the coordinat
 ## Open questions
 - `repo` is not URL-validated. Add rules when a consumer (the P2.2 repo miner) defines them.
 
-## Blocked on
-- Coordinator review and merge of this task's PR.
+## Coordinator verification
+- PR #6 merged to `main` as `4377df5` after coordinator re-review.
+- Merged-main CI run `37154049449` passed.
+- Task status: `verified` on 2026-10-04.
 
-## Next ready after approval
-Per the P1.1 order, once this task is merged and verified (the coordinator opens them; the agent does not):
+## Blocked on
+- None. This task is verified. No later task is authorized until its packet is separately reviewed and marked READY.
+
+## Next eligible for packet drafting
+Per the P1.1 order, now that this task is verified (the coordinator opens them; the agent does not):
 - SIN-P1.1-003 EvaluationPolicy: owns the requirement → obligation mapping and introduces `ObligationId` (ADR-0004).
 - SIN-P1.1-004 CandidateManifest.
 
