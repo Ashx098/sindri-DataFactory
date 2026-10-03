@@ -7,6 +7,7 @@
 - Finished at: 2026-10-04
 - Agent / person: coding agent (Claude Code) for Avinash
 - Branch/worktree: `chore/SIN-B0.1-002-governance-fixups` (main working tree)
+- Gate submission head: `4b5cc03` (CI 37144804467 success); decisions recorded in the following commit
 - HEAD commit: the commit that adds this file (child of `198c79a`)
 - Base commit: `0743238` (`main`)
 - Dirty files, if any: none after commit
@@ -36,9 +37,12 @@
 Governance docs, `implementation/*.yaml`, `.github/` (CI trigger, CODEOWNERS), `tests/unit/test_governance.py`. No product code. No architecture content.
 
 ## Decisions
-- ADR-0001 modular monolith layout and stack: **proposed**
-- ADR-0002 authority modes and status taxonomy: **proposed**
-- ADR-0003 adopt governance pack v2 with amendments: **proposed**
+Coordinator decisions recorded by the agent on 2026-10-04 (the agent made none of them):
+- ADR-0001 modular monolith layout and stack: **accepted** by Avinash
+- ADR-0002 authority modes and status taxonomy: **accepted** by Avinash, with the amendment that raw TIMEOUT is never rewritten and only a downstream EvaluationPolicy outcome may be negative
+- ADR-0003 adopt governance pack v2 with amendments: **accepted** by Avinash
+- B0-E001 / B0-E002: **approved** as expired one-time exceptions
+- P1.5 keeps the repository dependency plan (abstract contracts only; integration in P1.8)
 
 ## Deviations
 - B0-E001 direct push to `main` for the bootstrap commit (one-time, expired).
@@ -51,10 +55,9 @@ Governance docs, `implementation/*.yaml`, `.github/` (CI trigger, CODEOWNERS), `
 - When does a second reviewer exist, so code-owner review can be required?
 
 ## Blocked on
-- **B0.G human approval** (`docs/implementation/gates/B0.G.md`), which needs:
-  1. `main` branch protection enabled (repo admin: PR required, `fast-gate` check required, no force push);
-  2. an accept/reject decision on ADR-0001/0002/0003;
-  3. approval of exceptions B0-E001/E002.
+- **B0.G human approval** (`docs/implementation/gates/B0.G.md`), which now needs only:
+  1. the coordinator's confirmation that `main` branch protection is enabled (PR required, `fast-gate` check required, force push/deletion blocked, no required approvals yet);
+  2. an architecture-owner review comment on the PR, and green PR CI.
 - PR for this branch not opened: the agent's `gh` token is invalid. Open it from the GitHub UI or after `gh auth login`.
 
 ## Next ready after approval

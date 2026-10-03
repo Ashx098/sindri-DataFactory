@@ -31,6 +31,8 @@ When artifacts disagree, use this order and escalate rather than silently choosi
 
 A test that contradicts an approved contract is not automatically correct. Treat the mismatch as a defect to resolve.
 
+Chat instructions rank below the task packet. If an instruction in chat conflicts with an accepted ADR, the canonical architecture or the approved implementation plan, **flag the conflict and ask**; do not silently change the repository to match the latest conversation. Agents obey the project, not the most recent message.
+
 ## 3. Hard architecture boundaries
 - No solver code may import or read hidden evaluator internals.
 - No agent output may write acceptance decisions directly.

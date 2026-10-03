@@ -15,7 +15,7 @@ parallel without redefining primitives.
 ## Why / architecture references
 - Master architecture section(s): §4 principle 9 (results bind to exact artifacts); §8 F1 status normaliser; §8.7 authority records; §14 J2 status taxonomy; §12 G2/G3 tiers and evidence levels.
 - Phase/subphase: P1.1 (`docs/implementation/phases/P1_FOUNDATION_AND_JUDGE_V0.md`); P1.1 breakdown in `docs/implementation/CURRENT_PHASE.md`.
-- ADRs/RFCs: ADR-0001, ADR-0002 (both `proposed`; this task must not start until they are accepted or the coordinator explicitly waives that).
+- ADRs/RFCs: ADR-0001, ADR-0002 (accepted 2026-10-04, with the TIMEOUT amendment).
 
 ## Owner / coordinator
 - Owner: assigned by coordinator
@@ -34,7 +34,7 @@ parallel without redefining primitives.
 ## Scope
 - In scope:
   - `src/sindri/core/ids.py`: typed ID types for task, candidate, observation, episode, requirement, policy, finding; `content_id(bytes)` and `canonical_json_id(obj)` (SHA-256 over canonical JSON: sorted keys, no insignificant whitespace, UTF-8).
-  - `src/sindri/core/status.py`: review and finalize against master §14 J2 and Appendix A; add nothing that is not in the master.
+  - `src/sindri/core/status.py`: review and finalize against master §14 J2 and Appendix A; add nothing that is not in the master. Align the `ToolStatus.is_label` docstring with accepted ADR-0002: raw TIMEOUT stays TIMEOUT, and only a downstream EvaluationPolicy-driven outcome may be negative.
   - Unit and property tests for both.
 - Allowed paths: `src/sindri/core/`, `tests/unit/`, `docs/REPO_MAP.md`, `THIRD_PARTY.md`, this packet, `docs/handoffs/SIN-P1.1-001.md`.
 
