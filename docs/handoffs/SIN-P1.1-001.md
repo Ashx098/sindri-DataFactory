@@ -39,15 +39,14 @@ None at ADR level. Task-level choices, recorded in the packet:
 - Canonical JSON rejects any value the json module would silently convert.
 
 ## Deviations
-- Branch is based on PR #1's approval commit `0cb29dd` rather than `main`, because PR #1 is not merged yet; the coordinator's "approve with deadline" decision allowed starting. Rebase onto `main` after PR #1 merges.
+- Branch was based on PR #1's approval commit `0cb29dd` rather than `main`; merging PR #2 with a merge commit brought both into `main`, so no rebase was needed.
 - The first commit (`1632ea7`) carried a blank handoff template because of an agent tooling error; fixed in the following commit.
 
 ## Open questions
 - Should identity-bearing record fields forbid floats outright? Decide in SIN-P1.1-002…007 (packet "Known limitations").
 
 ## Blocked on
-- PR #1 (B0) merging into `main`; then rebase this branch onto `main` and open its PR.
-- B0-E004: `main` branch protection must be confirmed enabled before this task's PR merges.
+- Nothing. Merged via PR #2 (`7cf0fd8`); B0-E004 closed. Awaiting coordinator verification (`merged` → `verified`).
 
 ## Next ready after approval
 Newly unblocked once this task is merged and verified (the coordinator opens them; the agent does not):

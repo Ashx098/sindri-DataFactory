@@ -63,8 +63,8 @@ No product architecture change, no P1 implementation, no gate approval, no ADR a
 - [x] Fast gate passes in GitHub Actions on this branch.
 - [x] Deliberate violations fail in GitHub Actions (probe branches, then deleted).
 - [x] B0.G packet complete with `PENDING_HUMAN_APPROVAL`.
-- [ ] `main` branch protection enabled (needs repo admin).
-- [ ] PR opened (needs working `gh` auth or the web UI).
+- [x] `main` branch protection enabled (coordinator; closed B0-E004).
+- [x] PR opened and merged (PR #1, by the coordinator).
 
 ## Verification commands
 ```bash
@@ -76,7 +76,7 @@ python scripts/show_ready_tasks.py --all
 See Scope.
 
 ## Status
-`review` (authoritative status: `implementation/task_board.yaml`)
+`merged` (head `0cb29dd`, on `main` via `7cf0fd8`; authoritative status: `implementation/task_board.yaml`)
 
 ## Completion evidence
 - Files changed: see PR diff.
