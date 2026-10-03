@@ -72,7 +72,7 @@ uv run pytest -q
 `src/sindri/core/ids.py`, `src/sindri/core/status.py` (review only), `tests/unit/test_ids.py`, `tests/unit/test_status.py`. If this changes materially, stop and ask the coordinator.
 
 ## Status
-`merged` via PR #2, merge commit `7cf0fd8` (authoritative status: `implementation/task_board.yaml`); `verified` is the coordinator's transition
+`verified` by Avinash, 2026-10-04 (merged via PR #2 `7cf0fd8`; `main` `f4d22d5` CI run 37147307359 green). Not `closed` until the float/identity follow-up is carried into SIN-P1.1-002 (decision D5) and P1.1-G
 
 ## Completion evidence
 - Files changed: `src/sindri/core/ids.py` (new), `src/sindri/core/status.py` (ADR-0002 docstring, `@unique` on all enums; no members added or removed), `tests/unit/test_ids.py` (new), `tests/unit/test_status.py`, `docs/REPO_MAP.md`, `implementation/task_board.yaml`, this packet, handoff.
