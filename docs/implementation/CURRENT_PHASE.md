@@ -13,8 +13,8 @@ python scripts/show_ready_tasks.py --all
 ## Notes for the active phase
 - `SIN-P1.1-001` verified (coordinator, 2026-10-04). Kept at `verified`, not `closed`, until the
   float/identity follow-up is carried forward (SIN-P1.1-002 decision D5, P1.1-G).
-- **`SIN-P1.1-002` is the only READY task** (coordinator, 2026-10-04; decisions D1–D8, C1–C6, ADR-0004).
-- No other P1 task is authorized.
+- `SIN-P1.1-002` verified (coordinator, 2026-10-04). PR #6 merged as `4377df5`; merged-main CI `37154049449` passed.
+- No task is currently READY. `SIN-P1.1-003` and `SIN-P1.1-004` are eligible for packet drafting only; neither is authorized for implementation until its packet is reviewed and marked READY.
 
 ## P1.1 order (coordinator sequencing refinement, 2026-10-04; not an ADR change)
 ```
