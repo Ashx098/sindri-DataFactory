@@ -42,6 +42,11 @@ A test that contradicts an approved contract is not automatically correct. Treat
 - Contract/evaluator/assumption changes trigger the documented requalification path.
 - Customer, benchmark, and final-evaluation boundaries apply to files, retrieval indexes, caches, prompts, traces, and agent memories.
 
+## 3A. Decision authority
+- Agents may **propose** ADRs, RFCs and architecture changes, and prepare all supporting evidence.
+- Only the architecture owner moves an ADR `proposed → reviewed → accepted | rejected`. An agent never marks its own ADR `reviewed` or `accepted`, never sets a gate to COMPLETE, and never marks its own task `verified`.
+- Same principle as the product: agents propose; a trusted authority accepts.
+
 ## 4. Code rules
 - Python domain code is typed. New public interfaces require type annotations.
 - Use Pydantic models for boundary records; do not pass anonymous dictionaries across component boundaries.
@@ -120,7 +125,11 @@ Before declaring a task complete:
 - write/update the handoff if unfinished work remains or another agent will continue;
 - record any durable architecture decision as an ADR;
 - ensure `docs/PROJECT_STATE.md` reflects milestone-level changes;
-- ensure no secrets, large transient logs, model dumps, or hidden evaluator material were accidentally added.
+- ensure no secrets, large transient logs, model dumps, or hidden evaluator material were accidentally added;
+- write or update `docs/handoffs/<TASK-ID>.md` (`scripts/new_handoff.py`). A handoff is **mandatory at the end of every meaningful session**, not only when work is unmerged: phase/subphase boundaries, gate submissions, agent replacement, long interruptions, architecture decisions and integration completion all require one.
+
+### End-of-task report
+Finish with: task complete (or not), evidence, handoff path, newly unblocked tasks, and **"Awaiting coordinator assignment."** Never pick or start the next task yourself; the coordinator computes READY = dependencies satisfied ∧ phase ACTIVE ∧ required gates approved, and assigns it.
 
 ## 10. Stop conditions
 Stop and request review instead of improvising when:

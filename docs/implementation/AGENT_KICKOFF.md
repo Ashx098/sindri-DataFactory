@@ -9,6 +9,7 @@ Every fresh coding-agent chat/session must:
 6. Restate outcome, non-goals, dependencies, allowed paths and verification plan before editing.
 7. Implement only that task; no future-phase scaffolding.
 8. Run acceptance checks and update docs in the same change.
-9. Record a handoff if work is not fully merged.
+9. Write/update the task handoff before the session ends (mandatory, merged or not).
+10. Report completion evidence and newly unblocked tasks, then stop: "Awaiting coordinator assignment." Never start the next task on your own.
 
 A new chat is given a TASK-ID, not “continue from the previous chat.”

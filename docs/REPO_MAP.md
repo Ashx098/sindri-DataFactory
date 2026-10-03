@@ -11,7 +11,7 @@ sindri-DataFactory/
   .github/
     workflows/ci.yml             PR fast gate (ruff, mypy, pytest)
     workflows/README-ci-gates.md planned CI tiers
-    PULL_REQUEST_TEMPLATE.md  CODEOWNERS.example
+    PULL_REQUEST_TEMPLATE.md  CODEOWNERS
   implementation/
     current.yaml                 AUTHORITATIVE active phase + phase/gate states
     task_board.yaml              AUTHORITATIVE task status

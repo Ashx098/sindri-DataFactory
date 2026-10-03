@@ -1,6 +1,6 @@
 # ADR-0003: Adopt governance pack v2 with amendments
 
-- Status: accepted
+- Status: proposed (prepared by coding agent; awaiting architecture-owner review)
 - Date: 2026-10-03
 - Owners: platform lead
 - Supersedes: the B0 scaffold's root docs where they differ from pack v2

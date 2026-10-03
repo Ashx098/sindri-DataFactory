@@ -1,30 +1,43 @@
 # TASK-ID Handoff
 
-## Repository state
+> Mandatory at the end of every meaningful session (AGENTS.md §9). A fresh agent or engineer must
+> be able to continue from this file plus the repository, with no chat history.
+
+## Session
+- Finished at:
+- Agent / person:
 - Branch/worktree:
 - HEAD commit:
 - Base commit:
 - Dirty files, if any:
 
 ## Completed
-Precise list of completed behavior/artifacts.
+- ...
 
-## Tests executed
-| Command/test | Result | Notes |
+## Verified
+| Command / check | Result | Notes |
 |---|---|---|
 
-## Current failure / blocker
-Include exact error, observation, or failing test. Do not write only "doesn't work".
+## Changed
+Files or areas changed, and why.
 
-## Decisions made this session
-List decisions and where each was recorded (task, ADR, component contract). Anything not recorded elsewhere is not durable.
+## Decisions
+ADR/RFC/contract IDs created or changed, with status. Anything not recorded there is not durable.
 
-## Next exact actions
-1. ...
-2. ...
+## Deviations
+Departures from AGENTS.md / the plan, with exception IDs from `docs/implementation/EXCEPTIONS.md`.
 
-## Risks / things not to change casually
+## Open questions
 ...
 
-## Documentation still owed
+## Blocked on
+...
+
+## Next ready after approval
+Tasks the coordinator may open next (the agent does not start them).
+
+## Do not start
+Work that must not begin yet, and why.
+
+## Risks / things not to change casually
 ...

@@ -1,6 +1,6 @@
 # ADR-0002: Task authority modes and shared status taxonomy
 
-- Status: accepted
+- Status: proposed (prepared by coding agent; awaiting architecture-owner review)
 - Date: 2026-10-03
 - Owners: platform lead, DV/formal engineer
 - Supersedes: n/a

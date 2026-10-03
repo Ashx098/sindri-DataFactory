@@ -1,6 +1,7 @@
 # ADR-0000: Decision title
 
-- Status: proposed | accepted | superseded | rejected
+- Status: proposed | reviewed | accepted | rejected | superseded
+- Accepted by: (architecture owner; never the authoring agent)
 - Date: YYYY-MM-DD
 - Owners:
 - Supersedes:

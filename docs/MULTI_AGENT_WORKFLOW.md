@@ -53,7 +53,7 @@ Do not resolve architecture disagreements by majority vote between models.
 A fresh chat must be able to continue using only repository state. The new agent reads root rules, project state, repo map, task packet, latest handoff, branch history, and local rules. If anything important exists only in the old chat, the previous session was not closed correctly.
 
 ## End-of-session handoff
-If the task is not fully merged, update `docs/handoffs/TASK-ID.md` with:
+Every meaningful session ends by writing or updating `docs/handoffs/TASK-ID.md`, **whether or not the work is merged**: phase/subphase boundaries, gate submissions, agent replacement, long interruptions, architecture decisions and integration completion all require it. Use `docs/handoffs/TEMPLATE.md`. It records:
 - exact branch/worktree and HEAD commit;
 - what is complete;
 - what changed and why;

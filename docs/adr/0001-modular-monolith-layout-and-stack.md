@@ -1,6 +1,6 @@
 # ADR-0001: Modular monolith layout and V1 stack
 
-- Status: accepted
+- Status: proposed (prepared by coding agent; awaiting architecture-owner review)
 - Date: 2026-10-03
 - Owners: platform lead
 - Supersedes: master architecture §21.1 layout and the "Python 3.11+" row of §21.2
