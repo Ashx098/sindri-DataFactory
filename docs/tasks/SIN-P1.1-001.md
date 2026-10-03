@@ -24,7 +24,7 @@ parallel without redefining primitives.
 
 ## Base
 - Base branch: `main`
-- Base commit: commit that records B0.G approval
+- Base commit: the B0.G approval commit on PR #1 (rebase onto `main` once PR #1 merges)
 - Worktree: `../worktrees/SIN-P1.1-001`
 
 ## Dependencies
@@ -59,6 +59,7 @@ parallel without redefining primitives.
 - [ ] Unknown status strings are rejected when parsed.
 - [ ] `ruff`, `mypy --strict`, full `pytest` green; no import-boundary violations.
 - [ ] Handoff written; report ends with "Awaiting coordinator assignment."
+- [ ] Merge condition (B0-E004): `main` branch protection confirmed enabled before this task's PR merges.
 
 ## Verification commands
 ```bash

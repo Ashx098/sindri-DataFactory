@@ -55,12 +55,10 @@ Coordinator decisions recorded by the agent on 2026-10-04 (the agent made none o
 - When does a second reviewer exist, so code-owner review can be required?
 
 ## Blocked on
-- **B0.G human approval** (`docs/implementation/gates/B0.G.md`), which now needs only:
-  1. the coordinator's confirmation that `main` branch protection is enabled (PR required, `fast-gate` check required, force push/deletion blocked, no required approvals yet);
-  2. an architecture-owner review comment on the PR, and green PR CI.
-- PR for this branch not opened: the agent's `gh` token is invalid. Open it from the GitHub UI or after `gh auth login`.
+- Nothing for B0. B0.G approved 2026-10-04 with exception B0-E004 (branch protection before SIN-P1.1-001's PR merges).
+- PR #1 merge: the coordinator merges it after CI is green on the approval commit.
 
-## Next ready after approval
+## Next ready
 - `SIN-P1.1-001`, base IDs, content hashing, enums and status taxonomy. Only this task, and only once the coordinator marks it `ready`.
 
 ## Do not start

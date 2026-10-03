@@ -5,12 +5,12 @@ architecture_version: master-architecture-v1
 governance_version: governance-v1.1
 implementation_plan_version: execution-v1.0
 
-active_phase: B0
+active_phase: P1
 
 # NOT_STARTED | ACTIVE | GATE_REVIEW | COMPLETE | BLOCKED
 phases:
-  B0: {state: GATE_REVIEW, gate: B0.G, evidence: docs/implementation/gates/B0.G.md}
-  P1: {state: NOT_STARTED, gate: P1.G}
+  B0: {state: COMPLETE, gate: B0.G, evidence: docs/implementation/gates/B0.G.md}
+  P1: {state: ACTIVE, gate: P1.G}
   P2: {state: NOT_STARTED, gate: P2.G}
   P3: {state: NOT_STARTED, gate: P3.G}
   P4: {state: NOT_STARTED, gate: P4.G}

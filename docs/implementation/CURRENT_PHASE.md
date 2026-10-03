@@ -11,9 +11,10 @@ python scripts/show_ready_tasks.py --all
 ```
 
 ## Notes for the active phase
-- B0 fixups are in `SIN-B0.1-002`; B0.G then goes to human approval (`docs/implementation/gates/B0.G.md`).
-- After B0.G is approved, **only** `SIN-P1.1-001` may be opened. No other P1 task is authorized until
-  the coordinator opens it.
+- B0.G approved 2026-10-04 with exception B0-E004: `main` branch protection must be enabled before
+  SIN-P1.1-001's PR merges.
+- **Only** `SIN-P1.1-001` is authorized. No other P1 task (P1.2 evidence store, P1.3 sandbox, P1.4 tool
+  gateway, P1.6 FIFO, ...) may start until the coordinator opens it.
 
 ## Planned P1.1 breakdown (coordinator opens packets one at a time)
 Records are separate tasks so no agent is handed "all schemas". 002–007 may run in parallel only
