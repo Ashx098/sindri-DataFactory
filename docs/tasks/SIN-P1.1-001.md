@@ -59,7 +59,7 @@ parallel without redefining primitives.
 - [x] Unknown status strings are rejected when parsed.
 - [x] `ruff`, `mypy --strict`, full `pytest` green; no import-boundary violations.
 - [x] Handoff written; report ends with "Awaiting coordinator assignment."
-- [ ] Merge condition (B0-E004): `main` branch protection confirmed enabled before this task's PR merges.
+- [x] Merge condition (B0-E004): `main` protection with required `fast-gate` confirmed by the coordinator and the public API; merged via PR #2 (`7cf0fd8`). See B0-E004 closure note.
 
 ## Verification commands
 ```bash
@@ -72,7 +72,7 @@ uv run pytest -q
 `src/sindri/core/ids.py`, `src/sindri/core/status.py` (review only), `tests/unit/test_ids.py`, `tests/unit/test_status.py`. If this changes materially, stop and ask the coordinator.
 
 ## Status
-`review` (authoritative status: `implementation/task_board.yaml`)
+`merged` via PR #2, merge commit `7cf0fd8` (authoritative status: `implementation/task_board.yaml`); `verified` is the coordinator's transition
 
 ## Completion evidence
 - Files changed: `src/sindri/core/ids.py` (new), `src/sindri/core/status.py` (ADR-0002 docstring, `@unique` on all enums; no members added or removed), `tests/unit/test_ids.py` (new), `tests/unit/test_status.py`, `docs/REPO_MAP.md`, `implementation/task_board.yaml`, this packet, handoff.

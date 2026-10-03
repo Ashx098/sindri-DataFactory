@@ -11,10 +11,10 @@ python scripts/show_ready_tasks.py --all
 ```
 
 ## Notes for the active phase
-- B0.G approved 2026-10-04 with exception B0-E004: `main` branch protection must be enabled before
-  SIN-P1.1-001's PR merges.
-- **Only** `SIN-P1.1-001` is authorized. No other P1 task (P1.2 evidence store, P1.3 sandbox, P1.4 tool
-  gateway, P1.6 FIFO, ...) may start until the coordinator opens it.
+- B0 complete; exception B0-E004 closed (branch protection with required `fast-gate`).
+- `SIN-P1.1-001` merged (PR #2, `7cf0fd8`) and awaiting coordinator verification.
+- No other P1 task is authorized until the coordinator opens it. Per the breakdown below, 002–007
+  become eligible once 001 is merged; they still need packets and `ready` status from the coordinator.
 
 ## Planned P1.1 breakdown (coordinator opens packets one at a time)
 Records are separate tasks so no agent is handed "all schemas". 002–007 may run in parallel only
