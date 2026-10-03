@@ -76,7 +76,7 @@ python scripts/show_ready_tasks.py --all
 See Scope.
 
 ## Status
-`review` once the PR is open (authoritative status: `implementation/task_board.yaml`)
+`review` (authoritative status: `implementation/task_board.yaml`)
 
 ## Completion evidence
 - Files changed: see PR diff.

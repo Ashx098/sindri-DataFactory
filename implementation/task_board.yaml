@@ -23,7 +23,7 @@ tasks:
     title: Governance fixups before B0.G review
     phase: B0
     subphase: B0.1
-    status: active
+    status: review
     depends_on: [SIN-B0.1-001]
     packet: docs/tasks/SIN-B0.1-002.md
 
