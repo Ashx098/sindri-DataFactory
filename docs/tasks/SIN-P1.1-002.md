@@ -161,7 +161,7 @@ uv run pytest -q tests/contract
 `src/sindri/core/ids.py` (additive), `src/sindri/schemas/{__init__,_base,task,requirement}.py`, `tests/contract/__init__.py`, `tests/contract/test_task_manifest.py`, `tests/contract/test_requirement.py`, `tests/contract/examples/{task_manifest,requirement}.json`, `tests/unit/test_ids.py` (new ID types), `components/schemas.yaml`, `docs/REPO_MAP.md`. If this changes materially, stop and ask the coordinator.
 
 ## Status
-`review` (authoritative status: `implementation/task_board.yaml`). Decisions D1–D8 and C1–C6 implemented as written.
+`verified` (coordinator, 2026-10-04). PR #6 merged to `main` as `4377df5`; merged-main CI run `37154049449` passed. Decisions D1–D8 and C1–C6 are implemented as written.
 
 ## Completion evidence
 - Files changed:
@@ -188,4 +188,5 @@ uv run pytest -q tests/contract
   - `repo` is non-blank text, not URL-validated: no consumer defines the URL rules yet.
   - Cross-record and cross-version rules (C5) are not checked here, by design (SIN-P1.1-009).
 - Follow-up (template convention, not done here): `docs/tasks/TASK_TEMPLATE.md` should list `implementation/task_board.yaml` as an implicit status-only allowed path for every task, so status moves are never scope deviations. To be applied by the coordinator in a governance change.
+- Verification on merged main: PR #6 merge commit `4377df5`; CI `37154049449` passed.
 - Handoff/next action: `docs/handoffs/SIN-P1.1-002.md`.
