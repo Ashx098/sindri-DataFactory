@@ -21,7 +21,7 @@ and requirements without inventing their shape.
 - ADRs/RFCs: ADR-0001 (stack), ADR-0002 (`AuthorityMode`, statuses), **ADR-0004** (Requirement does not own obligations).
 
 ## Owner / coordinator
-- Owner: assigned by coordinator when marked ready
+- Owner: coding agent (Claude Code), assigned by Avinash 2026-10-04
 - Integrator: Avinash
 - Reviewers: Avinash; RTL/DV reviewer for requirement semantics once assigned (role currently unassigned)
 
@@ -34,7 +34,7 @@ and requirements without inventing their shape.
 - Required completed tasks: SIN-P1.1-001 (verified)
 - Required schemas/contracts: `sindri.core.ids`, `sindri.core.status`
 
-## Coordinator decisions (PR #4, 2026-10-04; recorded, not made, by the agent)
+## Coordinator decisions (PR #4 and final packet review, 2026-10-04; recorded, not made, by the agent)
 | ID | Decision |
 |---|---|
 | D1 | **(b)** TaskManifest is immutable and versioned, and limited to identity, authority, provenance, rights, split, contract and allowed edit scope. Tier, difficulty, evidence level and status history are lifecycle state for the registry/event log (P1.2). |
@@ -49,9 +49,9 @@ and requirements without inventing their shape.
 | C4 | No `dict[str, Any]` (or `Any`) in authoritative fields; parameter values use exact JSON-native, non-float types. |
 | C5 | P1.1-009 gets an invariant: task/family/lineage/split identity cannot change across manifest versions (recorded in `CURRENT_PHASE.md`). |
 
-### Consequences the agent derived (coordinator to confirm when marking ready)
-- **ObligationId deferred to SIN-P1.1-003.** D2 approved adding it, but D4 removed its only consumer from this task. D2's own rule ("defer IDs that have no real consumer yet") then moves it to 003, and ADR-0004 records this.
-- **D7: `comprehension` task type.** Master §9 T1 lists *Comprehension* as a task type, but the §20.1 `task_type` enum omits it, and C3 needs read-only types to exist. Proposal: `TaskType` = §20.1 values + `comprehension`. Read-only types (empty edit scope): `comprehension`, `spec_task`. Mutating types (non-empty scope): `spec_to_rtl`, `completion`, `modification`, `debug`, `testbench`, `assertion`. If the coordinator prefers not to extend the enum, `spec_task` alone is the read-only type.
+| D8 | **ObligationId deferral to SIN-P1.1-003: approved** (no consumer in 002 after ADR-0004). |
+| D7 | **Approved.** `TaskType` = §20.1 values + `comprehension` (master §9 T1 lists Comprehension as a task type). Read-only (empty edit scope): `comprehension`, `spec_task`. Mutating (non-empty safe edit scope): `spec_to_rtl`, `completion`, `modification`, `debug`, `testbench`, `assertion`. |
+| C6 | Implementation note for C4: exact scalars use Pydantic strict types, `ExactScalar = StrictInt \| StrictStr \| StrictBool`, so that `True`/`1`/`"1"` are never coerced into one another in identity-bearing data. |
 
 ## Scope
 - In scope:
@@ -61,7 +61,7 @@ and requirements without inventing their shape.
     - Versioning: `manifest_version: int ≥ 1`, `supersedes: ContentId | None`. `None` if and only if `manifest_version == 1`.
     - `authority_mode: AuthorityMode`: required, no default.
     - `split: Split` (`train` | `dev` | `final`): required, no default.
-    - `task_type: TaskType` (per D7).
+    - `task_type: TaskType` (D7: §20.1 values + `comprehension`).
     - `source`: a discriminated union on `kind`, with kind-specific required fields:
       - `repo_cut`, `commit_feature`, `commit_fix`: `repo`, `commit`;
       - `mutation`: parent `task_id`, operator;
@@ -85,7 +85,7 @@ and requirements without inventing their shape.
     - `original_text: str` (verbatim, non-empty) and `normalized_semantics: str` (non-empty). These are distinct fields, and neither is derived from the other.
     - `legal_environment: tuple[EnvironmentRule, ...]`, where each rule has `text` and `source_ref`.
     - `assumptions: tuple[Assumption, ...]`, where each has `text` and a required `source_ref`.
-    - `applicability`: either `AllSupportedConfigs` or `ParameterScope`. `ParameterScope` maps a parameter name (`[A-Z][A-Z0-9_]*`) to a non-empty tuple of `int | str | bool` values (C4: no float, no `Any`).
+    - `applicability`: either `AllSupportedConfigs` or `ParameterScope`. `ParameterScope` maps a parameter name (`[A-Z][A-Z0-9_]*`) to a non-empty tuple of `ExactScalar` values (C4/C6: `StrictInt | StrictStr | StrictBool`; no float, no `Any`, no coercion).
     - `mandatory: bool`: required, no default.
     - `disposition: RequirementDisposition` (D4).
     - No `obligation_ids` (ADR-0004).
@@ -133,6 +133,7 @@ Negative (each a separate test):
 - [ ] Assumption or environment rule without `source_ref` → rejected.
 - [ ] Unknown disposition, split, task type or source kind → rejected.
 - [ ] A binary float anywhere, at any depth (including inside `ParameterScope` values), → rejected.
+- [ ] `ParameterScope` values are not coerced: `"8"` stays a str, `True` stays a bool and never matches `1` (C6).
 - [ ] Non-JSON-native or `Any`-typed authoritative values (e.g. a nested dict where a typed model is expected) → rejected.
 - [ ] Records are immutable: attribute assignment raises.
 
@@ -158,7 +159,7 @@ uv run pytest -q tests/contract
 `src/sindri/core/ids.py` (additive), `src/sindri/schemas/{__init__,_base,task,requirement}.py`, `tests/contract/__init__.py`, `tests/contract/test_task_manifest.py`, `tests/contract/test_requirement.py`, `tests/contract/examples/{task_manifest,requirement}.json`, `tests/unit/test_ids.py` (new ID types), `components/schemas.yaml`, `docs/REPO_MAP.md`. If this changes materially, stop and ask the coordinator.
 
 ## Status
-`planned`. Decisions applied; awaiting the coordinator's final packet review and confirmation of D7 and the ObligationId deferral (authoritative status: `implementation/task_board.yaml`).
+`ready` (coordinator, 2026-10-04). All decisions D1–D8 and C1–C6 are final (authoritative status: `implementation/task_board.yaml`).
 
 ## Completion evidence
 - Files changed:
