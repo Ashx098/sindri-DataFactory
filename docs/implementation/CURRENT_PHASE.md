@@ -13,7 +13,7 @@ python scripts/show_ready_tasks.py --all
 ## Notes for the active phase
 - `SIN-P1.1-001` verified (coordinator, 2026-10-04). Kept at `verified`, not `closed`, until the
   float/identity follow-up is carried forward (SIN-P1.1-002 decision D5, P1.1-G).
-- `SIN-P1.1-002` packet drafted for coordinator review; status `planned`. Not authorized to start.
+- **`SIN-P1.1-002` is the only READY task** (coordinator, 2026-10-04; decisions D1–D8, C1–C6, ADR-0004).
 - No other P1 task is authorized.
 
 ## P1.1 order (coordinator sequencing refinement, 2026-10-04; not an ADR change)
@@ -39,14 +39,14 @@ says which may be opened.
 | Task | Outcome | Evidence beyond "the class exists" |
 |---|---|---|
 | SIN-P1.1-001 | Base IDs, content hashing, enums, status taxonomy | byte-change → new ID; infra statuses never coerce to PASS/FAIL |
-| SIN-P1.1-002 | TaskManifest + Requirement | authority_mode, family/lineage and split mandatory; unknown fields rejected |
-| SIN-P1.1-003 | EvaluationPolicy | mandatory checks and parameter matrix explicit; assumptions carry a source |
+| SIN-P1.1-002 | TaskManifest + Requirement | versioned immutable records; authority/split/lineage/rights never defaulted; structured rights; task-type edit scope; no floats or `Any`; no obligations on Requirement (ADR-0004) |
+| SIN-P1.1-003 | EvaluationPolicy | mandatory checks and parameter matrix explicit; assumptions carry a source; **owns the requirement → obligation mapping and introduces `ObligationId` (ADR-0004)**; every approved mandatory requirement maps to ≥ 1 obligation |
 | SIN-P1.1-004 | CandidateManifest | parent ancestry; frozen candidate immutable; author model/seed recorded |
 | SIN-P1.1-005 | Observation | candidate hash + tool image digest mandatory; PASS requires a declared executed check; TOOL_ERROR distinct; unknown status rejected |
 | SIN-P1.1-006 | Finding | status only via defined transitions; requirement, artifact and evidence references required |
 | SIN-P1.1-007 | EpisodeState | budgets spent/remaining consistent; WAITING representable; pending jobs recorded |
 | SIN-P1.1-008 | Serialization and schema-versioning tests | round-trip of every master §20 example; schema_version stored; old versions never silently reinterpreted |
-| SIN-P1.1-009 | Cross-record invariant tests | claims of pass/fail reference Observation IDs (master §8.7); IDs resolve across records |
+| SIN-P1.1-009 | Cross-record invariant tests | claims of pass/fail reference Observation IDs (master §8.7); IDs resolve across records; **task/family/lineage/split identity cannot change across manifest versions** and (`task_id`, `requirement_id`) is stable across requirement versions (coordinator C5) |
 | SIN-P1.1-G | Subphase integration verification | all P1.1 tasks verified on main; exported JSON Schemas match models; float/identity rule (SIN-P1.1-001 follow-up) applied consistently across records |
 
 ## Rule
