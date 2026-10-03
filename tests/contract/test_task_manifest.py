@@ -51,7 +51,7 @@ def test_every_source_kind_validates(source: dict[str, Any]) -> None:
     assert TaskManifest.model_validate(manifest(source=source)).source.kind == source["kind"]
 
 
-def test_restrictive_rights_combination_validates() -> None:
+def test_restrictive_rights_combination_validates_for_evaluation_split() -> None:
     rights = {
         "licence": None,
         "written_agreement_ref": "agreement:client-7/2026-09",
@@ -60,8 +60,48 @@ def test_restrictive_rights_combination_validates() -> None:
         "redistribution_allowed": False,
         "customer_restricted": True,
     }
-    m = TaskManifest.model_validate(manifest(rights=rights))
+    m = TaskManifest.model_validate(manifest(split="final", rights=rights))
     assert m.rights.training_allowed is False and m.rights.customer_restricted is True
+
+
+def _rights(training: bool, evaluation: bool) -> dict[str, Any]:
+    return {**EXAMPLE["rights"], "training_allowed": training, "evaluation_allowed": evaluation}
+
+
+@pytest.mark.parametrize(
+    ("split", "training", "evaluation"),
+    [
+        ("train", True, False),  # rights broader-or-equal to the split's use are fine
+        ("train", True, True),
+        ("dev", False, True),
+        ("dev", True, True),
+        ("final", False, True),
+        ("final", True, True),
+    ],
+)
+def test_rights_compatible_with_split_validate(
+    split: str, training: bool, evaluation: bool
+) -> None:
+    m = TaskManifest.model_validate(manifest(split=split, rights=_rights(training, evaluation)))
+    assert m.split == split
+
+
+@pytest.mark.parametrize(
+    ("split", "training", "evaluation", "message"),
+    [
+        ("train", False, True, "split=train requires rights.training_allowed"),
+        ("train", False, False, "split=train requires rights.training_allowed"),
+        ("dev", True, False, "split=dev requires rights.evaluation_allowed"),
+        ("dev", False, False, "split=dev requires rights.evaluation_allowed"),
+        ("final", True, False, "split=final requires rights.evaluation_allowed"),
+        ("final", False, False, "split=final requires rights.evaluation_allowed"),
+    ],
+)
+def test_rights_may_not_forbid_the_use_the_split_assigns(
+    split: str, training: bool, evaluation: bool, message: str
+) -> None:
+    with pytest.raises(ValidationError, match=message):
+        TaskManifest.model_validate(manifest(split=split, rights=_rights(training, evaluation)))
 
 
 @pytest.mark.parametrize("task_type", sorted(READ_ONLY_TASK_TYPES))
@@ -97,7 +137,7 @@ def test_content_id_ignores_key_order_and_tracks_every_field() -> None:
         manifest(split="dev"),
         manifest(variant_id="maxlen4-64_ticket"),
         manifest(allowed_edit_paths=["rtl/pkt_framer.sv", "rtl/pkt_pkg.sv"]),
-        manifest(rights={**EXAMPLE["rights"], "training_allowed": False}),
+        manifest(rights={**EXAMPLE["rights"], "redistribution_allowed": False}),
     ]
     ids = {TaskManifest.model_validate(v).content_id() for v in variants}
     assert base.content_id() not in ids and len(ids) == len(variants)

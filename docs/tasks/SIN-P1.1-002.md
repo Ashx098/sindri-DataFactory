@@ -55,7 +55,7 @@ and requirements without inventing their shape.
 
 ## Scope
 - In scope:
-  - `src/sindri/schemas/__init__.py`, `src/sindri/schemas/_base.py`: a shared base model with `extra="forbid"`, `frozen=True`, strict types, and a required `schema_version: Literal[1]`. The base also contains a recursive validator that rejects binary floats anywhere in the record (D5).
+  - `src/sindri/schemas/__init__.py`, `src/sindri/schemas/_base.py`: a shared base model with `extra="forbid"`, `frozen=True`, strict types, and a required `schema_version`: a `StrictInt` pinned to exactly 1. It is not `Literal[1]`, which Pydantic coerces from `True`/`1.0` (review fix, PR #6). The base also contains a recursive validator that rejects binary floats anywhere in the record (D5).
   - `src/sindri/schemas/task.py`, `TaskManifest`:
     - Identity: `task_id: TaskId`, `family_id: FamilyId`, `lineage_id: LineageId`, `variant_id: VariantId`.
     - Versioning: `manifest_version: int ≥ 1`, `supersedes: ContentId | None`. `None` if and only if `manifest_version == 1`.
@@ -68,9 +68,10 @@ and requirements without inventing their shape.
       - `generator`: generator ID and version;
       - `use_case`: intake reference.
     - `rights: SourceRights` (C2), required for every source kind. All fields are required with no defaults:
-      - `licence` (SPDX identifier, or `null` only with a `written_agreement_ref`);
+      - `licence`: a declared licence identifier or expression, validated here only as non-blank text, or `null` only with a `written_agreement_ref`. SPDX syntax and licence-policy validation are deferred to the source-rights registry (P2.1) (review fix, PR #6);
       - `written_agreement_ref`;
       - `training_allowed: bool`, `evaluation_allowed: bool`, `redistribution_allowed: bool`, `customer_restricted: bool`.
+    - Rights must be compatible with the split (review fix, PR #6): `train` requires `training_allowed`; `dev` and `final` require `evaluation_allowed`. Rights may be broader than the split, never narrower than the use it assigns.
     - `golden_hash: ContentId | None`: required for `reference_behavior`.
     - `contract_id: ContractId`, `approved_contract_hash: ContentId`.
     - `allowed_edit_paths: tuple[str, ...]` (C3):
@@ -91,7 +92,7 @@ and requirements without inventing their shape.
     - No `obligation_ids` (ADR-0004).
   - `src/sindri/core/ids.py`: add `FamilyId`, `LineageId`, `VariantId` (pattern `[a-z0-9]+(?:[-_][a-z0-9]+)*`, which allows the §20.1 hyphens) and `ContractId` (`ct_…`). Additive only.
   - Tests under `tests/contract/` and `tests/unit/`.
-- Allowed paths: `src/sindri/schemas/`, `src/sindri/core/ids.py` (additive only), `tests/contract/`, `tests/unit/`, `docs/REPO_MAP.md`, `components/schemas.yaml`, this packet, `docs/handoffs/SIN-P1.1-002.md`.
+- Allowed paths: `src/sindri/schemas/`, `src/sindri/core/ids.py` (additive only), `tests/contract/`, `tests/unit/`, `docs/REPO_MAP.md`, `components/schemas.yaml`, this packet, `docs/handoffs/SIN-P1.1-002.md`, `implementation/task_board.yaml` (**status-only governance state**: this task's own status line; added in review, PR #6).
 
 ## Forbidden paths / authority boundaries
 - Hidden evaluator/final-eval paths: none may be created. Fixtures must not use real final-eval family names.
@@ -113,7 +114,8 @@ and requirements without inventing their shape.
 Positive:
 - [x] The §20.1 and §20.9 examples, adapted to D1–D7 and C1–C4, validate and round-trip (model → JSON → model) identically.
 - [x] Every source kind validates with its required fields.
-- [x] A rights combination with training disallowed, evaluation allowed, redistribution disallowed and customer-restricted validates.
+- [x] A rights combination with training disallowed, evaluation allowed, redistribution disallowed and customer-restricted validates (on an evaluation split).
+- [x] Rights compatible with the split validate (6 combinations); rights that forbid the split's use are rejected with a specific message (6 combinations) (review fix, PR #6).
 - [x] A read-only task with empty edit scope validates; a mutating task with safe paths validates.
 - [x] A record's canonical content ID is stable across key order and changes when any field changes.
 
@@ -168,7 +170,7 @@ uv run pytest -q tests/contract
   - `tests/contract/{__init__,test_task_manifest,test_requirement}.py`, `tests/contract/examples/{task_manifest,requirement}.json` (new).
   - `tests/unit/test_ids.py` (new ID types).
   - `components/schemas.yaml`, `docs/REPO_MAP.md`, `implementation/task_board.yaml`, this packet, handoff.
-- Tests run/results: `ruff` clean; `mypy --strict` clean (13 files); `pytest`: 252 passed, 8 skipped (packages not yet created), including 158 contract tests.
+- Tests run/results (after the PR #6 review fixes): `ruff` clean; `mypy --strict` clean (13 files); `pytest`: 264 passed, 8 skipped (packages not yet created), including 170 contract tests.
 - Acceptance evidence:
   - The adapted §20.1 and §20.9 examples validate, round-trip and re-serialize to the identical JSON.
   - Every field (17 TaskManifest, 6 rights, all Requirement fields) is proven required by a dedicated test.
@@ -176,11 +178,14 @@ uv run pytest -q tests/contract
   - Planted bugs, each caught and reverted:
     - `split` default → 1 failure;
     - `extra="allow"` → 9 failures;
-    - `training_allowed=True` default → 1 failure.
+    - `training_allowed=True` default → 1 failure;
+    - rights/split rule removed → 6 failures (review fix).
 - Known limitations / implementation notes:
   - **`Literal[1]` is unsafe in Pydantic**: it accepts `True` and `1.0` as `1` (verified by probe). `schema_version` is therefore a `StrictInt` pinned to 1, with a test. Later records must reuse `Record`, not declare their own `Literal` version.
-  - Source rights sit at manifest level (`rights`), beside `source`; required for every source kind.
+  - Source rights sit at manifest level (`rights`), beside `source`; required for every source kind, and checked against the split.
+  - `licence` is non-blank text only; SPDX/policy validation is P2.1.
   - Commits must be full 40/64-hex lowercase object IDs; abbreviated SHAs are rejected as non-reproducible.
   - `repo` is non-blank text, not URL-validated: no consumer defines the URL rules yet.
   - Cross-record and cross-version rules (C5) are not checked here, by design (SIN-P1.1-009).
+- Follow-up (template convention, not done here): `docs/tasks/TASK_TEMPLATE.md` should list `implementation/task_board.yaml` as an implicit status-only allowed path for every task, so status moves are never scope deviations. To be applied by the coordinator in a governance change.
 - Handoff/next action: `docs/handoffs/SIN-P1.1-002.md`.

@@ -45,6 +45,8 @@ invariants:
     text: Read-only task types have an empty edit scope; mutating types a non-empty safe one.
   - id: INV-006
     text: Requirement records carry no verification obligations (ADR-0004).
+  - id: INV-007
+    text: Rights never forbid the use the split assigns (train needs training_allowed; dev/final need evaluation_allowed).
 failure_modes:
   - id: FM-001
     symptom: A field gains a default and silently fills authority/split/rights.

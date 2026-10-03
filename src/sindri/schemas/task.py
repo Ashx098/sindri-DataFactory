@@ -108,7 +108,9 @@ TaskSource = Annotated[
 class SourceRights(StrictModel):
     """Explicit usage rights (C2). Every field is required; nothing defaults to allowed.
 
-    `licence` is an SPDX expression; it may be null only when a written agreement covers the use.
+    `licence` is a declared licence identifier or expression (non-blank text). SPDX syntax and
+    licence-policy validation belong to the source-rights registry (P2.1), not this record. It may
+    be null only when a written agreement covers the use.
     """
 
     licence: NonEmptyText | None
@@ -163,6 +165,11 @@ class TaskManifest(Record):
         check_version_chain(self.manifest_version, self.supersedes, "manifest")
         if self.authority_mode is AuthorityMode.REFERENCE_BEHAVIOR and self.golden_hash is None:
             raise ValueError("reference_behavior tasks must name their golden_hash")
+        # Rights may be broader than the split, never narrower than the use the split assigns.
+        if self.split is Split.TRAIN and not self.rights.training_allowed:
+            raise ValueError("split=train requires rights.training_allowed")
+        if self.split in (Split.DEV, Split.FINAL) and not self.rights.evaluation_allowed:
+            raise ValueError(f"split={self.split} requires rights.evaluation_allowed")
         if len(set(self.allowed_edit_paths)) != len(self.allowed_edit_paths):
             raise ValueError("allowed_edit_paths contains duplicates")
         read_only = self.task_type in READ_ONLY_TASK_TYPES
