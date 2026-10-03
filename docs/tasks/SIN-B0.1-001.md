@@ -53,7 +53,7 @@ No schemas, stores, tools, controller or judge code. No CODEOWNERS activation (n
 - [x] CI fast gate defined; same commands green locally.
 - [x] Empty future-phase packages removed; boundary test cannot pass vacuously.
 - [x] SIN-P1.1-001 packet created as `planned`.
-- [ ] Coordinator review of B0.G.
+- [ ] Coordinator review of B0.G (tracked in SIN-B0.1-002).
 
 ## Verification commands
 ```bash
@@ -66,11 +66,11 @@ python scripts/agent_bootstrap.py SIN-P1.1-001 --path src/sindri/judge --brief
 See ADR-0003 "Decision".
 
 ## Status
-`review` (authoritative status: `implementation/task_board.yaml`)
+`merged` at `0743238` (authoritative status: `implementation/task_board.yaml`)
 
 ## Completion evidence
 - Files changed: see `git status` at the B0 commit; summary in ADR-0003.
 - Tests run/results: recorded in `docs/implementation/gates/B0.G.md`.
 - Acceptance evidence: `docs/implementation/gates/B0.G.md`.
-- Known limitations: CI not yet run on a remote; CODEOWNERS not enabled.
+- Known limitations: deviations B0-E001, B0-E002, B0-E003 (`docs/implementation/EXCEPTIONS.md`); follow-ups in SIN-B0.1-002.
 - Handoff/next action: coordinator reviews B0.G, then marks SIN-P1.1-001 ready.

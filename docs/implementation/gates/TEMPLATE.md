@@ -12,6 +12,8 @@
 None, or list explicitly with owner and rationale.
 
 ## Decision
-`PENDING | COMPLETE | BLOCKED`
+`PENDING_HUMAN_APPROVAL | APPROVED | BLOCKED`
 
-A coding agent may prepare this packet but may not set COMPLETE.
+Only the coordinator sets APPROVED, then updates `implementation/current.yaml`.
+
+A coding agent may prepare this packet but may not set APPROVED.

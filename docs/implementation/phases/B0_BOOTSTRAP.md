@@ -32,5 +32,14 @@ repository alone, and CI enforces the fast gate.
 - Exit evidence: packet has phase identity, dependencies, allowed/forbidden paths, non-goals, verification commands.
 
 ### B0.G — Gate
-- Deliverable: gate evidence packet `docs/implementation/gates/B0.G.md`.
-- Exit evidence: coordinator sets Decision to COMPLETE, sets `phases.B0.state: COMPLETE`, `phases.P1.state: ACTIVE`, `active_phase: P1` in `implementation/current.yaml`, and marks `SIN-P1.1-001` ready.
+- Deliverable: gate evidence packet `docs/implementation/gates/B0.G.md` with Decision `PENDING_HUMAN_APPROVAL`.
+- Exit evidence (all required):
+  - canonical docs exist and cross-reference; phase plan matches master P1–P6;
+  - only B0 active, P1 blocked; B0 tasks recorded correctly; first P1 task planned/blocked;
+  - ADRs `proposed`, awaiting the architecture owner;
+  - governance, import-boundary and status tests pass locally **and in GitHub Actions**;
+  - deliberate violations make those tests fail **in GitHub Actions**;
+  - `main` protected: PR required, fast-gate check required, force-push disallowed;
+  - bootstrap script yields the kickoff read order; a fresh-session handoff exists;
+  - no future-phase placeholder product code; bootstrap exceptions documented; no stray artifacts.
+- On approval the coordinator sets Decision `APPROVED`, `phases.B0.state: COMPLETE`, `phases.P1.state: ACTIVE`, `active_phase: P1`, and marks only `SIN-P1.1-001` ready.

@@ -1,6 +1,7 @@
 # ADR-0003: Adopt governance pack v2 with amendments
 
 - Status: accepted
+- Accepted by: Avinash (architecture owner), 2026-10-04; coordinator decision recorded by the coding agent from Avinash's instruction of 2026-10-04 (SIN-B0.1-002); confirm with an architecture-owner review comment on the B0 PR
 - Date: 2026-10-03
 - Owners: platform lead
 - Supersedes: the B0 scaffold's root docs where they differ from pack v2

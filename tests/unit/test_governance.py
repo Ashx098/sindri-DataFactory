@@ -104,3 +104,21 @@ def test_show_ready_tasks_parser_agrees_with_yaml(tasks: list[dict[str, Any]]) -
         sys.path.pop(0)
     parsed = load_tasks((ROOT / "implementation/task_board.yaml").read_text(encoding="utf-8"))
     assert [(t["id"], t["status"]) for t in parsed] == [(t["id"], t["status"]) for t in tasks]
+
+
+ADR_STATUSES = {"proposed", "reviewed", "accepted", "rejected", "superseded"}
+
+
+def test_adr_statuses_are_valid() -> None:
+    for adr in sorted((ROOT / "docs/adr").glob("[0-9]*.md")):
+        if adr.name.startswith("0000"):
+            continue
+        lines = adr.read_text(encoding="utf-8").splitlines()
+        line = next((ln for ln in lines if ln.startswith("- Status:")), None)
+        assert line, f"{adr.name} has no status line"
+        status = line.split(":", 1)[1].split()[0]
+        assert status in ADR_STATUSES, f"{adr.name}: {status}"
+        if status in {"accepted", "rejected"}:
+            assert "- Accepted by:" in adr.read_text(encoding="utf-8"), (
+                f"{adr.name} is {status} without an 'Accepted by:' line naming the owner"
+            )

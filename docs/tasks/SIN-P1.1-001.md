@@ -1,4 +1,4 @@
-# SIN-P1.1-001 — Core domain schemas, content IDs and status taxonomy
+# SIN-P1.1-001 — Base IDs, content hashing, enums and status taxonomy
 
 ## Phase identity
 - Phase: `P1`
@@ -8,83 +8,80 @@
 - Implementation-plan version: `execution-v1.0`
 
 ## Outcome
-The P1.1 boundary records exist as strict, versioned Pydantic models with content-hash identity, so
-P1.2 (evidence store), P1.3 (sandbox), P1.5 (controller) and P1.6 (FIFO package) can build against
-frozen interfaces.
+The shared primitives every P1.1 record depends on are frozen: typed IDs, canonical content hashing,
+and the status/tier/evidence/authority enums. Records (SIN-P1.1-002 onward) can then be built in
+parallel without redefining primitives.
 
 ## Why / architecture references
-- Master architecture section(s): §8.7 authority records; §20.1, 20.3, 20.4, 20.6, 20.9, 20.10, 20.11 schemas; §14 J2 status taxonomy; §4 authority rule.
-- Phase/subphase: P1.1 (`docs/implementation/phases/P1_FOUNDATION_AND_JUDGE_V0.md`)
-- ADRs/RFCs: ADR-0001 (layout/stack), ADR-0002 (authority modes, status taxonomy), ADR-0003.
+- Master architecture section(s): §4 principle 9 (results bind to exact artifacts); §8 F1 status normaliser; §8.7 authority records; §14 J2 status taxonomy; §12 G2/G3 tiers and evidence levels.
+- Phase/subphase: P1.1 (`docs/implementation/phases/P1_FOUNDATION_AND_JUDGE_V0.md`); P1.1 breakdown in `docs/implementation/CURRENT_PHASE.md`.
+- ADRs/RFCs: ADR-0001, ADR-0002 (accepted 2026-10-04, with the TIMEOUT amendment).
 
 ## Owner / coordinator
-- Owner: TBD
-- Integrator: platform lead
-- Reviewers: platform lead; DV/formal engineer for `Requirement` and `EvaluationPolicy` semantics
+- Owner: coding agent (Claude Code), assigned by Avinash 2026-10-04
+- Integrator: Avinash
+- Reviewers: Avinash
 
 ## Base
 - Base branch: `main`
-- Base commit: commit that closes B0.G
+- Base commit: the B0.G approval commit on PR #1 (rebase onto `main` once PR #1 merges)
 - Worktree: `../worktrees/SIN-P1.1-001`
 
 ## Dependencies
 - Required completed tasks: `B0.G`
-- Required schemas/contracts: `sindri.core.status` (exists)
+- Required schemas/contracts: existing `sindri.core.status`
 
 ## Scope
 - In scope:
-  - `src/sindri/core/ids.py`: typed ID newtypes and SHA-256 content hashing of canonical bytes/JSON.
-  - `src/sindri/schemas/`: `TaskManifest`, `Requirement`, `EvaluationPolicy`, `CandidateManifest`, `Observation`, `Finding`, `EpisodeState`.
-  - Every record: `schema_version`, `extra="forbid"`, frozen where the record is immutable, enums from `sindri.core.status` only.
-  - `Observation` binds to candidate hash, tool image digest, profile and configuration; claims of pass/fail reference observation IDs (master §8.7 repository invariant).
-  - Serialized example per record under `tests/contract/examples/` adapted from master §20.
-  - JSON Schema export per record to `docs/schemas/` via a script (generated, never hand-edited).
-- Allowed paths: `src/sindri/core/`, `src/sindri/schemas/`, `tests/unit/`, `tests/contract/`, `docs/schemas/`, `scripts/export_schemas.py`, `components/schemas.yaml`, `docs/REPO_MAP.md`, `THIRD_PARTY.md`, this packet, its handoff.
+  - `src/sindri/core/ids.py`: typed ID types for task, candidate, observation, episode, requirement, policy, finding; `content_id(bytes)` and `canonical_json_id(obj)` (SHA-256 over canonical JSON: sorted keys, no insignificant whitespace, UTF-8).
+  - `src/sindri/core/status.py`: review and finalize against master §14 J2 and Appendix A; add nothing that is not in the master. Align the `ToolStatus.is_label` docstring with accepted ADR-0002: raw TIMEOUT stays TIMEOUT, and only a downstream EvaluationPolicy-driven outcome may be negative.
+  - Unit and property tests for both.
+- Allowed paths: `src/sindri/core/`, `tests/unit/`, `docs/REPO_MAP.md`, `THIRD_PARTY.md`, this packet, `docs/handoffs/SIN-P1.1-001.md`.
 
 ## Forbidden paths / authority boundaries
 - Hidden evaluator/final-eval paths: none may be created.
-- Other forbidden paths: `src/sindri/{evidence,tools,controller,judge,solver}/` (later subphases).
+- Other forbidden paths: `src/sindri/schemas/` (SIN-P1.1-002+), every other `src/sindri/` package.
 
 ## Non-goals
-- No evidence store, database, sandbox or tool adapter (P1.2–P1.4).
-- No controller state machine logic beyond the `EpisodeState` record shape (P1.5).
-- No FIFO contract or fixtures (P1.6); no tool version pinning (P1.4).
-- No Contract, SpecCertificate, EvaluatorCertificate, ReleaseManifest or DatasetRecord schemas (later phases).
-- No LLM calls.
+- No Pydantic record models (TaskManifest, Observation, ...): later P1.1 tasks.
+- No storage, hashing of files on disk, sandbox or tool code (P1.2–P1.4).
+- No ID generation policy beyond content IDs and typed wrappers (no UUID service, no database).
 
 ## Interfaces touched
-- Schemas: new, `schema_version = 1`.
-- Tool APIs: none.
-- DB/migrations: none.
-- External dependencies: none beyond pydantic (record any addition in `THIRD_PARTY.md`).
+- Schemas: none. Tool APIs: none. DB/migrations: none.
+- External dependencies: none beyond the standard library and pydantic.
 
 ## Acceptance criteria
-- [ ] Each record round-trips its serialized example (model → JSON → model is identical).
-- [ ] Unknown fields, wrong enum values and missing required fields are rejected (negative tests per record).
-- [ ] Status fields cannot hold a value outside `sindri.core.status`; `TOOL_ERROR`/`TIMEOUT`/`INCONCLUSIVE` cannot collapse into `FAIL` or `PASS`.
-- [ ] Content ID is stable for identical input and changes for any changed byte (Hypothesis property test).
-- [ ] An `Observation` whose inputs lack candidate hash or tool image digest is invalid.
-- [ ] `TaskManifest` requires `authority_mode`, family/lineage IDs and `split`.
-- [ ] JSON Schemas exported; `components/schemas.yaml` written from the component template.
-- [ ] `docs/REPO_MAP.md` updated; no import-boundary violations.
+- [x] Same input → same content ID; any single changed byte → different ID (Hypothesis property test).
+- [x] Canonical JSON ID is independent of key order and whitespace; differs for any value change.
+- [x] Typed IDs reject malformed values (wrong prefix/format) and are not interchangeable in type checks.
+- [x] Only `PASS`/`FAIL` are labels; `TOOL_ERROR`, `TIMEOUT`, `INCONCLUSIVE`, `UNSUPPORTED` cannot be coerced to `PASS`/`FAIL` (negative tests).
+- [x] Unknown status strings are rejected when parsed.
+- [x] `ruff`, `mypy --strict`, full `pytest` green; no import-boundary violations.
+- [x] Handoff written; report ends with "Awaiting coordinator assignment."
+- [ ] Merge condition (B0-E004): `main` branch protection confirmed enabled before this task's PR merges.
 
 ## Verification commands
 ```bash
 uv run ruff check .
 uv run mypy
-uv run pytest tests/unit tests/contract tests/architecture -q
-python scripts/export_schemas.py --check   # exported schemas match models
+uv run pytest -q
 ```
 
 ## Plan of record
-`src/sindri/core/ids.py`, `src/sindri/schemas/{__init__,task,requirement,policy,candidate,observation,finding,episode}.py`, `tests/unit/test_ids.py`, `tests/contract/test_schemas.py`, `tests/contract/examples/*.json`, `scripts/export_schemas.py`, `docs/schemas/*.json`, `components/schemas.yaml`. If this changes materially, stop and ask the coordinator.
+`src/sindri/core/ids.py`, `src/sindri/core/status.py` (review only), `tests/unit/test_ids.py`, `tests/unit/test_status.py`. If this changes materially, stop and ask the coordinator.
 
 ## Status
-`planned` (authoritative status: `implementation/task_board.yaml`)
+`review` (authoritative status: `implementation/task_board.yaml`)
 
 ## Completion evidence
-- Files changed:
-- Tests run/results:
+- Files changed: `src/sindri/core/ids.py` (new), `src/sindri/core/status.py` (ADR-0002 docstring, `@unique` on all enums; no members added or removed), `tests/unit/test_ids.py` (new), `tests/unit/test_status.py`, `docs/REPO_MAP.md`, `implementation/task_board.yaml`, this packet, handoff.
+- Tests run/results: `uv run ruff check .` clean; `uv run mypy` clean (strict); `uv run pytest -q`: 82 passed, 9 skipped (packages not yet created).
 - Acceptance evidence:
-- Known limitations:
-- Handoff/next action:
+  - Hashing: Hypothesis properties for determinism, single-byte change, appended bytes; the SHA-256 empty-input known vector.
+  - Canonical JSON: Hypothesis key-order and formatting invariance; any value change alters the ID. `1`, `1.0`, `True`, `"1"`, `[1]`, `{"1":1}` give 6 distinct IDs. Int keys, tuples, sets, bytes, NaN, inf and arbitrary objects are rejected rather than silently converted.
+  - Typed IDs: master §20 examples accepted; 17 malformed values rejected; a mypy `--strict` run proves `CandidateId` and bare `str` are rejected where `TaskId` is required; Pydantic fields validate strictly and serialize as plain str.
+  - Statuses: TIMEOUT/TOOL_ERROR/INCONCLUSIVE/UNSUPPORTED never equal PASS/FAIL and round-trip unchanged; no enum aliases; unknown and miscased strings rejected; the taxonomy matches master J2, Appendix A, G2, G3 and §4.
+  - Planted bugs in `ids.py` (hash ignoring the last byte; accepting int keys) each made the suite fail; both reverted.
+- Known limitations: domain ID formats follow the master §20 examples; patterns are permissive enough that, e.g., `ob_1` is also a syntactically valid `TaskId` (records type their fields, so this is not ambiguous in use). Floats hash by Python's shortest repr; records should avoid floats in identity-bearing fields.
+- Handoff/next action: `docs/handoffs/SIN-P1.1-001.md`. Merge blocked on PR #1 merging and on B0-E004 (branch protection).

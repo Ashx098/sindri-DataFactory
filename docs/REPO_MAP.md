@@ -11,7 +11,7 @@ sindri-DataFactory/
   .github/
     workflows/ci.yml             PR fast gate (ruff, mypy, pytest)
     workflows/README-ci-gates.md planned CI tiers
-    PULL_REQUEST_TEMPLATE.md  CODEOWNERS.example
+    PULL_REQUEST_TEMPLATE.md  CODEOWNERS
   implementation/
     current.yaml                 AUTHORITATIVE active phase + phase/gate states
     task_board.yaml              AUTHORITATIVE task status
@@ -25,11 +25,12 @@ sindri-DataFactory/
     MULTI_AGENT_WORKFLOW.md  TESTING_STRATEGY.md  RELEASE_PROCESS.md
   src/sindri/
     core/status.py               shared status taxonomy (ADR-0002)
+    core/ids.py                  typed domain IDs, content IDs, canonical JSON hashing
     judge/ solver/ verification_forge/ data/ tools/   local AGENTS.md only (rules bind before code)
   components/component.template.yaml
   agents/agent-card.template.yaml
   tests/
-    unit/                        status taxonomy, governance consistency
+    unit/                        IDs/hashing, status taxonomy, governance consistency
     architecture/                import-boundary enforcement
   scripts/
     agent_bootstrap.py  new_task.py  new_handoff.py  show_ready_tasks.py  docx_to_md.py
@@ -37,7 +38,7 @@ sindri-DataFactory/
 
 | Path | Created by | Notes |
 |---|---|---|
-| `src/sindri/schemas/`, `core/ids.py` | SIN-P1.1-001 | boundary records |
+| `src/sindri/schemas/` | SIN-P1.1-002 … 007 | boundary records |
 | `src/sindri/evidence/` | P1.2 | |
 | sandbox / `src/sindri/tools/` | P1.3 / P1.4 | `tool_profiles/` arrives with P1.4 |
 | `src/sindri/controller/` | P1.5 | |

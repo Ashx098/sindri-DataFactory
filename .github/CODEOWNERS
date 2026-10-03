@@ -1,0 +1,18 @@
+# Temporary single maintainer until RTL, DV/formal and product reviewers are assigned
+# (docs/PROJECT_STATE.md "Roles and owners"). Do not add placeholder handles.
+# Do NOT enable "Require review from Code Owners" in branch protection until a second reviewer
+# exists: GitHub does not let an author approve their own PR, so a sole owner would block merges.
+
+*                                 @Ashx098
+
+/PRINCIPLES.md                    @Ashx098
+/ARCHITECTURE_GUARDRAILS.md       @Ashx098
+/docs/adr/                        @Ashx098
+/implementation/                  @Ashx098
+/src/sindri/core/                 @Ashx098
+/src/sindri/judge/                @Ashx098
+/src/sindri/verification_forge/   @Ashx098
+/src/sindri/solver/               @Ashx098
+/src/sindri/data/                 @Ashx098
+/tests/architecture/              @Ashx098
+/tests/unit/test_governance.py    @Ashx098

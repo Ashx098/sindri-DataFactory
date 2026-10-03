@@ -5,29 +5,46 @@
 > (ADR-0003). This file holds workstreams, decisions and blockers. Update it in the same PR as
 > milestone or workstream changes.
 
-_Last updated: 2026-10-03_
+_Last updated: 2026-10-04_
 
 ## Versions
 See `docs/implementation/VERSION.md`.
 
-## Active workstreams
-| Workstream | Owner | Status | Active task | Blocking decision |
-|---|---|---|---|---|
-| Governance/bootstrap | TBD | gate review | SIN-B0.1-001 | B0.G sign-off |
-| Foundation (P1) | TBD | planned | SIN-P1.1-001 (planned) | B0.G |
-| Task Forge | TBD | planned | — | P1.G |
-| Spec Forge | TBD | planned | — | P1.G + P2 assets |
-| Verification Forge | TBD | planned | — | P1.G + P3 contracts |
-| Solver/Judge | TBD | planned | — | P1 substrate |
-| Data/Training | TBD | planned | — | qualified data |
+## Roles and owners
+Roles must exist even when one person holds several. `unassigned` roles are real gaps, not TBD placeholders.
 
-## Open decisions (need ADR/RFC or owner)
-- Held-out family for the P5 transfer experiment (must be frozen before tuning; master §17.4).
-- Real GitHub handles/teams for `.github/CODEOWNERS.example` → `CODEOWNERS`.
-- Git remote and where CI runs.
+| Role | Owner | Notes |
+|---|---|---|
+| Coordinator / architecture owner | Avinash (@Ashx098) | accepts ADRs, approves gates, assigns tasks |
+| Foundation / platform | Avinash | P1 lead |
+| AI / model / solver | Avinash | |
+| Data / training | Avinash | |
+| Judge / release | Avinash + DV/formal reviewer | acceptance-critical: needs the DV reviewer once assigned |
+| RTL / domain reviewer | **unassigned** | needed by P1.6 (FIFO contract review) |
+| DV / formal reviewer | **unassigned** | needed by P1.6–P1.7; key-person risk (master §24) |
+| Product / domain | **unassigned** | Chipforge owner for use cases and authority conflicts |
+
+## Active workstreams
+| Workstream | Status | Active task | Blocking decision |
+|---|---|---|---|
+| Governance/bootstrap | B0.G approved; PR #1 to merge | SIN-B0.1-002 | B0-E004 branch protection |
+| Foundation (P1) | active | SIN-P1.1-001 (ready) | — |
+| Task Forge | planned | — | P1.G |
+| Spec Forge | planned | — | P1.G + P2 assets |
+| Verification Forge | planned | — | P1.G + P3 contracts |
+| Solver/Judge | planned | — | P1 substrate |
+| Data/Training | planned | — | qualified data |
+
+## Scheduled decisions
+| Decision | When | Status |
+|---|---|---|
+| Split policy: family/lineage split before descendants; no train/dev/final contamination via retrieval, caches, examples or generated descendants | now | fixed by master §4/§9 T5; enforced in P2.6 |
+| Candidate held-out families profiled (structurally different, base+harness pass rate in a useful band) | P2.G / early P3 | open |
+| Final held-out family locked | before the first tuning dataset is finalized; before SFT sees anything derived from it | open |
+| Second reviewer for code-owner-required reviews | before enabling "require code owner review" | open |
 
 ## Current blockers
-- B0.G awaiting coordinator review: `docs/implementation/gates/B0.G.md`.
+- B0-E004: `main` branch protection must be enabled before SIN-P1.1-001's PR merges (repo admin).
 
 ## Risks being watched
 Verification/formal engineer key-person dependency; density of weeks 10–16 (P4 tail + P5).

@@ -28,6 +28,7 @@ Canonical window: **weeks 1-4**.
 - Deliverable: State machine, budgets, WAITING, invalidation, retry classification, pending jobs, restart.
 - Depends on: `P1.1 + P1.2`
 - Exit evidence: Transition tests; crash/restart; candidate edit invalidates evidence; infra retry distinct from candidate failure.
+- Constraint (coordinator, 2026-10-04): P1.5 depends on abstract job/tool contracts and fakes only; it must not import concrete Verilator/SBY/Yosys adapters. It may proceed in parallel with P1.3/P1.4 once P1.1 and P1.2 have merged; integrated behaviour is demonstrated in P1.8.
 
 ### P1.6 — FIFO validation authority package
 - Deliverable: Reviewed FIFO contract, two correct implementations, fixed parameter matrix, known-bad fixtures and 15-20 reviewed critical mutants.
