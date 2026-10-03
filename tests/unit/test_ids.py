@@ -12,12 +12,16 @@ from pydantic import BaseModel, ValidationError
 from sindri.core.ids import (
     CandidateId,
     ContentId,
+    ContractId,
     EpisodeId,
+    FamilyId,
     FindingId,
+    LineageId,
     ObservationId,
     PolicyId,
     RequirementId,
     TaskId,
+    VariantId,
     canonical_json_bytes,
     canonical_json_id,
     content_id,
@@ -134,6 +138,10 @@ VALID = [
     (PolicyId, "ep_fifo_004"),
     (FindingId, "F42"),
     (ContentId, "sha256:" + "0" * 64),
+    (FamilyId, "stream-framing"),
+    (LineageId, "pktfr"),
+    (VariantId, "maxlen4-64_datasheet"),
+    (ContractId, "ct_pktfr_0193_v3"),
 ]
 
 INVALID = [
@@ -154,6 +162,13 @@ INVALID = [
     (ContentId, "sha256:" + "0" * 63),
     (ContentId, "sha256:" + "A" * 64),
     (ContentId, "md5:" + "0" * 64),
+    (FamilyId, "Stream-Framing"),
+    (FamilyId, "stream--framing"),
+    (FamilyId, "-stream"),
+    (LineageId, "pktfr_"),
+    (VariantId, "maxlen 4"),
+    (ContractId, "pktfr_0193_v3"),
+    (ContractId, "ct_"),
 ]
 
 
