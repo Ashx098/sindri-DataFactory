@@ -31,6 +31,6 @@ tasks:
     title: Base IDs, content hashing, enums and status taxonomy
     phase: P1
     subphase: P1.1
-    status: ready
+    status: review
     depends_on: [B0.G]
     packet: docs/tasks/SIN-P1.1-001.md

@@ -18,7 +18,7 @@ parallel without redefining primitives.
 - ADRs/RFCs: ADR-0001, ADR-0002 (accepted 2026-10-04, with the TIMEOUT amendment).
 
 ## Owner / coordinator
-- Owner: assigned by coordinator
+- Owner: coding agent (Claude Code), assigned by Avinash 2026-10-04
 - Integrator: Avinash
 - Reviewers: Avinash
 
@@ -52,13 +52,13 @@ parallel without redefining primitives.
 - External dependencies: none beyond the standard library and pydantic.
 
 ## Acceptance criteria
-- [ ] Same input → same content ID; any single changed byte → different ID (Hypothesis property test).
-- [ ] Canonical JSON ID is independent of key order and whitespace; differs for any value change.
-- [ ] Typed IDs reject malformed values (wrong prefix/format) and are not interchangeable in type checks.
-- [ ] Only `PASS`/`FAIL` are labels; `TOOL_ERROR`, `TIMEOUT`, `INCONCLUSIVE`, `UNSUPPORTED` cannot be coerced to `PASS`/`FAIL` (negative tests).
-- [ ] Unknown status strings are rejected when parsed.
-- [ ] `ruff`, `mypy --strict`, full `pytest` green; no import-boundary violations.
-- [ ] Handoff written; report ends with "Awaiting coordinator assignment."
+- [x] Same input → same content ID; any single changed byte → different ID (Hypothesis property test).
+- [x] Canonical JSON ID is independent of key order and whitespace; differs for any value change.
+- [x] Typed IDs reject malformed values (wrong prefix/format) and are not interchangeable in type checks.
+- [x] Only `PASS`/`FAIL` are labels; `TOOL_ERROR`, `TIMEOUT`, `INCONCLUSIVE`, `UNSUPPORTED` cannot be coerced to `PASS`/`FAIL` (negative tests).
+- [x] Unknown status strings are rejected when parsed.
+- [x] `ruff`, `mypy --strict`, full `pytest` green; no import-boundary violations.
+- [x] Handoff written; report ends with "Awaiting coordinator assignment."
 - [ ] Merge condition (B0-E004): `main` branch protection confirmed enabled before this task's PR merges.
 
 ## Verification commands
@@ -72,11 +72,16 @@ uv run pytest -q
 `src/sindri/core/ids.py`, `src/sindri/core/status.py` (review only), `tests/unit/test_ids.py`, `tests/unit/test_status.py`. If this changes materially, stop and ask the coordinator.
 
 ## Status
-`planned` (authoritative status: `implementation/task_board.yaml`)
+`review` (authoritative status: `implementation/task_board.yaml`)
 
 ## Completion evidence
-- Files changed:
-- Tests run/results:
+- Files changed: `src/sindri/core/ids.py` (new), `src/sindri/core/status.py` (ADR-0002 docstring, `@unique` on all enums; no members added or removed), `tests/unit/test_ids.py` (new), `tests/unit/test_status.py`, `docs/REPO_MAP.md`, `implementation/task_board.yaml`, this packet, handoff.
+- Tests run/results: `uv run ruff check .` clean; `uv run mypy` clean (strict); `uv run pytest -q`: 82 passed, 9 skipped (packages not yet created).
 - Acceptance evidence:
-- Known limitations:
-- Handoff/next action:
+  - Hashing: Hypothesis properties for determinism, single-byte change, appended bytes; the SHA-256 empty-input known vector.
+  - Canonical JSON: Hypothesis key-order and formatting invariance; any value change alters the ID. `1`, `1.0`, `True`, `"1"`, `[1]`, `{"1":1}` give 6 distinct IDs. Int keys, tuples, sets, bytes, NaN, inf and arbitrary objects are rejected rather than silently converted.
+  - Typed IDs: master §20 examples accepted; 17 malformed values rejected; a mypy `--strict` run proves `CandidateId` and bare `str` are rejected where `TaskId` is required; Pydantic fields validate strictly and serialize as plain str.
+  - Statuses: TIMEOUT/TOOL_ERROR/INCONCLUSIVE/UNSUPPORTED never equal PASS/FAIL and round-trip unchanged; no enum aliases; unknown and miscased strings rejected; the taxonomy matches master J2, Appendix A, G2, G3 and §4.
+  - Planted bugs in `ids.py` (hash ignoring the last byte; accepting int keys) each made the suite fail; both reverted.
+- Known limitations: domain ID formats follow the master §20 examples; patterns are permissive enough that, e.g., `ob_1` is also a syntactically valid `TaskId` (records type their fields, so this is not ambiguous in use). Floats hash by Python's shortest repr; records should avoid floats in identity-bearing fields.
+- Handoff/next action: `docs/handoffs/SIN-P1.1-001.md`. Merge blocked on PR #1 merging and on B0-E004 (branch protection).

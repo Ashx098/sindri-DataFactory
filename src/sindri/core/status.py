@@ -2,12 +2,16 @@
 
 Every tool observation, judge check and dataset record uses these enums instead of ad-hoc
 strings. Master architecture: F1 result normaliser, J2 status taxonomy, G2 tiers, G3 evidence
-levels, 4 authority rule.
+levels, 4 authority rule; Appendix A outcomes. Semantics: ADR-0002.
+
+Every enum is @unique: no member may alias another's value, so no status can be silently
+coerced into a different one. Parsing an unknown string raises ValueError.
 """
 
-from enum import IntEnum, StrEnum
+from enum import IntEnum, StrEnum, unique
 
 
+@unique
 class ToolStatus(StrEnum):
     """Normalised outcome of one tool run (an Observation)."""
 
@@ -20,15 +24,18 @@ class ToolStatus(StrEnum):
 
     @property
     def is_label(self) -> bool:
-        """True only when the result may become a training label.
+        """True only for statuses that carry a correctness label by default (ADR-0002).
 
-        Infrastructure outcomes are never labels: a crash, expired license or unsupported
-        construct says nothing about the candidate. TIMEOUT is a label only when the contract sets
-        a performance bound; that decision belongs to the judge policy, not to this enum.
+        TOOL_ERROR, UNSUPPORTED and INCONCLUSIVE never carry a label: a crash, expired license or
+        unsupported construct says nothing about the candidate. TIMEOUT carries no label here
+        either. The raw status always stays TIMEOUT and is never rewritten to FAIL; only a
+        downstream judge/training policy whose EvaluationPolicy declares the runtime limit as a
+        task requirement may derive a negative outcome from it, referencing this Observation.
         """
         return self in (ToolStatus.PASS, ToolStatus.FAIL)
 
 
+@unique
 class CheckStatus(StrEnum):
     """Status of one judge check; extends ToolStatus with judge-only outcomes."""
 
@@ -42,6 +49,7 @@ class CheckStatus(StrEnum):
     INVALID_TASK = "INVALID_TASK"
 
 
+@unique
 class Verdict(StrEnum):
     """Final acceptance outcome (master architecture Appendix A)."""
 
@@ -55,6 +63,7 @@ class Verdict(StrEnum):
     REVIEW_REQUIRED = "REVIEW_REQUIRED"
 
 
+@unique
 class Tier(StrEnum):
     """Where a task may be used (G2)."""
 
@@ -64,6 +73,7 @@ class Tier(StrEnum):
     RETIRED = "retired"
 
 
+@unique
 class EvidenceLevel(IntEnum):
     """Strongest evidence attached to a record (G3). Ordered: compare with >=."""
 
@@ -75,6 +85,7 @@ class EvidenceLevel(IntEnum):
     Q5_ENGINEERING_ACCEPTED = 5
 
 
+@unique
 class AuthorityMode(StrEnum):
     """What counts as truth for a task (ADR-0002)."""
 
