@@ -1,0 +1,9 @@
+# Adapt handles/teams before enabling.
+/PRINCIPLES.md                 @architecture-owners
+/ARCHITECTURE_GUARDRAILS.md    @architecture-owners
+/src/sindri/judge/              @verification-owners @security-owners
+/src/sindri/verification_forge/ @verification-owners
+/src/sindri/solver/             @agent-owners
+/src/sindri/data/               @data-owners
+/src/sindri/schemas/            @architecture-owners
+/docs/adr/                      @architecture-owners

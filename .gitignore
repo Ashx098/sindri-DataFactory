@@ -1,0 +1,35 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.hypothesis/
+*.egg-info/
+dist/
+build/
+
+# Local pilot stores (artifacts live in the content-addressed store, not git)
+/var/
+*.sqlite
+*.sqlite3
+*.db
+
+# Waveforms, logs, model dumps, datasets
+*.vcd
+*.fst
+*.fsdb
+*.log
+*.parquet
+*.safetensors
+*.bin
+*.ckpt
+sim_build/
+results.xml
+
+# Editors / OS
+.idea/
+.vscode/
+.DS_Store
+.env

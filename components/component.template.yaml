@@ -1,0 +1,46 @@
+id: component_name
+version: 1
+owner: team_or_person
+kind: deterministic  # deterministic | agent | hybrid
+purpose: >-
+  One precise paragraph describing why this component exists.
+
+inputs:
+  - SchemaName
+outputs:
+  - SchemaName
+
+may_read:
+  - scope_name
+may_write:
+  - scope_name
+forbidden_read:
+  - hidden_final_eval
+forbidden_write:
+  - acceptance_policy
+
+public_interfaces:
+  - name: do_something
+    request: RequestSchema
+    response: ResponseSchema
+
+invariants:
+  - id: INV-001
+    text: Every accepted result references immutable observation inputs.
+
+failure_modes:
+  - id: FM-001
+    symptom: ...
+    guard: ...
+
+required_tests:
+  - unit
+  - contract
+  - integration
+
+observability:
+  spans: []
+  metrics: []
+
+related_adrs: []
+related_docs: []

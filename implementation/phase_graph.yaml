@@ -1,0 +1,8 @@
+phases:
+  B0: {depends_on: [], gate: B0.G}
+  P1: {depends_on: [B0.G], gate: P1.G}
+  P2: {depends_on: [P1.G], gate: P2.G}
+  P3: {depends_on: [P1.G, P2_code_first_assets], gate: P3.G}
+  P4: {depends_on: [P1.G, P3_contracts, P2_mutation_assets], gate: P4.G}
+  P5: {depends_on: [P4.G], gate: P5.G}
+  P6: {depends_on: [P5.G], gate: P6.G}

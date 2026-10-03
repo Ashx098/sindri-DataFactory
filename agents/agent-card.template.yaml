@@ -1,0 +1,38 @@
+name: role_name
+version: 1
+mission: >-
+  One narrow job. Prefer one typed artifact per invocation.
+
+inputs:
+  - InputSchema
+forbidden_inputs:
+  - final_eval_material
+outputs:
+  schema: OutputSchema
+
+tools:
+  - typed_tool_name
+
+model_policy:
+  tier: mid  # cheap | mid | strong | cross_family_panel
+  temperature: 0.2
+
+budget:
+  max_tokens: 8000
+  max_tool_calls: 5
+
+permissions:
+  may_read: []
+  may_write: []
+
+escalation:
+  conditions: []
+  target: human_or_panel
+
+qualification:
+  fixtures: []
+  required_metrics: {}
+
+prompt:
+  path: agents/prompts/role_name/v1.md
+  hash_required: true

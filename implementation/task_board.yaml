@@ -1,0 +1,22 @@
+# Coordinator adds tasks only after creating docs/tasks/<id>.md (scripts/new_task.py).
+# status: planned | ready | active | blocked | review | merged | verified | closed
+# Only `ready` tasks may be assigned to coding agents. A task may be `ready` only when every
+# depends_on entry is merged/verified/closed (or a completed gate) and its phase is ACTIVE.
+# Format is restricted (flat keys per task) so scripts/show_ready_tasks.py can read it without
+# dependencies; tests/unit/test_governance.py validates it.
+tasks:
+  - id: SIN-B0.1-001
+    title: Install governance pack v2 with amendments
+    phase: B0
+    subphase: B0.1
+    status: review
+    depends_on: []
+    packet: docs/tasks/SIN-B0.1-001.md
+
+  - id: SIN-P1.1-001
+    title: Core domain schemas, content IDs and status taxonomy
+    phase: P1
+    subphase: P1.1
+    status: planned
+    depends_on: [B0.G]
+    packet: docs/tasks/SIN-P1.1-001.md

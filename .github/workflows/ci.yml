@@ -1,0 +1,24 @@
+# PR fast gate (B0.4). Other tiers in README-ci-gates.md are added by the tasks that need them.
+name: ci
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  fast-gate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+      - run: uv sync --locked
+      - name: lint
+        run: uv run ruff check .
+      - name: types
+        run: uv run mypy
+      - name: tests (unit, architecture, governance)
+        run: uv run pytest -q
+      - name: scripts run without the project environment
+        run: |
+          python3 scripts/show_ready_tasks.py --all
+          python3 scripts/agent_bootstrap.py --brief > /dev/null

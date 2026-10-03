@@ -1,0 +1,18 @@
+# AUTHORITATIVE phase state (ADR-0003). CURRENT_PHASE.md and PROJECT_STATE.md point here and
+# must not restate these values. Coordinator-owned; change only in a PR that also carries the
+# gate evidence packet. Coding agents may not set a phase or gate to COMPLETE.
+architecture_version: master-architecture-v1
+governance_version: governance-v1.1
+implementation_plan_version: execution-v1.0
+
+active_phase: B0
+
+# NOT_STARTED | ACTIVE | GATE_REVIEW | COMPLETE | BLOCKED
+phases:
+  B0: {state: GATE_REVIEW, gate: B0.G, evidence: docs/implementation/gates/B0.G.md}
+  P1: {state: NOT_STARTED, gate: P1.G}
+  P2: {state: NOT_STARTED, gate: P2.G}
+  P3: {state: NOT_STARTED, gate: P3.G}
+  P4: {state: NOT_STARTED, gate: P4.G}
+  P5: {state: NOT_STARTED, gate: P5.G}
+  P6: {state: NOT_STARTED, gate: P6.G}
