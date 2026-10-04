@@ -56,7 +56,7 @@ invariants:
   - id: INV-CM-003
     text: parent_candidate_id and patch_hash are both set or both null; a candidate is never its own parent.
   - id: INV-CM-004
-    text: episode_id is set if and only if producer_role is solver.
+    text: solver requires episode_id; reconstructor forbids it; architecture_explorer has it optional (None = oracle-side, set = solver-side).
   - id: INV-CM-005
     text: author carries model, version, temperature_millis, seed, provenance_ref and a never-defaulted training_allowed.
 failure_modes:

@@ -21,7 +21,8 @@
 |---|---|---|
 | `uv run ruff check .` | pass | |
 | `uv run mypy` (strict) | pass | 14 files |
-| `uv run pytest -q` | 327 passed, 8 skipped | 63 CandidateManifest tests |
+| `uv run pytest -q` | 328 passed, 8 skipped | 64 CandidateManifest tests (after PR #11 fixes) |
+| F6 fix: old over-strict episode rule restored | 1 failure | confirms the new test catches it |
 | Planted bug: domain tag dropped | 15 failures | reverted |
 | Planted bug: source_hash recomputation skipped | 4 failures | reverted |
 | Planted bug: `training_allowed=True` default | 1 failure | reverted |
@@ -32,15 +33,19 @@
 ## Decisions
 None beyond F1–F8. `seed` has no range constraint (none specified).
 
+## Review fixes (PR #11)
+- F6 corrected: solver requires `episode_id`, reconstructor forbids it, and architecture_explorer has it optional (oracle-side `None`, solver-side episode recorded). Both explorer modes are tested.
+
 ## Deviations
-- The branch is based on the unmerged ready-marking commit `62a7834`, not on `main`. It can merge only after that PR; merging that PR with a merge commit makes this branch merge cleanly. If it is squashed instead, rebase this branch.
+- **Process deviation (not precedent):** implementation began from the **unmerged** readiness commit `62a7834`, under coordinator delegation. The coordinator accepted the work for review, but READY was not yet authoritative on `main`. Future implementation waits until readiness is merged.
+- The branch includes the updated readiness branch (PR #9). After PRs #9 and #10 merge, `main` must be merged into this branch and the shared files resolved by hand before this PR merges.
 
 ## Open questions
 None.
 
 ## Blocked on
 - Merge of the ready-marking PR (`chore/SIN-P1.1-003-004-ready`), then coordinator review of this task's PR.
-- Integration with SIN-P1.1-003: both edit `schemas/__init__.py`, `components/schemas.yaml`, `docs/REPO_MAP.md` and `implementation/task_board.yaml` (append-only). Whichever merges second needs a trivial conflict resolution.
+- Integration with SIN-P1.1-003: both edit `schemas/__init__.py`, `components/schemas.yaml`, `docs/REPO_MAP.md` and `implementation/task_board.yaml` (append-only). This PR merges second and needs a **deliberate manual resolution**. "Accept both" is unsafe: a trial merge showed it breaks the `__init__.py` import block and duplicates repo-map lines. Re-run the full gate on the combined state.
 
 ## Next ready after approval
 After 003 and 004 are both merged and verified: SIN-P1.1-005 Observation (the coordinator opens its packet).

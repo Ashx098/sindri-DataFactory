@@ -21,7 +21,12 @@ SOURCE_HASH_KIND = "candidate_file_set_v1"
 
 @unique
 class ProducerRole(StrEnum):
-    """Who produced the candidate (F6). Human-written goldens are not candidates."""
+    """Who produced the candidate (F6). Human-written goldens are not candidates.
+
+    Episode rule (PR #11 review): `solver` always belongs to an episode; `reconstructor` never
+    does; `architecture_explorer` runs in two places (master X4): oracle-side without an episode,
+    or solver-side inside a solver trajectory, whose episode must then be recorded.
+    """
 
     SOLVER = "solver"
     RECONSTRUCTOR = "reconstructor"
@@ -95,9 +100,10 @@ class CandidateManifest(Record):
             raise ValueError("parent_candidate_id and patch_hash must be both set or both null")
         if self.parent_candidate_id == self.candidate_id:
             raise ValueError("a candidate cannot be its own parent")
-        is_solver = self.producer_role is ProducerRole.SOLVER
-        if is_solver and self.episode_id is None:
+        role = self.producer_role
+        if role is ProducerRole.SOLVER and self.episode_id is None:
             raise ValueError("solver candidates must name their episode_id")
-        if not is_solver and self.episode_id is not None:
-            raise ValueError(f"{self.producer_role} candidates are produced outside an episode")
+        if role is ProducerRole.RECONSTRUCTOR and self.episode_id is not None:
+            raise ValueError("reconstructor candidates are produced outside an episode")
+        # architecture_explorer: episode_id optional (None = oracle-side, set = solver-side).
         return self

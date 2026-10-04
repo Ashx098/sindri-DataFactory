@@ -106,7 +106,7 @@ def test_first_solver_candidate_has_no_parent_or_patch() -> None:
 
 
 @pytest.mark.parametrize("role", ["reconstructor", "architecture_explorer"])
-def test_oracle_side_candidates_have_no_episode(role: str) -> None:
+def test_oracle_side_candidates_without_episode_validate(role: str) -> None:
     c = CandidateManifest.model_validate(
         candidate(producer_role=role, episode_id=None, parent_candidate_id=None, patch_hash=None)
     )
@@ -174,9 +174,22 @@ def test_solver_needs_an_episode() -> None:
     rejects(candidate(episode_id=None), match="solver candidates")
 
 
-@pytest.mark.parametrize("role", ["reconstructor", "architecture_explorer"])
-def test_oracle_roles_reject_an_episode(role: str) -> None:
-    rejects(candidate(producer_role=role), match="outside an episode")
+def test_reconstructor_rejects_an_episode() -> None:
+    rejects(candidate(producer_role="reconstructor"), match="outside an episode")
+
+
+def test_solver_side_architecture_explorer_keeps_its_episode() -> None:
+    # Master X4: the explorer also runs inside solver trajectories; that provenance is kept.
+    c = CandidateManifest.model_validate(candidate(producer_role="architecture_explorer"))
+    assert c.episode_id == EXAMPLE["episode_id"]
+
+
+def test_oracle_side_architecture_explorer_has_no_episode() -> None:
+    c = CandidateManifest.model_validate(
+        candidate(producer_role="architecture_explorer", episode_id=None,
+                  parent_candidate_id=None, patch_hash=None)
+    )
+    assert c.episode_id is None
 
 
 def test_unknown_producer_role_rejected() -> None:
