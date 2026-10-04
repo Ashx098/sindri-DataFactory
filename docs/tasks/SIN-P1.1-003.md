@@ -44,11 +44,12 @@ pass" for a task.
 | E5 | **Accepted, with `ConfigurationId`.** Configurations are explicit, each with a `ConfigurationId` (its first real consumer, so it is introduced here). Checks reference configurations **by ID, never by list index**, because evidence must be scoped to exact finite configurations (§11.14). |
 | E6 | **Accepted.** One obligation → exactly one `RequirementId` → one or more checks of this policy. Cross-record completeness stays in SIN-P1.1-009. |
 | E7 | **Corrected semantics.** A policy exception is a narrow **not-applicable exclusion** for specific (check, configuration) pairs. It never turns an executed FAIL into PASS. An alternative checker requires a new policy version. Release-level waivers stay a ReleaseManifest concern. |
+| E7a | **Clarified (PR #9 review): no wall-clock expiry.** A PolicyException means "(check X, configuration Y) is semantically not applicable under this exact policy version". It has no expiry, because an immutable policy must not behave differently depending on the day it runs. Temporary, contextual waivers of failures are release waivers and live in the release layer (ReleaseManifest). |
+| E5a | **Corrected (PR #9 review): zero-parameter designs.** `EvaluationPolicy.configurations` must contain ≥ 1 configuration, but `Configuration.assignments` **may be empty**. A design with no parameters has one explicit default configuration, e.g. `{"configuration_id": "cfg_default", "assignments": []}`. Two configurations with the same assignment set (including two empty ones) are still rejected. |
 
-### Delegated decisions (2026-10-04)
+### Delegated decisions (2026-10-04), approved by the coordinator on PR #9
 The coordinator delegated these two calls to the agent ("do what feels right and correct and why").
-They are recorded as **agent decisions under explicit delegation**, take effect only when the
-coordinator merges the PR that records them, and can be reversed by the coordinator at any time.
+The agent decided them; the coordinator then **approved E8 and E9** in the PR #9 review.
 
 | ID | Decision | Rationale |
 |---|---|---|
@@ -65,7 +66,7 @@ while tightening it later invalidates stored records, so foundation schemas star
     - `CheckId` (`chk_…`), `ConfigurationId` (`cfg_…`), `ToolProfileId` (`tp_…`), `ExceptionId` (`ex_…`).
   - `src/sindri/schemas/policy.py`: `EvaluationPolicy` (`Record`):
     - Identity: `policy_id: PolicyId`, `policy_version` and `supersedes` (version chain as in 002), `task_id: TaskId`, `contract_hash: ContentId`.
-    - `configurations`: non-empty. Each has a `configuration_id` and `assignments`, a non-empty tuple of `{name: ParameterName, value: ExactScalar}` with unique names. Configuration IDs are unique, and no two configurations may have the same assignment set.
+    - `configurations`: non-empty. Each has a `configuration_id` and `assignments`, a tuple of `{name: ParameterName, value: ExactScalar}` with unique names. The tuple is empty for a no-parameter design (E5a). Configuration IDs are unique, and no two configurations may have the same assignment set; two empty sets count as the same.
     - `checks`: non-empty, unique `CheckId`. Each check has:
       - `kind: CheckKind` (E3), `mandatory: StrictBool` (no default), `visibility` (E2);
       - `tool_profile_id`;
@@ -100,7 +101,7 @@ while tightening it later invalidates stored records, so foundation schemas star
 - No cross-record checks. These belong to SIN-P1.1-009:
   - `contract_hash` equals the task's `approved_contract_hash`;
   - obligation requirements exist on the task;
-  - every approved mandatory requirement has at least one obligation;
+  - every approved mandatory requirement is **enforced** (strengthened in the PR #9 review): for each configuration where it applies, after exceptions are applied, some obligation for it contains at least one **mandatory, non-quality check that applies to that configuration**. Merely having an obligation is not enough, because an obligation that uses only optional checks would let the judge accept without enforcing the requirement;
   - configuration parameter names match the task's contract.
 - No `VerificationPlan` (P4.1). No Observation, Finding or EpisodeState.
 
