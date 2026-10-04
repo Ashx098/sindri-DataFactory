@@ -23,6 +23,7 @@ from sindri.core.ids import (
     ObligationId,
     ObservationId,
     PolicyId,
+    PropertyId,
     RequirementId,
     TaskId,
     ToolProfileId,
@@ -31,6 +32,9 @@ from sindri.core.ids import (
     canonical_json_id,
     content_id,
 )
+
+# Aliased so pytest does not try to collect the domain type `TestId` as a test class.
+from sindri.core.ids import TestId as SimTestId
 
 # ---- content IDs ------------------------------------------------------------------------------
 
@@ -153,6 +157,9 @@ VALID = [
     (ConfigurationId, "cfg_w8_d8"),
     (ToolProfileId, "tp_sby_bmc_v0"),
     (ExceptionId, "ex_formal_w32"),
+    (SimTestId, "stall_stability_004"),
+    (PropertyId, "R03_sva"),
+    (PropertyId, "sva_stall_stable"),
 ]
 
 INVALID = [
@@ -186,6 +193,10 @@ INVALID = [
     (ConfigurationId, "cfg-w8"),
     (ToolProfileId, "tp_"),
     (ExceptionId, "exc_formal"),
+    (SimTestId, "Stall_test"),
+    (SimTestId, "4_stall"),
+    (PropertyId, "R03-sva"),
+    (PropertyId, "_R03"),
 ]
 
 

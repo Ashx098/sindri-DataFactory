@@ -178,8 +178,8 @@ canonical_json_id({"kind": "observation_execution_key_v1",
 
 ## Acceptance criteria
 Positive:
-- [ ] The adapted §20.4 example (FAIL, BMC, expected properties, a counterexample ref, `duration_ms`, `wall_time_limit_ms`, full bindings) validates, round-trips and re-serializes to identical JSON.
-- [ ] One valid Observation for each allowed status on representative kinds, including:
+- [x] The adapted §20.4 example (FAIL, BMC, expected properties, a counterexample ref, `duration_ms`, `wall_time_limit_ms`, full bindings) validates, round-trips and re-serializes to identical JSON.
+- [x] One valid Observation for each allowed status on representative kinds, including:
   - a sim PASS with every expected test passed;
   - a sim FAIL with a **partial** report (test_1 PASS, test_2 FAIL, remaining expected tests never ran) (R3);
   - a formal PASS with every expected property checked;
@@ -187,37 +187,37 @@ Positive:
   - a TOOL_ERROR with no report and an infrastructure diagnostic;
   - a formal INCONCLUSIVE with unmet depth;
   - an UNSUPPORTED with a capability code.
-- [ ] Two random-sim Observations differing only in seed have different execution keys.
-- [ ] `observation_execution_key` matches an independent byte-level `hashlib` vector and changes when any key input changes. It does **not** change with `observation_id`, `started_at`, `duration_ms`, `status`, `summary` or `log_ref`.
+- [x] Two random-sim Observations differing only in seed have different execution keys.
+- [x] `observation_execution_key` matches an independent byte-level `hashlib` vector and changes when any key input changes. It does **not** change with `observation_id`, `started_at`, `duration_ms`, `status`, `summary` or `log_ref`.
 
 Negative (each a separate test):
-- [ ] Every field required (no defaults); unknown fields rejected at every level, including `producer`, `seeds`, `duration_s`, `tool`, `executed`.
-- [ ] A stored `execution_key` that disagrees with recomputation → rejected (wrong tag, unsorted, or one tampered input, e.g. a different `candidate_manifest_hash` or `adapter_hash`).
-- [ ] `check_kind: quality` → rejected; an action incompatible with the kind (R2) or a report variant incompatible with the kind → rejected.
-- [ ] Missing `evaluator_bundle_hash` or `None` → rejected (always required); `wall_time_limit_ms` missing or < 1 → rejected.
-- [ ] Seed violating R1 (missing on sim, present on non-sim) → rejected.
-- [ ] Sim PASS with a missing, extra, duplicated or non-PASS test → rejected.
-- [ ] Formal PASS with a missing, extra or non-PASS property; BMC `reached_depth < requested_depth`; prove PASS without `proof_closed` → rejected.
-- [ ] PASS or FAIL without a report → rejected; PASS with a partial report → rejected; FAIL with a partial report but **no** candidate-attributed failure → rejected (R3).
-- [ ] FAIL without a failure locus (per kind) → rejected.
-- [ ] TOOL_ERROR with a candidate error, failing test or counterexample, or without an infrastructure diagnostic → rejected.
-- [ ] TIMEOUT with `duration_ms < wall_time_limit_ms` or with a failure locus → rejected.
-- [ ] INCONCLUSIVE on a non-formal/non-equivalence kind, or with a met bound → rejected.
-- [ ] A `ToolStatus` outside the enum, or `INVALID_SUBMISSION`/`INVALID_TASK` → rejected.
-- [ ] More than 200 diagnostics, a blank or over-long summary, malformed `started_at`, float duration → rejected.
-- [ ] The record is immutable; there is no `supersedes` field.
+- [x] Every field required (no defaults); unknown fields rejected at every level, including `producer`, `seeds`, `duration_s`, `tool`, `executed`.
+- [x] A stored `execution_key` that disagrees with recomputation → rejected (wrong tag, unsorted, or one tampered input, e.g. a different `candidate_manifest_hash` or `adapter_hash`).
+- [x] `check_kind: quality` → rejected; an action incompatible with the kind (R2) or a report variant incompatible with the kind → rejected.
+- [x] Missing `evaluator_bundle_hash` or `None` → rejected (always required); `wall_time_limit_ms` missing or < 1 → rejected.
+- [x] Seed violating R1 (missing on sim, present on non-sim) → rejected.
+- [x] Sim PASS with a missing, extra, duplicated or non-PASS test → rejected.
+- [x] Formal PASS with a missing, extra or non-PASS property; BMC `reached_depth < requested_depth`; prove PASS without `proof_closed` → rejected.
+- [x] PASS or FAIL without a report → rejected; PASS with a partial report → rejected; FAIL with a partial report but **no** candidate-attributed failure → rejected (R3).
+- [x] FAIL without a failure locus (per kind) → rejected.
+- [x] TOOL_ERROR with a candidate error, failing test or counterexample, or without an infrastructure diagnostic → rejected.
+- [x] TIMEOUT with `duration_ms < wall_time_limit_ms` or with a failure locus → rejected.
+- [x] INCONCLUSIVE on a non-formal/non-equivalence kind, or with a met bound → rejected.
+- [x] A `ToolStatus` outside the enum, or `INVALID_SUBMISSION`/`INVALID_TASK` → rejected.
+- [x] More than 200 diagnostics, a blank or over-long summary, malformed `started_at`, float duration → rejected.
+- [x] The record is immutable; there is no `supersedes` field.
 
 Planted-bug checks (run, record in the handoff, revert):
-- [ ] Allowing TIMEOUT with a failing test ("timeout means fail") makes the suite fail.
-- [ ] Accepting sim PASS when executed tests ⊂ expected makes the suite fail.
-- [ ] Accepting formal PASS when checked properties ⊂ expected makes the suite fail.
-- [ ] Dropping `candidate_manifest_hash` or `adapter_hash` from the key makes the suite fail.
-- [ ] Making `evaluator_bundle_hash` nullable makes the suite fail.
+- [x] Allowing TIMEOUT with a failing test ("timeout means fail") makes the suite fail.
+- [x] Accepting sim PASS when executed tests ⊂ expected makes the suite fail.
+- [x] Accepting formal PASS when checked properties ⊂ expected makes the suite fail.
+- [x] Dropping `candidate_manifest_hash` or `adapter_hash` from the key makes the suite fail.
+- [x] Making `evaluator_bundle_hash` nullable makes the suite fail.
 
 General:
-- [ ] `ruff`, `mypy --strict`, full `pytest` green; the boundary test still covers `schemas`.
-- [ ] `components/schemas.yaml` gains Observation invariants (ADR-0005 boundary, execution key, status matrix, hidden protection); `docs/REPO_MAP.md` updated.
-- [ ] Handoff written; report ends with "Awaiting coordinator assignment."
+- [x] `ruff`, `mypy --strict`, full `pytest` green; the boundary test still covers `schemas`.
+- [x] `components/schemas.yaml` gains Observation invariants (ADR-0005 boundary, execution key, status matrix, hidden protection); `docs/REPO_MAP.md` updated.
+- [x] Handoff written; report ends with "Awaiting coordinator assignment."
 
 ## Verification commands
 ```bash
@@ -231,11 +231,35 @@ uv run pytest -q tests/contract
 `src/sindri/core/ids.py` (additive), `src/sindri/schemas/observation.py`, `src/sindri/schemas/__init__.py`, `tests/contract/test_observation.py`, `tests/contract/examples/observation.json`, `tests/unit/test_ids.py`, `components/schemas.yaml`, `docs/REPO_MAP.md`.
 
 ## Status
-`ready` (coordinator, 2026-10-04). Packet approved on PR #13 and merged as `ce39c73`; merged-main CI `37186781645` passed. This readiness transition authorizes implementation only after this governance PR itself is merged to `main` (authoritative status: `implementation/task_board.yaml`).
+`review` (authoritative status: `implementation/task_board.yaml`). Decisions O1–O15 and R1–R5 implemented as written.
 
 ## Completion evidence
 - Files changed:
+  - `src/sindri/core/ids.py` (additive `TestId`, `PropertyId`; only docstring lines edited, no pattern changed);
+  - `src/sindri/schemas/observation.py` (new), `src/sindri/schemas/__init__.py` (exports);
+  - `tests/contract/test_observation.py` and `tests/contract/examples/observation.json` (new), `tests/unit/test_ids.py`;
+  - `components/schemas.yaml`, `docs/REPO_MAP.md`, `implementation/task_board.yaml`, this packet, handoff.
 - Tests run/results:
+  - `ruff` clean; `mypy --strict` clean (16 files);
+  - `pytest`: 595 passed, 8 skipped, no warnings (165 Observation contract tests, 482 contract tests in total).
 - Acceptance evidence:
-- Known limitations:
-- Handoff/next action:
+  - The adapted §20.4 fixture is itself a **partial-report FAIL**: R17_sva never checked, and BMC stopped at depth 23 of 40 at the counterexample. It validates and re-serializes to identical JSON (R3).
+  - `observation_execution_key` is pinned by an independent byte-level `hashlib` vector over all 16 request fields. Twelve tests show each request input changes the key, a further test shows `formal_mode` does too, and ten show that result and handle fields do not.
+  - Rejection reasons spot-checked: incomplete sim/formal PASS, TIMEOUT or TOOL_ERROR with failure evidence, INCONCLUSIVE on sim, action mismatch, seed on formal, `None` bundle, and infrastructure-only structural FAIL each fail on their own rule.
+  - Planted bugs, each caught and the source restored byte-identical:
+    - TIMEOUT with a failing test allowed → 3 failures;
+    - sim PASS with executed ⊂ expected → 1;
+    - formal PASS with checked ⊂ expected → 1;
+    - `candidate_manifest_hash` dropped from the key → 12;
+    - `adapter_hash` dropped from the key → 12;
+    - `evaluator_bundle_hash` nullable → 1.
+- Implementation interpretations where the packet left detail open, for coordinator review:
+  1. **Formal FAIL** requires both a failing property *and* a counterexample ref; equivalence FAIL requires `proved=false` and a counterexample. Both are part of "sufficient candidate-attributed failure evidence" (R3).
+  2. **Results outside the expected inventory, or duplicated results, are rejected for every status**, not only PASS: a result for an undeclared test means the inventory itself is wrong.
+  3. **Non-verdict statuses** (TIMEOUT, TOOL_ERROR, UNSUPPORTED, INCONCLUSIVE) reject any candidate failure evidence, including candidate-category error diagnostics.
+  4. **Structural PASS** means zero errors. Latch/blackbox counts are recorded for synthesis but not judged, because "unexpected" latches need policy semantics this record does not have.
+  5. The **formal report must echo** the requested mode and depth.
+  6. **`diagnostics_truncated=true`** requires exactly 200 entries; `started_at` must be zero-padded `YYYY-MM-DDTHH:MM:SSZ` (`strptime` alone accepts `2026-1-4`).
+  7. The test suite imports `TestId` under an alias (`SimTestId`), because pytest otherwise tries to collect a domain type named `Test*` as a test class. No product code was changed for this.
+- Known limitations: completeness is relative to the adapter-reported inventory until the P1.4/P1.6 evaluator-bundle manifest anchors it (R5 follow-up). Cross-record invariants are SIN-P1.1-009.
+- Handoff/next action: `docs/handoffs/SIN-P1.1-005.md`.

@@ -14,6 +14,7 @@ outputs:
   - Requirement
   - EvaluationPolicy
   - CandidateManifest
+  - Observation
 may_read:
   - sindri.core
 may_write: []
@@ -69,6 +70,17 @@ invariants:
     text: solver requires episode_id; reconstructor forbids it; architecture_explorer has it optional (None = oracle-side, set = solver-side).
   - id: INV-CM-005
     text: author carries model, version, temperature_millis, seed, provenance_ref and a never-defaulted training_allowed.
+  # SIN-P1.1-005 Observation
+  - id: INV-OB-001
+    text: Observation is the record of an attempted execution of one declared policy check (ADR-0005); diagnostic/qualification results are other types; quality is not an Observation kind in v1.
+  - id: INV-OB-002
+    text: execution_key == canonical_json_id({"kind":"observation_execution_key_v1", request fields}); only observation_execution_key implements it; result fields never enter it.
+  - id: INV-OB-003
+    text: Raw ToolStatus is never rewritten; TIMEOUT/TOOL_ERROR/UNSUPPORTED/INCONCLUSIVE never carry candidate failure evidence.
+  - id: INV-OB-004
+    text: PASS needs a complete report (all expected tests/properties, bound met); FAIL needs a report with candidate-attributed failure evidence and may be partial (R3).
+  - id: INV-OB-005
+    text: Hidden-check Observations are judge-side protected and never reach solver context (O14); authentication is evidence-store write authority, not a record field (O13).
 failure_modes:
   - id: FM-001
     symptom: A field gains a default and silently fills authority/split/rights.
