@@ -231,7 +231,7 @@ uv run pytest -q tests/contract
 `src/sindri/core/ids.py` (additive), `src/sindri/schemas/observation.py`, `src/sindri/schemas/__init__.py`, `tests/contract/test_observation.py`, `tests/contract/examples/observation.json`, `tests/unit/test_ids.py`, `components/schemas.yaml`, `docs/REPO_MAP.md`.
 
 ## Status
-`planned`. PR #13 decisions O1–O15 and final-review decisions R1–R5 applied; packet ready for coordinator merge and readiness transition (authoritative status: `implementation/task_board.yaml`).
+`ready` (coordinator, 2026-10-04). Packet approved on PR #13 and merged as `ce39c73`; merged-main CI `37186781645` passed. This readiness transition authorizes implementation only after this governance PR itself is merged to `main` (authoritative status: `implementation/task_board.yaml`).
 
 ## Completion evidence
 - Files changed:
