@@ -44,8 +44,13 @@ None beyond F1–F8. `seed` has no range constraint (none specified).
 ## Open questions
 None.
 
+## Coordinator verification
+- PR #11 merged to `main` as `d465850`.
+- Merged-main CI run `37184201021` passed on the integrated 003+004 state.
+- Task status: `verified` on 2026-10-04.
+
 ## Blocked on
-- Coordinator final review and merge of PR #11.
+- None. This task is verified. No later task is authorized until its packet is separately reviewed and marked READY.
 
 ## Integration with SIN-P1.1-003 (done)
 `main` at `3a51766` (PRs #9 and #10) was merged into this branch. Three files were resolved **by hand**, not with "accept both":
@@ -55,8 +60,8 @@ None.
 
 `implementation/task_board.yaml` merged automatically and is consistent. The full gate ran on the combined state (see Verified).
 
-## Next ready after approval
-After 003 and 004 are both merged and verified: SIN-P1.1-005 Observation (the coordinator opens its packet).
+## Next eligible for packet drafting
+SIN-P1.1-005 Observation. The coordinator opens/reviews its packet before implementation is authorized.
 
 ## Do not start
 - 005–009, P1.1-G, any P1.2+ or P2+ work.
