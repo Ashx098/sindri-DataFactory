@@ -14,7 +14,7 @@ python scripts/show_ready_tasks.py --all
 - `SIN-P1.1-001` verified (coordinator, 2026-10-04). Kept at `verified`, not `closed`, until the
   float/identity follow-up is carried forward (SIN-P1.1-002 decision D5, P1.1-G).
 - `SIN-P1.1-002` verified (coordinator, 2026-10-04). PR #6 merged as `4377df5`; merged-main CI `37154049449` passed.
-- No task is currently READY. `SIN-P1.1-003` and `SIN-P1.1-004` packets carry the coordinator decisions from PR #8 (`planned`; awaiting final packet review, incl. two derived 003 invariants). Neither is authorized for implementation until its packet is reviewed and marked READY.
+- **`SIN-P1.1-003` and `SIN-P1.1-004` are READY** (2026-10-04; decisions on PR #8, E8–E9 and readiness under coordinator delegation). They run in parallel in separate worktrees; 003 alone edits `core/ids.py`. No other task is authorized.
 
 ## P1.1 order (coordinator sequencing refinement, 2026-10-04; not an ADR change)
 ```

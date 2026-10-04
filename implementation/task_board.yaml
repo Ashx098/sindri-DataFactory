@@ -47,7 +47,7 @@ tasks:
     title: EvaluationPolicy and requirement-obligation mapping
     phase: P1
     subphase: P1.1
-    status: planned
+    status: ready
     depends_on: [SIN-P1.1-002]
     packet: docs/tasks/SIN-P1.1-003.md
 
@@ -55,6 +55,6 @@ tasks:
     title: CandidateManifest
     phase: P1
     subphase: P1.1
-    status: planned
+    status: ready
     depends_on: [SIN-P1.1-002]
     packet: docs/tasks/SIN-P1.1-004.md
