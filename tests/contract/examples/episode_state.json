@@ -23,7 +23,6 @@
     {
       "job_id": "job_771",
       "request_hash": "sha256:7171717171717171717171717171717171717171717171717171717171717171",
-      "action": "run_formal",
       "candidate": {
         "candidate_id": "c_pktfr_0193_e17_v3",
         "candidate_manifest_hash": "sha256:c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3"
@@ -40,7 +39,6 @@
     {
       "job_id": "job_772",
       "request_hash": "sha256:7272727272727272727272727272727272727272727272727272727272727272",
-      "action": "run_sim",
       "candidate": {
         "candidate_id": "c_pktfr_0193_e17_v3",
         "candidate_manifest_hash": "sha256:c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3"

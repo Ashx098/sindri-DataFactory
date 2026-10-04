@@ -135,6 +135,16 @@ def test_waiting_resuming_to_plan_needs_no_candidate() -> None:
                                       best_candidate=None))
 
 
+def test_candidate_less_waiting_to_plan_with_candidate_less_job() -> None:
+    """PR #19 review: WAITING -> PLAN, no active candidate, pending job with candidate=None."""
+    jobs = copy.deepcopy(STATE["pending_jobs"])[:1]
+    jobs[0]["candidate"] = None
+    s = EpisodeState.model_validate(state(resume_state="PLAN", active_candidate=None,
+                                          best_candidate=None, pending_jobs=jobs,
+                                          reserved=jobs[0]["reserved"]))
+    assert s.pending_jobs[0].candidate is None and s.resume_state is EpisodeStatus.PLAN
+
+
 @pytest.mark.parametrize("st", ["COMPLETED", "ABORTED"])
 def test_terminal_snapshots_with_zero_jobs(st: str) -> None:
     EpisodeState.model_validate(settled(st))
@@ -212,6 +222,19 @@ def test_pending_job_needs_request_hash_and_exact_candidate() -> None:
     rejects(EpisodeState, state(pending_jobs=jobs))
     jobs = copy.deepcopy(STATE["pending_jobs"])
     del jobs[0]["candidate"]["candidate_manifest_hash"]
+    rejects(EpisodeState, state(pending_jobs=jobs))
+
+
+def test_pending_job_candidate_key_is_required_even_when_null() -> None:
+    jobs = copy.deepcopy(STATE["pending_jobs"])
+    del jobs[0]["candidate"]
+    rejects(EpisodeState, state(pending_jobs=jobs))
+
+
+def test_pending_job_has_no_action_field() -> None:
+    """ADR-0005: jobs are broader than Observations; request_hash identifies the request."""
+    jobs = copy.deepcopy(STATE["pending_jobs"])
+    jobs[0]["action"] = "run_formal"
     rejects(EpisodeState, state(pending_jobs=jobs))
 
 

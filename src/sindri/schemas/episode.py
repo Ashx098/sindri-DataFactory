@@ -20,7 +20,6 @@ from pydantic import Field, StrictInt, model_validator
 
 from sindri.core.ids import CandidateId, ContentId, EpisodeId, JobId, PolicyId, TaskId
 from sindri.schemas._base import Record, StrictModel
-from sindri.schemas.observation import ObservationAction
 
 NonNegativeInt = Annotated[StrictInt, Field(ge=0)]
 PositiveInt = Annotated[StrictInt, Field(ge=1)]
@@ -111,12 +110,17 @@ class CandidateBinding(StrictModel):
 
 
 class PendingJob(StrictModel):
-    """An outstanding asynchronous job bound to the exact immutable request it represents (ED9)."""
+    """An outstanding asynchronous job bound to the exact immutable request it represents (ED9).
+
+    `request_hash` is the authoritative request identity; P1.5/P1.4 resolve its typed operation and
+    whether it needs a candidate. Pending jobs are broader than correctness Observations
+    (ADR-0005), so there is no ObservationAction here. `candidate` is a required key whose value
+    may be None: model, planning or diagnostic jobs may have no candidate.
+    """
 
     job_id: JobId
     request_hash: ContentId
-    action: ObservationAction
-    candidate: CandidateBinding
+    candidate: CandidateBinding | None
     reserved: BudgetVector
 
 

@@ -113,7 +113,7 @@ invariants:
   - id: INV-EP7-002
     text: WAITING has a resume_state among the active states and at least one pending job; terminal states have none; abort_reason exactly on ABORTED; active_candidate required from DEV_CHECK onwards (and in WAITING when resume_state requires it).
   - id: INV-EP7-003
-    text: EpisodeBudget is identified by its content_id; additive limits may be zero, wall_clock_limit_ms > 0; wall-clock is not additive; remaining is derived; reserved equals the sum of pending-job reservations; every pending job binds its request_hash.
+    text: EpisodeBudget is identified by its content_id; additive limits may be zero, wall_clock_limit_ms > 0; wall-clock is not additive; remaining is derived (remaining() rejects a snapshot of another budget); reserved equals the sum of pending-job reservations; every pending job binds its request_hash and carries a required-but-nullable candidate, with no ObservationAction (jobs are broader than Observations, ADR-0005).
 failure_modes:
   - id: FM-001
     symptom: A field gains a default and silently fills authority/split/rights.
