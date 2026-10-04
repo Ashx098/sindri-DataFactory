@@ -61,9 +61,10 @@ trusts only what is traceable to one of these.
 | O14 | **Accepted.** Hidden-check Observation contents are protected and never reach solver context. |
 | O15 | **Recorded semantic distinction (coordinator).** An Observation is the record of an *attempted* declared check execution, not proof that execution completed. PASS/FAIL require strong typed execution evidence. TOOL_ERROR, TIMEOUT, UNSUPPORTED and INCONCLUSIVE may be partial or may never have reached the candidate, so a TOOL_ERROR must not be required to prove that the check ran. |
 
-### Consequences the agent derived while applying the decisions (coordinator to confirm at final review)
-- **R1. Seed scope.** The master API is `run_sim(candidate, test_ids, seed)` for *all* simulation. Proposal: `seed: StrictInt | None` is a required key; it is **non-null for both `directed_sim` and `random_sim`** (simulator seeding affects replay even for directed tests) and `None` for every other kind. If directed runs should carry no seed, the rule becomes "non-null for `random_sim` only".
-- **R2. Action ↔ kind mapping** (one-to-one, enforced in-record):
+### Derived details R1–R5: coordinator decisions on PR #13 (final review)
+R1, R2, R4 accepted as proposed. R3 accepted **with a correction**; R5 accepted **with a follow-up**. Each item below states the final rule.
+- **R1. Seed scope (accepted).** `seed: StrictInt | None` is a required key: **non-null for both `directed_sim` and `random_sim`** (the master API is `run_sim(candidate, test_ids, seed)` for all simulation, and every invocation stays reproducible), `None` for every other kind. One simulation invocation + one seed = one Observation.
+- **R2. Action ↔ kind mapping (accepted as proposed)** (one-to-one, enforced in-record):
 
   | Check kind | Action |
   |---|---|
@@ -76,12 +77,15 @@ trusts only what is traceable to one of these.
   | `equivalence` | `check_equiv` |
 
   `quality` is excluded (O11).
-- **R3. Report presence by status (from O15):**
-  - PASS/FAIL require a complete report of the kind's variant.
-  - INCONCLUSIVE requires a formal or equivalence report showing the unmet bound.
-  - TOOL_ERROR, TIMEOUT and UNSUPPORTED take `execution_report: None` or a partial report. A partial report may never satisfy PASS rules, and the status cannot be inferred from it.
-- **R4. Equivalence report without a relation ID (from O7):** `EquivalenceReport{proved: bool}`. PASS requires `proved`. FAIL requires a counterexample ref. INCONCLUSIVE means not proved and no counterexample.
-- **R5. Empty evaluator bundle.** The canonical empty-bundle hash is defined by the task that defines evaluator-bundle construction (P1.4/P1.6). This record only requires a `ContentId`; it never accepts `None`.
+- **R3. Report presence by status (accepted with correction):**
+  - **PASS:** a report is mandatory and must be **complete**.
+  - **FAIL:** a report is mandatory and **may be partial**, provided it contains sufficient candidate-attributed failure evidence. Example: test_1 PASS, test_2 FAIL, and the runner aborts, so tests 3–20 never run; that is still a valid FAIL.
+  - **INCONCLUSIVE:** a formal or equivalence report is mandatory and must show why the proof or bound was not closed.
+  - **TOOL_ERROR, TIMEOUT, UNSUPPORTED:** report optional or partial. Such a report can never be read as complete PASS/FAIL evidence, and the status cannot be inferred from it.
+- **R4. Equivalence report (accepted):** `EquivalenceReport{proved: bool}`; the counterexample lives in `evidence_refs`. PASS: `proved = true`. FAIL: `proved = false` plus a `counterexample_trace` ref. INCONCLUSIVE: `proved = false` with no counterexample. The relation is committed by `policy_hash`, contract, `evaluator_bundle_hash` and golden artifacts, so no relation ID is needed.
+- **R5. Empty evaluator bundle (accepted, with follow-up).** The canonical empty-bundle hash is defined by the task that defines evaluator-bundle construction (P1.4/P1.6). This record only requires a `ContentId` and never accepts `None`.
+  - **Follow-up owned by P1.4/P1.6, recorded here:** the evaluator-bundle manifest must be the **authority for the expected inventory**. `Observation.expected_test_ids` must equal the bundle's committed test inventory, and `Observation.expected_property_ids` its committed property inventory.
+  - This closes the remaining loophole in which a buggy adapter reports `expected = executed = [T1, T2, T3]` while the real bundle contains T4. In 005, expected == executed only proves completeness relative to what the adapter reports. Anchoring to the bundle belongs where the bundle manifest exists.
 
 ## Execution key (single implementation, recomputed in-record)
 ```
@@ -96,7 +100,7 @@ canonical_json_id({"kind": "observation_execution_key_v1",
 - **Execution result** (never in the key): `observation_id`, `started_at`, `duration_ms`, `status`, `summary`, `diagnostics`, `log_ref`, `evidence_refs`, `execution_report`.
 - `adapter_version`, `tool_profile_id`, `policy_id` and `candidate_id` are human-readable or lookup handles; the key uses their hash counterparts.
 
-## Scope (finalized after confirmation of R1–R5)
+## Scope (final; R1–R5 decided on PR #13)
 - In scope:
   - `src/sindri/core/ids.py`, additive only: `TestId` (e.g. `stall_stability_004`) and `PropertyId` (e.g. `R03_sva`). No `EquivalenceRelationId`.
   - `src/sindri/schemas/observation.py`:
@@ -124,19 +128,20 @@ canonical_json_id({"kind": "observation_execution_key_v1",
     - floats rejected (inherited).
   - Status matrix:
     - **PASS:**
-      - complete report;
+      - complete report (mandatory);
       - sim: every expected test present exactly once with PASS;
       - formal: expected properties == checked, all PASS, reached ≥ requested (BMC) or `proof_closed` (prove);
       - equivalence: `proved`;
       - structural: zero errors;
       - in every case: no `error` diagnostics and no counterexample refs.
-    - **FAIL:** a candidate-attributed failure locus:
+    - **FAIL:** a report is mandatory and may be partial (R3); it must contain a candidate-attributed failure locus:
       - sim: ≥ 1 test FAIL;
       - formal/equivalence: a counterexample ref;
       - structural: ≥ 1 candidate-category error.
     - **TOOL_ERROR:** ≥ 1 infrastructure diagnostic, and no candidate error, failing test or counterexample.
     - **TIMEOUT:** `duration_ms ≥ wall_time_limit_ms`, and no failure locus.
-    - **INCONCLUSIVE:** formal or equivalence only, with a report showing the unmet bound.
+    - **INCONCLUSIVE:** formal or equivalence only; the report is mandatory and shows the unmet bound.
+    - **TOOL_ERROR / TIMEOUT / UNSUPPORTED:** report optional or partial, and never counted as PASS/FAIL evidence.
     - **UNSUPPORTED:** ≥ 1 diagnostic whose code names the unsupported capability.
   - Tests under `tests/contract/`, with an adapted §20.4 fixture.
 - Allowed paths: `src/sindri/schemas/observation.py`, `src/sindri/schemas/__init__.py` (exports only), `src/sindri/core/ids.py` (additive only), `tests/contract/`, `tests/unit/test_ids.py`, `components/schemas.yaml`, `docs/REPO_MAP.md`, this packet, `docs/handoffs/SIN-P1.1-005.md`, `implementation/task_board.yaml` (status-only governance state).
@@ -164,6 +169,9 @@ canonical_json_id({"kind": "observation_execution_key_v1",
 - Citations carry an `observation_id` and `content_id()` that agree.
 - The P1.1-009 enforcement rule (PR #9) is evaluated over Observations of mandatory, non-quality, applicable checks.
 
+## Follow-ups owned by later tasks (not 009)
+- P1.4/P1.6, evaluator-bundle manifest (R5): the bundle commits to the expected test and property inventories, and `Observation.expected_test_ids` / `expected_property_ids` must equal them. Until then, 005 guarantees completeness only relative to the adapter-reported expectation.
+
 ## Interfaces touched
 - Schemas: new `Observation` v1. IDs: additive `TestId`, `PropertyId`.
 - Tool APIs: none (P1.4 adapters will emit this record). DB/migrations: none. External dependencies: none new.
@@ -173,6 +181,7 @@ Positive:
 - [ ] The adapted §20.4 example (FAIL, BMC, expected properties, a counterexample ref, `duration_ms`, `wall_time_limit_ms`, full bindings) validates, round-trips and re-serializes to identical JSON.
 - [ ] One valid Observation for each allowed status on representative kinds, including:
   - a sim PASS with every expected test passed;
+  - a sim FAIL with a **partial** report (test_1 PASS, test_2 FAIL, remaining expected tests never ran) (R3);
   - a formal PASS with every expected property checked;
   - a TIMEOUT with no report;
   - a TOOL_ERROR with no report and an infrastructure diagnostic;
@@ -189,7 +198,7 @@ Negative (each a separate test):
 - [ ] Seed violating R1 (missing on sim, present on non-sim) → rejected.
 - [ ] Sim PASS with a missing, extra, duplicated or non-PASS test → rejected.
 - [ ] Formal PASS with a missing, extra or non-PASS property; BMC `reached_depth < requested_depth`; prove PASS without `proof_closed` → rejected.
-- [ ] PASS or FAIL without a report → rejected; a partial report cannot make PASS (R3).
+- [ ] PASS or FAIL without a report → rejected; PASS with a partial report → rejected; FAIL with a partial report but **no** candidate-attributed failure → rejected (R3).
 - [ ] FAIL without a failure locus (per kind) → rejected.
 - [ ] TOOL_ERROR with a candidate error, failing test or counterexample, or without an infrastructure diagnostic → rejected.
 - [ ] TIMEOUT with `duration_ms < wall_time_limit_ms` or with a failure locus → rejected.
@@ -222,7 +231,7 @@ uv run pytest -q tests/contract
 `src/sindri/core/ids.py` (additive), `src/sindri/schemas/observation.py`, `src/sindri/schemas/__init__.py`, `tests/contract/test_observation.py`, `tests/contract/examples/observation.json`, `tests/unit/test_ids.py`, `components/schemas.yaml`, `docs/REPO_MAP.md`.
 
 ## Status
-`planned`. PR #13 decisions O1–O15 applied; awaiting final packet review, including R1–R5 (authoritative status: `implementation/task_board.yaml`).
+`planned`. PR #13 decisions O1–O15 and final-review decisions R1–R5 applied; packet ready for coordinator merge and readiness transition (authoritative status: `implementation/task_board.yaml`).
 
 ## Completion evidence
 - Files changed:

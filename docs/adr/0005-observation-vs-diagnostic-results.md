@@ -21,7 +21,7 @@ PASS: the query succeeded, but the RTL did not pass anything. The same holds for
 ## Decision
 - `Observation` v1 is the record of an **attempted execution of one declared EvaluationPolicy check** against one exact candidate. Only it can carry a correctness-bearing `ToolStatus` and serve as acceptance evidence.
 - Waveform inspection, coverage queries, formal `cover` runs and undeclared ad-hoc queries produce a **separately typed result** (e.g. `DiagnosticResult`, or a qualification-specific result). That type is defined by the first task with a real consumer (P1.4 or P1.8), not now.
-- Judge, qualification and dataset interfaces accept `Observation`, so the boundary is enforced by types rather than by every consumer remembering to filter.
+- The judge and the correctness/dataset evidence interfaces use `Observation` for candidate correctness claims. Qualification may additionally consume separately typed qualification results (formal cover, mutation and coverage qualification, evaluator self-tests), but those results can never substitute for a candidate-correctness `Observation`. The boundary is enforced by types rather than by every consumer remembering to filter (wording corrected on PR #13).
 - The master's informal use of "observation" for any tool output (e.g. §13: the solver sees "its own tool observations") remains valid prose. This ADR narrows the *record type* name only.
 
 ## Alternatives considered
