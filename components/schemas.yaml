@@ -16,6 +16,8 @@ outputs:
   - EvaluationPolicy
   - CandidateManifest
   - Observation
+  - Finding
+  - FindingTransition
   - EpisodeBudget
   - EpisodeState
 may_read:
@@ -50,6 +52,9 @@ public_interfaces:
   - name: observation_execution_key
     request: the 15 execution-request fields
     response: ContentId (observation_execution_key_v1)
+  - name: Finding / FindingTransition.model_validate
+    request: mapping or JSON
+    response: Finding, FindingTransition
   - name: EpisodeBudget / EpisodeState.model_validate
     request: mapping or JSON
     response: EpisodeBudget, EpisodeState
@@ -107,6 +112,15 @@ invariants:
     text: Synthesis PASS needs zero black boxes (master §14 J1); synthesis FAIL may rest on errors, black boxes or latches together with a candidate error. Latches are recorded but not judged until evaluator/profile semantics define expected latches (P1.4/P1.6).
   - id: INV-OB-005
     text: Hidden-check Observations are judge-side protected and never reach solver context (O14); authentication is evidence-store write authority, not a record field (O13).
+  # SIN-P1.1-006 Finding
+  - id: INV-FD-001
+    text: Finding is an immutable claim about one exact candidate (task + candidate id + manifest hash) and one requirement; it carries no status; lifecycle lives in FindingTransition records.
+  - id: INV-FD-002
+    text: Transitions follow ALLOWED_FINDING_TRANSITIONS (no hypothesis->confirmed); exactly the transition into check_proposed carries a ProposedCheck; confirm/refute need deciding Observation citations (id + hash); dropped needs a typed reason.
+  - id: INV-FD-004
+    text: ExistingPolicyCheck carries confirming_status PASS|FAIL (the opposite refutes; mixed deciding PASS/FAIL invalid, checked in 009); DevelopmentProbeRequest is pinned by policy_hash and v1 allows only run_sim with tests or run_formal with properties; a probe-proposed Finding is never decided (009/P1.5).
+  - id: INV-FD-003
+    text: Supporting artifacts and development probes never decide a Finding (FD5, FD8, ADR-0005); producer provenance is a closed model|component|human union with a never-defaulted training_allowed.
   # SIN-P1.1-007 EpisodeState
   - id: INV-EP7-001
     text: EpisodeState is an immutable hash-chained snapshot (sequence 0 has no predecessor); states and transitions follow ADR-0006 (ALLOWED_EPISODE_TRANSITIONS).
@@ -128,4 +142,4 @@ observability:
   spans: []
   metrics: []
 related_adrs: [ADR-0001, ADR-0002, ADR-0004, ADR-0005, ADR-0006]
-related_docs: [docs/tasks/SIN-P1.1-002.md, docs/tasks/SIN-P1.1-003.md, docs/tasks/SIN-P1.1-004.md, docs/tasks/SIN-P1.1-005.md, docs/tasks/SIN-P1.1-007.md]
+related_docs: [docs/tasks/SIN-P1.1-002.md, docs/tasks/SIN-P1.1-003.md, docs/tasks/SIN-P1.1-004.md, docs/tasks/SIN-P1.1-005.md, docs/tasks/SIN-P1.1-006.md, docs/tasks/SIN-P1.1-007.md]

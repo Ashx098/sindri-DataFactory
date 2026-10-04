@@ -57,7 +57,17 @@ The four implementation choices listed in the packet were approved as-is on PR #
 None. (Whether a pending job must match the active candidate is settled: P1.5 decides per request/state.)
 
 ## Blocked on
-- Coordinator re-review of PR #19 and clearing of the `blocked` status. Merge order (coordinator): PR #18 first; **then `main` is merged into this branch**, the shared files are resolved by hand, the full combined gate runs, and only then PR #19 merges. **Integration with SIN-P1.1-006:** both edit `schemas/__init__.py`, `components/schemas.yaml`, `docs/REPO_MAP.md` and `implementation/task_board.yaml`. Whichever PR merges second needs a deliberate manual resolution, never "accept both", followed by the full gate on the combined state.
+- Coordinator final review and merge of PR #19, and clearing of the `blocked` status.
+
+## Integration with SIN-P1.1-006 (done, per the coordinator's merge order)
+`main` at `0d19b0f` (PR #18 merged) was merged into this branch. Three files were resolved **by hand**, not "accept both", in P1.1 order (006 before 007):
+- `src/sindri/schemas/__init__.py`: rebuilt as seven valid import blocks. The 74 exports were verified to equal exactly the union of `main`'s (62) and this branch's (59) `__all__`.
+- `components/schemas.yaml`: outputs in P1.1 order; INV-FD-* then INV-EP7-*; `related_adrs` includes ADR-0006; `related_docs` lists 002–007.
+- `docs/REPO_MAP.md`: one schemas line naming every record; the "remaining records" row removed, because 006 + 007 complete the P1.1 record set.
+
+`implementation/task_board.yaml` merged automatically; both tasks remain `blocked`.
+
+**Combined gate:** ruff and mypy clean (18 files); **799 passed**, 8 skipped (= 707 on `main` + 694 here − 602 shared); 683 contract tests; Finding + EpisodeState tests 194; 29 unique invariants; all 74 exports resolve.
 
 ## Next ready after approval
 After 006 and 007 are merged and verified: SIN-P1.1-008 serialization/versioning (the coordinator opens its packet).
