@@ -21,7 +21,8 @@
 |---|---|---|
 | `uv run ruff check .` | pass | |
 | `uv run mypy` (strict) | pass | 14 files; caught a real mixed-ID variable bug during implementation |
-| `uv run pytest -q` | 356 passed, 8 skipped | 80 policy tests, 12 new ID tests |
+| `uv run pytest -q` | 359 passed, 8 skipped | 83 policy tests, 12 new ID tests (after PR #10 fixes) |
+| E5a fix: original `min_length=1` restored | 1 failure | confirms the new test catches it |
 | Planted bug: `mandatory` default `True` | 1 failure | reverted |
 | Planted bug: obligation→check resolution removed | 1 failure | reverted |
 | Planted bug: `cover` allowed as a formal mode | 1 failure | reverted |
@@ -32,8 +33,15 @@
 ## Decisions
 E1–E7 (coordinator, PR #8) and E8–E9 (agent decisions under coordinator delegation, recorded in the packet and effective on merge of the ready-marking PR). No new decisions in implementation.
 
+## Review fixes (PR #10)
+- E5a: zero-parameter designs use one explicit default configuration with empty assignments; duplicate empty sets are rejected.
+- E7a: no wall-clock expiry on policy exceptions (semantic not-applicability); temporary waivers are release-layer.
+- 009: the strengthened mandatory-requirement enforcement rule is recorded for SIN-P1.1-009.
+- E8/E9 approved by the coordinator.
+
 ## Deviations
-- The branch is based on the unmerged ready-marking commit `62a7834`, not on `main`. Merge that PR first, with a merge commit; otherwise rebase this branch.
+- **Process deviation (not precedent):** implementation began from the **unmerged** readiness commit `62a7834`, under coordinator delegation. The coordinator accepted the work for review, but READY was not yet authoritative on `main`. Future implementation waits until readiness is merged.
+- The branch includes the updated readiness branch (merged in at `fdf66da`), so after PR #9 merges this PR's diff is only 003's own changes.
 
 ## Open questions
 None.

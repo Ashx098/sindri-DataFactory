@@ -124,6 +124,7 @@ Negative (each a separate test):
 - [x] `formal_mode: cover` → rejected (E4); `bmc` without depth, depth on `prove`, depth < 1, or formal fields on a non-formal check → rejected.
 - [x] A check referencing a configuration by index (an integer), or an unknown `ConfigurationId` → rejected (E5).
 - [x] Duplicate configuration IDs or duplicate assignment sets → rejected; duplicate parameter names within a configuration → rejected.
+- [x] A zero-parameter design validates with one explicit `cfg_default` configuration with empty assignments; two empty configurations are rejected as the same assignment set; an empty `configurations` list is rejected (E5a, PR #10 review).
 - [x] Duplicate check, obligation or exception IDs → rejected.
 - [x] An obligation with no checks, an unknown check, or only `quality` checks → rejected.
 - [x] A mandatory `quality` check → rejected; a policy with no mandatory non-`quality` check → rejected.
@@ -163,7 +164,7 @@ uv run pytest -q tests/contract
 
 ## Completion evidence
 - Files changed: `src/sindri/core/ids.py` (additive: `ObligationId`, `CheckId`, `ConfigurationId`, `ToolProfileId`, `ExceptionId`; existing patterns untouched, only docstring lines edited), `src/sindri/schemas/policy.py` (new), `src/sindri/schemas/__init__.py` (exports), `tests/contract/test_evaluation_policy.py` and `tests/contract/examples/evaluation_policy.json` (new), `tests/unit/test_ids.py`, `components/schemas.yaml`, `docs/REPO_MAP.md`, `implementation/task_board.yaml`, this packet, handoff.
-- Tests run/results: `ruff` clean; `mypy --strict` clean (14 files); `pytest`: 356 passed, 8 skipped (80 EvaluationPolicy contract tests, 12 new ID tests).
+- Tests run/results (after PR #10 review fixes): `ruff` clean; `mypy --strict` clean (14 files); `pytest`: 359 passed, 8 skipped (83 EvaluationPolicy contract tests, 12 new ID tests).
 - Acceptance evidence:
   - The adapted §20.10 example (4 explicit configurations, 6 checks across development/hidden, `bmc` depth 24, one quality check, 3 obligations over 2 requirements, one narrow formal exclusion) validates and re-serializes to identical JSON.
   - Rejection reasons spot-checked:
@@ -178,5 +179,9 @@ uv run pytest -q tests/contract
     - obligation→check resolution removed → 1;
     - `cover` allowed → 1.
   - **mypy found a real bug during implementation:** a variable reused for configuration IDs and check IDs. The distinct ID types made the type checker reject the mix.
+- Review fixes (PR #10):
+  - **E5a:** `Configuration.assignments` may be empty. The new test fails with the original `min_length=1` restored (1 failure) and passes with the fix.
+  - **E7a:** exceptions carry no expiry by design (semantic not-applicability); temporary waivers are release-layer.
+  - **009:** the strengthened coverage rule (a mandatory, non-quality, applicable check per configuration after exceptions) is recorded in Non-goals and `CURRENT_PHASE.md`; it is not checked here because 003 cannot see `Requirement.mandatory` or applicability.
 - Known limitations: the solver-safe projection (E2) is not built (P1.5/P5); its rule is recorded as INV-EP-001. Cross-record checks are SIN-P1.1-009.
 - Handoff/next action: `docs/handoffs/SIN-P1.1-003.md`.

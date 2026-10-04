@@ -54,7 +54,7 @@ invariants:
   - id: INV-EP-002
     text: Check kinds are per-candidate only (E3); formal modes are bmc|prove (E4); quality checks are never mandatory and never the only check of an obligation (E8).
   - id: INV-EP-003
-    text: Checks reference configurations by ConfigurationId, never index (E5); all references resolve inside the policy.
+    text: Checks reference configurations by ConfigurationId, never index (E5); all references resolve inside the policy; a zero-parameter design has one explicit configuration with empty assignments (E5a).
   - id: INV-EP-004
     text: Exceptions are not-applicable exclusions of exact (check, configuration) pairs (E7), never FAIL->PASS, and never every configuration of a mandatory check (E9).
 failure_modes:

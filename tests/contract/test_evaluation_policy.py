@@ -164,6 +164,31 @@ def test_same_assignment_set_under_two_ids_rejected() -> None:
     rejects(policy(configurations=[*EXAMPLE["configurations"], clone]), match="assignments")
 
 
+def no_parameter_policy(*configs: str) -> dict[str, Any]:
+    first = configs[0]
+    return policy(
+        configurations=[{"configuration_id": c, "assignments": []} for c in configs],
+        checks=[check("chk_sim", configuration_ids=[first])],
+        obligations=[{"obligation_id": "sim_basic", "requirement_id": "R01",
+                      "check_ids": ["chk_sim"]}],
+        exceptions=[],
+    )
+
+
+def test_zero_parameter_design_has_one_explicit_default_configuration() -> None:
+    p = EvaluationPolicy.model_validate(no_parameter_policy("cfg_default"))
+    assert p.configurations[0].assignments == ()
+    assert p.checks[0].configuration_ids == ("cfg_default",)
+
+
+def test_two_empty_configurations_are_the_same_assignment_set() -> None:
+    rejects(no_parameter_policy("cfg_default", "cfg_other"), match="assignments")
+
+
+def test_policy_still_needs_at_least_one_configuration() -> None:
+    rejects(policy(configurations=[]))
+
+
 def test_duplicate_parameter_in_one_configuration_rejected() -> None:
     bad = {
         "configuration_id": "cfg_bad",

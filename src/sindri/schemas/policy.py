@@ -75,10 +75,14 @@ class ParameterAssignment(StrictModel):
 
 
 class Configuration(StrictModel):
-    """One exact, finite parameter assignment (E5, master §11.14)."""
+    """One exact, finite parameter assignment (E5, master §11.14).
+
+    `assignments` is empty for a design with no parameters: that design still has exactly one
+    explicit configuration (e.g. `cfg_default`) so evidence stays configuration-scoped (E5a).
+    """
 
     configuration_id: ConfigurationId
-    assignments: Annotated[tuple[ParameterAssignment, ...], Field(min_length=1)]
+    assignments: tuple[ParameterAssignment, ...]
 
     @model_validator(mode="after")
     def _unique_names(self) -> Self:
