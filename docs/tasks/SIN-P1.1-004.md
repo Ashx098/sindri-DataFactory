@@ -9,13 +9,13 @@
 
 ## Outcome
 `CandidateManifest` exists as a strict, immutable record of exactly one candidate design version:
-which task it is for, which files with which content hashes it consists of, the context it was built
-against, which candidate it was derived from and by what patch, and which model configuration
-produced it. Every later observation and judgement can then bind to an exact, reproducible candidate
-identity (master principle 9: "a pass on yesterday's file means nothing for today's file").
+which task it is for, which files with which content hashes it consists of (with a precisely defined
+source identity), the context it was built against, which candidate it was derived from and by what
+patch, and which model configuration and provenance produced it. Every later observation and
+judgement can then bind to an exact, reproducible candidate identity (master principle 9).
 
 ## Why / architecture references
-- Master architecture: §4 principle 9; §8.7 ("CandidateManifest: candidate/parent IDs, source hash, dependency hash, model configuration and patch ancestry"); §8.8 (candidate edits create new immutable candidate identity, architecture branches are separate candidates); §6.6 (the agent "edits a new immutable candidate"); §8 F1 `submit(candidate)`; §8 F6 provenance; §20.3 example.
+- Master architecture: §4 principle 9; §8.7 (CandidateManifest contents); §8.8 (edits create new immutable candidate identity; branches are separate candidates); §8.9 ("every model output carries model/version/licence/provenance tags; records whose usage rights do not permit training are filtered before export"); §8 F6 model gateway (records version, seed, temperature and licence tags); §8 F1 `submit(candidate)`; §20.3 example.
 - Phase/subphase: P1.1; order in `docs/implementation/CURRENT_PHASE.md`: 002 → **{003, 004}** → 005.
 - ADRs/RFCs: ADR-0001, ADR-0002.
 
@@ -31,52 +31,55 @@ identity (master principle 9: "a pass on yesterday's file means nothing for toda
 
 ## Dependencies
 - Required completed tasks: SIN-P1.1-002 (verified)
-- Required schemas/contracts: `sindri.schemas._base`, `sindri.core.ids` (`CandidateId`, `EpisodeId`, `TaskId`, `ContentId` already exist; this task adds **no** ID types)
+- Required schemas/contracts: `sindri.schemas._base`, `sindri.schemas.task.EditPath` (import only), `sindri.core.ids` (`CandidateId`, `EpisodeId`, `TaskId`, `ContentId`, `canonical_json_id` already exist; this task adds **no** ID types)
 
-## Decisions needed before READY
-The §20.3 example conflicts with already-accepted decisions in places. The agent recommends an option for each; **the coordinator decides**.
+## Coordinator decisions (PR #8, 2026-10-04; recorded, not made, by the agent)
+| ID | Decision |
+|---|---|
+| F1 | **Accepted.** `temperature_millis: StrictInt ≥ 0` (0.8 → 800). Any later sampling parameter follows the same scaled-integer convention. |
+| F2 | **Accepted.** No `frozen` field; submission is an event/registry fact (controller, P1.5). |
+| F3 | **Accepted, tightened.** `source_hash` is required and must equal exactly `canonical_json_id({"kind": "candidate_file_set_v1", "files": [{"path": p, "hash": h}, …]})`, with files sorted by `path`. The construction is domain-separated and versioned, so different implementations cannot produce different identities for the same file set. Changing the construction means a new `kind` tag. |
+| F4 | **Accepted, with one meaning for `None`.** `dependency_hash: ContentId \| None` is a required key. `None` means **this task explicitly has no external dependency bundle**. It never means "unknown" or "not computed yet"; a manifest whose dependencies are not yet known cannot be created. |
+| F5 | **Accepted.** `parent_candidate_id` and `patch_hash` are both required keys and must be both present or both `None`. |
+| F6 | **Accepted.** `producer_role: solver \| reconstructor \| architecture_explorer`; `episode_id` is required if and only if the role is `solver`. |
+| F7 | **Corrected.** Provenance is recorded at the source, not first at DatasetRecord. `author` must contain at least: `model`, `model_version`, `temperature_millis`, `seed: StrictInt`, `provenance_ref` (non-blank) and `training_allowed: StrictBool` (required, no default). Later, the model gateway (F6/P5.1) makes `provenance_ref` resolve to the exact call/provider/terms record. DatasetRecord may derive export eligibility from it, but must not be the first place provenance appears. |
+| F8 | **Accepted.** Candidate IDs are opaque; relationships are explicit fields only. |
+| Path reuse | **Decided.** 004 imports `EditPath` from the verified `schemas/task.py`. It must **not** refactor it into `_base.py` during this task, because that kind of innocent cleanup makes parallel branches overlap. |
 
-| ID | Question | Agent recommendation |
-|---|---|---|
-| F1 | **`temperature: 0.8` is a binary float**, which D5 forbids in records. | An exact scaled integer: `temperature_millis: StrictInt ≥ 0` (0.8 → 800). It is simpler and less ambiguous than a canonical decimal string. The same convention applies to any later sampling parameter (e.g. `top_p_millis`). |
-| F2 | **`frozen: true`.** Every manifest is already immutable, so "frozen" can only mean "submitted for judging" (`submit(candidate)`), which is lifecycle state. | Drop `frozen` from the record, following the D1 reasoning. Submission is an event/registry fact (controller, P1.5). |
-| F3 | **Source hash** (§8.7). | `source_hash: ContentId` is required and must equal the canonical ID computed from the sorted `(path, hash)` file list. A record whose declared hash disagrees with its files is rejected, so identity cannot be asserted, only derived. |
-| F4 | **Dependency hash** (§8.7): the read-only context (repo files, packages, includes) the candidate was built against. | `dependency_hash: ContentId \| None`, required but nullable, so a task with no external context says so explicitly. What goes into the dependency bundle is defined by the controller/context work (P1.5, §8.10), not here. |
-| F5 | **Patch ancestry** (§8.7): `parent_candidate` alone does not say what changed. | `parent_candidate_id: CandidateId \| None` and `patch_hash: ContentId \| None`, both required keys; `patch_hash` is present if and only if there is a parent. A first candidate has neither. |
-| F6 | **Producer.** §20.3 assumes a solver episode, but oracle-side roles also produce candidates (reconstructors S7, microarchitecture explorer X4 alternatives). | `episode_id: EpisodeId \| None` plus a required `producer_role` enum: `solver`, `reconstructor`, `architecture_explorer`. `episode_id` is required if and only if the role is `solver`. Human-written goldens are not candidates (master §2 "Candidate means any design produced by an agent"). |
-| F7 | **Model configuration** (§8.7, F6). | `author`: `model` (non-blank), `model_version` (non-blank), `temperature_millis`, `seed: StrictInt`. Licence/provenance tags are attached where datasets are exported (DatasetRecord, later), not duplicated here. |
-| F8 | **Semantic IDs.** `c_pktfr_0193_e17_v3` encodes task, episode and version in its text. | Do **not** parse meaning out of ID text. Relationships are explicit fields only; IDs are opaque labels. |
-
-## Scope (written for the recommended options; finalized after decisions)
+## Scope
 - In scope:
-  - `src/sindri/schemas/candidate.py`: `CandidateManifest` (`Record`):
-    - Identity: `candidate_id`, `task_id`, `producer_role`, `episode_id`.
-    - Ancestry: `parent_candidate_id`, `patch_hash`.
-    - `files`: non-empty and unique by path, each with a safe relative POSIX `path` (same rules as 002 `EditPath`) and a `hash: ContentId`.
-    - Hashes: `source_hash`, `dependency_hash`.
-    - `author` per F7.
+  - `src/sindri/schemas/candidate.py`: `CandidateManifest` (`Record`) with:
+    - `candidate_id: CandidateId`, `task_id: TaskId`, `producer_role`, `episode_id: EpisodeId | None`;
+    - `parent_candidate_id: CandidateId | None`, `patch_hash: ContentId | None`;
+    - `files`: non-empty and unique by path, each `{path: EditPath, hash: ContentId}`;
+    - `source_hash: ContentId` (F3), `dependency_hash: ContentId | None` (F4);
+    - `author` (F7): `model`, `model_version` (non-blank), `temperature_millis`, `seed`, `provenance_ref`, `training_allowed`.
+  - A module-level function `candidate_source_hash(files) -> ContentId` that implements the F3 construction exactly. It is the only place the construction lives, and the validator and tests use it.
   - In-record invariants:
-    - `source_hash` equals the canonical ID of the sorted file list;
-    - the patch/parent pairing;
+    - `source_hash` equals `candidate_source_hash(files)`;
+    - the parent/patch pairing;
     - the episode/role pairing;
     - a candidate is not its own parent;
-    - unsafe or duplicate paths rejected;
+    - unique, safe file paths;
     - floats rejected (inherited).
   - Tests under `tests/contract/`, with an adapted §20.3 example fixture.
 - Allowed paths: `src/sindri/schemas/candidate.py`, `src/sindri/schemas/__init__.py` (exports only), `tests/contract/`, `components/schemas.yaml`, `docs/REPO_MAP.md`, this packet, `docs/handoffs/SIN-P1.1-004.md`, `implementation/task_board.yaml` (status-only governance state).
 
 ## Forbidden paths / authority boundaries
 - Hidden evaluator/final-eval paths: none.
-- Other forbidden paths: `src/sindri/core/ids.py` (owned by SIN-P1.1-003 in this pair), `src/sindri/schemas/{_base,task,requirement}.py`, `src/sindri/schemas/policy.py` (003), `core/status.py`.
-- **Reuse:** the safe-path validator lives in `schemas/task.py`, a verified file this task may not edit. 004 may *import* `EditPath` from it. If moving it to `_base.py` is preferable, that is a coordinator call, not an in-task refactor.
+- Other forbidden paths:
+  - `src/sindri/core/ids.py` (owned by SIN-P1.1-003 in this pair);
+  - `src/sindri/schemas/{_base,task,requirement}.py` (verified; import only);
+  - `src/sindri/schemas/policy.py` (003);
+  - `core/status.py`.
 
 ## Non-goals
-- No file storage or hashing of files on disk (P1.2); the manifest records hashes it is given.
-- No submission/freeze lifecycle (P1.5), no dependency-bundle definition (P1.5/§8.10).
+- No file storage or on-disk hashing (P1.2); the manifest records hashes it is given.
+- No submission/freeze lifecycle (P1.5), no dependency-bundle definition (P1.5/§8.10), no model-gateway provenance records (P5.1).
 - No cross-record checks. These belong to SIN-P1.1-009:
-  - every file path lies inside the task's `allowed_edit_paths`;
-  - `task_id` resolves to a manifest;
-  - the parent candidate belongs to the same task;
+  - file paths lie inside the task's `allowed_edit_paths`;
+  - `task_id` resolves;
+  - the parent belongs to the same task;
   - read-only tasks have no candidates.
 - No Observation, Finding or EpisodeState.
 
@@ -86,26 +89,29 @@ The §20.3 example conflicts with already-accepted decisions in places. The agen
 ## Acceptance criteria
 Positive:
 - [ ] The adapted §20.3 example (per F1–F8) validates, round-trips and re-serializes to identical JSON.
-- [ ] A first candidate (no parent, no patch), a derived candidate (parent + patch), and a reconstructor candidate (no episode) each validate.
-- [ ] `source_hash` is independent of the input order of `files` and changes when any file hash or path changes.
+- [ ] First candidate (no parent, no patch), derived candidate (parent + patch), and reconstructor candidate (no episode) each validate.
+- [ ] `candidate_source_hash` equals a hand-computed `canonical_json_id({"kind": "candidate_file_set_v1", "files": [...]})` known vector; it is independent of `files` input order and changes when any path or hash changes.
+- [ ] `training_allowed: false` validates (provenance that forbids training is representable).
 
 Negative (each a separate test):
-- [ ] Every field required (no defaults), including the nullable ones as explicit keys.
+- [ ] Every field required (no defaults), including the nullable ones as explicit keys and every `author` field.
 - [ ] Unknown fields rejected at every level, including `frozen` (F2) and `temperature` (F1).
-- [ ] A `source_hash` that does not match the files → rejected.
+- [ ] A `source_hash` computed without the domain tag, with a different tag, or over unsorted files → rejected.
 - [ ] Parent without patch, patch without parent, or a candidate as its own parent → rejected.
 - [ ] `solver` without `episode_id`, or a non-solver role with one → rejected.
 - [ ] Empty files, duplicate paths, absolute paths, `..`, empty segments or backslashes → rejected.
-- [ ] Negative `temperature_millis`, non-integer `seed`, floats anywhere → rejected; no coercion (`"800"`, `True` rejected as integers).
+- [ ] Blank `provenance_ref`, `model` or `model_version` → rejected; `training_allowed` given as `1` or `"true"` → rejected.
+- [ ] Negative `temperature_millis`; `"800"`, `True` or `0.8` as numbers → rejected (no coercion, no floats).
 - [ ] The record is immutable.
 
 Planted-bug checks (run, record in the handoff, revert):
+- [ ] Dropping the domain tag from `candidate_source_hash` makes the suite fail.
 - [ ] Skipping the `source_hash` recomputation makes the suite fail.
-- [ ] Making `parent_candidate_id` default to `None` makes the suite fail.
+- [ ] Defaulting `training_allowed=True` in `author` makes the suite fail.
 
 General:
 - [ ] `ruff`, `mypy --strict`, full `pytest` green; the boundary test still covers `schemas`.
-- [ ] `components/schemas.yaml` gains the candidate invariants; `docs/REPO_MAP.md` updated.
+- [ ] `components/schemas.yaml` gains the candidate invariants (incl. the F3 construction and F4 meaning of `None`); `docs/REPO_MAP.md` updated.
 - [ ] Handoff written; report ends with "Awaiting coordinator assignment."
 
 ## Verification commands
@@ -120,11 +126,11 @@ uv run pytest -q tests/contract
 `src/sindri/schemas/candidate.py`, `src/sindri/schemas/__init__.py`, `tests/contract/test_candidate_manifest.py`, `tests/contract/examples/candidate_manifest.json`, `components/schemas.yaml`, `docs/REPO_MAP.md`.
 
 ## Parallel work with SIN-P1.1-003
-- Shared files: `src/sindri/schemas/__init__.py` (exports), `components/schemas.yaml`, `docs/REPO_MAP.md`. These are append-only edits; the integrator resolves ordering.
-- This task does not touch `src/sindri/core/ids.py`.
+- Shared files: `src/sindri/schemas/__init__.py` (exports), `components/schemas.yaml`, `docs/REPO_MAP.md`, `implementation/task_board.yaml`. These are append-only edits; the integrator resolves ordering.
+- This task does not touch `src/sindri/core/ids.py` and does not move `EditPath`.
 
 ## Status
-`planned`. Draft for coordinator review; decisions F1–F8 open (authoritative status: `implementation/task_board.yaml`).
+`planned`. Coordinator decisions F1–F8 applied; awaiting final packet review (authoritative status: `implementation/task_board.yaml`).
 
 ## Completion evidence
 - Files changed:

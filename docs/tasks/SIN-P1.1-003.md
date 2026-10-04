@@ -9,21 +9,21 @@
 
 ## Outcome
 `EvaluationPolicy` exists as a strict, versioned, immutable record that states exactly what must be
-checked for a task: the required checks and their configurations, proof modes and tool-profile
-references, the supported parameter matrix, sourced environment assumptions, approved exceptions,
-and the requirement → obligation mapping that ADR-0004 assigned to it. The judge (P1.7), controller
-(P1.5) and Verification Forge (P4) can then consume one closed definition of "what acceptance
-means" for a task.
+checked for one task: the per-candidate correctness checks and their exact configurations, formal
+modes and tool-profile references, sourced environment assumptions, narrow not-applicable
+exclusions, and the requirement → obligation mapping that ADR-0004 assigned to it. The judge (P1.7),
+controller (P1.5) and Verification Forge (P4) can then consume one closed definition of "what must
+pass" for a task.
 
 ## Why / architecture references
-- Master architecture: §8.7 ("EvaluationPolicy: required check IDs, configurations, proof modes, tool profiles, parameter matrix, assumptions and approved exceptions"); §11.6 requirement → obligation traceability; §11.10 assumptions need a Requirement/EvaluationPolicy source; §11.14 finite parameter matrix; §14 J1 check order, J5 versioning; §14.7 waivers; Appendix A acceptance policy; §20.10 example.
+- Master architecture: §8.7 (EvaluationPolicy contents); §11.6 traceability; §11.10 assumptions need a Requirement/EvaluationPolicy source, covers demonstrate reachability; §11.14 finite parameter matrix with evidence per exact configuration; §14 J1 check order, J5 versioning; §14.7 judging vs release (clean replay and waivers are release concerns); Appendix A; §20.10 example.
 - Phase/subphase: P1.1; order in `docs/implementation/CURRENT_PHASE.md`: 002 → **{003, 004}** → 005.
 - ADRs/RFCs: ADR-0002 (statuses), **ADR-0004** (this record owns the obligation mapping and introduces `ObligationId`).
 
 ## Owner / coordinator
 - Owner: assigned by coordinator when marked ready
 - Integrator: Avinash
-- Reviewers: Avinash; DV/formal reviewer for check kinds and proof modes once assigned (role unassigned)
+- Reviewers: Avinash; DV/formal reviewer for check kinds and formal modes once assigned (role unassigned)
 
 ## Base
 - Base branch: `main`
@@ -32,84 +32,105 @@ means" for a task.
 
 ## Dependencies
 - Required completed tasks: SIN-P1.1-002 (verified)
-- Required schemas/contracts: `sindri.schemas._base` (`Record`, `StrictModel`, `ExactScalar`, `NonEmptyText`, version chain), `sindri.core.ids`, `sindri.core.status`
+- Required schemas/contracts: `sindri.schemas._base` (`Record`, `StrictModel`, `ExactScalar`, `NonEmptyText`, version chain), `sindri.schemas.requirement.ParameterName` (import only), `sindri.core.ids`, `sindri.core.status`
 
-## Decisions needed before READY
-The master architecture underdetermines these. The agent recommends an option for each; **the coordinator decides**.
+## Coordinator decisions (PR #8, 2026-10-04; recorded, not made, by the agent)
+| ID | Decision |
+|---|---|
+| E1 | **Accepted.** The policy is task-scoped: it carries `task_id` and binds `contract_hash` (equality with the task's `approved_contract_hash` is checked in SIN-P1.1-009). |
+| E2 | **Accepted.** Every check declares `visibility: development \| hidden`. The full policy is a judge-side protected record; a solver-safe projection comes later (P1.5/P5). |
+| E3 | **Corrected.** Per-candidate check vocabulary only: `integrity_scan`, `parse_elaborate`, `lint`, `synthesis`, `directed_sim`, `random_sim`, `formal`, `equivalence`, `quality`. `mutation_qualification` belongs to evaluator/task qualification and `clean_replay` to the release/gate layer (master §14.7 separates judging from release replay), so neither is a per-candidate check. `quality` can never be mandatory for functional correctness. |
+| E4 | **Corrected.** Profiles are referenced by `ToolProfileId`; contents are P1.4. Formal correctness modes are **`bmc` or `prove` only**. A cover demonstrates reachability/non-vacuity, does not prove a behavioural requirement, and belongs to formal/evaluator qualification, so it can never satisfy an obligation in this record. `bmc` requires `depth: StrictInt ≥ 1`; `prove` has no depth. |
+| E5 | **Accepted, with `ConfigurationId`.** Configurations are explicit, each with a `ConfigurationId` (its first real consumer, so it is introduced here). Checks reference configurations **by ID, never by list index**, because evidence must be scoped to exact finite configurations (§11.14). |
+| E6 | **Accepted.** One obligation → exactly one `RequirementId` → one or more checks of this policy. Cross-record completeness stays in SIN-P1.1-009. |
+| E7 | **Corrected semantics.** A policy exception is a narrow **not-applicable exclusion** for specific (check, configuration) pairs. It never turns an executed FAIL into PASS. An alternative checker requires a new policy version. Release-level waivers stay a ReleaseManifest concern. |
 
-| ID | Question | Agent recommendation |
-|---|---|---|
-| E1 | **Policy scope.** §20.10 has `policy_id: ep_fifo_004` and `contract_hash`, but no `task_id`. Yet ADR-0004 obligations reference (`task_id`, `requirement_id`). Is a policy per task, or shared per contract/family? | **Per task.** Add `task_id` and bind `contract_hash` (it must equal the task's `approved_contract_hash`, checked in 009). Obligations then cover that task's requirements. Family-level sharing can be a later template mechanism, not a shared authoritative record. |
-| E2 | **Hidden checks.** §20.10 lists `hidden_check_ids`, but the solver must never see hidden tests (§8.9, J4). | Every check declares `visibility: development \| hidden`. The whole `EvaluationPolicy` is a **judge-side protected record**; a solver-visible projection is a later concern (P1.5/P5). This task only models the classification and records the protection rule in the component contract. |
-| E3 | **Check vocabulary.** §20.10 uses `parse, directed, random, formal_core, critical_mutation, synth`; Appendix A uses `parse_elaborate, directed_regression, …`. | A `CheckKind` enum from J1 plus Appendix A: `integrity_scan`, `parse_elaborate`, `lint`, `synthesis`, `directed_sim`, `random_sim`, `formal`, `equivalence`, `mutation_qualification`, `clean_replay`, `quality`. Each check has its own `CheckId` (`chk_…`). `quality` checks can never be mandatory (correctness-first, principle 7). Certificate-validity items (`spec_certificate_valid`, `evaluator_certificate_valid`, `contract_approved`) are qualification-gate preconditions (P1.7/G1), not checks in this record. |
-| E4 | **Formal/tool profiles.** §20.10 shows `formal_profiles: {...}`; tool profiles do not exist until P1.4. | Reference profiles by ID (`ToolProfileId` `tp_…`); do not model profile contents. Formal checks carry `proof_mode: bmc \| prove \| cover` and, for `bmc`, a required `depth: StrictInt ≥ 1`. Profile contents are P1.4. |
-| E5 | **Parameter matrix.** §20.10 `{WIDTH: [1,8,32], DEPTH: [1,2,3,8]}`: a cross product, or explicit configurations? | **Explicit configurations** (`tuple[Configuration, …]`, each a full parameter assignment with `ExactScalar` values), because §11.14 records evidence per configuration and some combinations may be unsupported. Reuse the 002 strict-scalar rules. A check may target a subset of configurations by index or ID. |
-| E6 | **Obligation shape.** | `Obligation`: `obligation_id: ObligationId`, `requirement_id: RequirementId` (exactly one; §11.6 "every requirement produces one or more obligations"), and `check_ids: tuple[CheckId, …]` (non-empty, each must exist in this policy). |
-| E7 | **Approved exceptions / waivers** (§14.7: narrow, justified, versioned). | `ApprovedException`: `exception_id`, `scope` (the check IDs and configurations it covers), `justification`, `approved_by`, `expires` (an explicit date or `null`). A waiver never turns a failed mandatory check into a pass for dataset labelling (recorded as an invariant; enforced in the judge, P1.7). |
+### Consequences the agent derived (coordinator to confirm at final review)
+- **Quality-only obligations.** Because `quality` is never evidence of functional correctness (E3), an obligation whose checks are all `quality` checks would leave its requirement effectively unverified. Proposed invariant: every obligation includes at least one non-`quality` check.
+- **E7 guard.** Read literally, E7 would let a set of exclusions cover every configuration of a mandatory check, quietly removing it without a new policy version. Proposed in-record invariant: **an exception set may not exclude all configurations of a mandatory check.** Dropping a mandatory check requires a new policy version, the same route E7 prescribes for alternative checkers. Expiry dates are not modelled: removing an exception is also a new policy version.
 
-## Scope (written for the recommended options; finalized after decisions)
+## Scope
 - In scope:
-  - `src/sindri/core/ids.py`, additive only: `ObligationId` (pattern from the master examples `sim_stall_01`, `sva_stall_stable`), `CheckId` (`chk_…`), `ToolProfileId` (`tp_…`), `ExceptionId` (`ex_…`).
+  - `src/sindri/core/ids.py`, additive only:
+    - `ObligationId` (from the master examples `sim_stall_01`, `sva_stall_stable`);
+    - `CheckId` (`chk_…`), `ConfigurationId` (`cfg_…`), `ToolProfileId` (`tp_…`), `ExceptionId` (`ex_…`).
   - `src/sindri/schemas/policy.py`: `EvaluationPolicy` (`Record`):
-    - `policy_id: PolicyId`, `policy_version` and `supersedes` (version chain as in 002), `task_id`, `contract_hash: ContentId`;
-    - `configurations` (non-empty, unique, explicit);
-    - `checks` (non-empty, unique `CheckId`): each with `kind`, `mandatory: StrictBool` (no default), `visibility`, `tool_profile_id`, the `configurations` it applies to, and formal fields per E4;
-    - `environment_assumptions` (each with `text` and a required `source_ref`);
-    - `obligations` (non-empty, unique `ObligationId`);
-    - `approved_exceptions`.
+    - Identity: `policy_id: PolicyId`, `policy_version` and `supersedes` (version chain as in 002), `task_id: TaskId`, `contract_hash: ContentId`.
+    - `configurations`: non-empty. Each has a `configuration_id` and `assignments`, a non-empty tuple of `{name: ParameterName, value: ExactScalar}` with unique names. Configuration IDs are unique, and no two configurations may have the same assignment set.
+    - `checks`: non-empty, unique `CheckId`. Each check has:
+      - `kind: CheckKind` (E3), `mandatory: StrictBool` (no default), `visibility` (E2);
+      - `tool_profile_id`;
+      - `configuration_ids`: non-empty, unique, each resolving to a configuration in this policy;
+      - for `formal` checks, `formal_mode: bmc | prove` and `depth`, per E4. Non-formal checks carry neither.
+    - `environment_assumptions`: each with `text` and a required `source_ref`.
+    - `obligations`: non-empty, unique `ObligationId`. Each has one `requirement_id` and non-empty, unique `check_ids` that resolve to checks in this policy.
+    - `exceptions`: each with `exception_id`, `excludes` (a non-empty, unique tuple of `{check_id, configuration_id}` pairs, where the configuration must be one the check targets), `justification` and `approved_by` (non-blank). Meaning: the pair is not applicable (E7).
   - In-record invariants:
     - unique IDs throughout;
-    - every obligation's `check_ids` and every check's configuration references resolve inside the policy;
-    - no `quality` check is mandatory;
-    - at least one mandatory correctness check exists;
-    - BMC checks have `depth`, non-BMC checks do not;
-    - exceptions only reference existing checks;
+    - all references resolve inside the policy;
+    - no mandatory `quality` check;
+    - at least one mandatory non-`quality` check;
+    - an obligation may not rely only on `quality` checks;
+    - formal-mode/depth pairing;
+    - the E7 guard (pending confirmation);
     - floats rejected (inherited).
   - Tests under `tests/contract/`, with an adapted §20.10 example fixture.
 - Allowed paths: `src/sindri/schemas/policy.py`, `src/sindri/schemas/__init__.py` (exports only), `src/sindri/core/ids.py` (additive only), `tests/contract/`, `tests/unit/test_ids.py`, `components/schemas.yaml`, `docs/REPO_MAP.md`, this packet, `docs/handoffs/SIN-P1.1-003.md`, `implementation/task_board.yaml` (status-only governance state).
 
 ## Forbidden paths / authority boundaries
 - Hidden evaluator/final-eval paths: none may be created; fixtures use synthetic check names only.
-- Other forbidden paths: `src/sindri/schemas/{_base,task,requirement}.py` (verified in 002; any needed change goes back to the coordinator), `src/sindri/schemas/candidate.py` (SIN-P1.1-004), existing ID patterns, `core/status.py`.
+- Other forbidden paths:
+  - `src/sindri/schemas/{_base,task,requirement}.py` (verified; import only);
+  - `src/sindri/schemas/candidate.py` (SIN-P1.1-004);
+  - existing ID patterns in `core/ids.py`;
+  - `core/status.py`.
 
 ## Non-goals
-- No tool-profile contents (P1.4), no judge logic, no waiver application (P1.7), no solver projection of the policy (P1.5/P5).
+- No `mutation_qualification`, `clean_replay` or cover checks (E3/E4: qualification and release layers).
+- No tool-profile contents (P1.4), no judge logic (P1.7), no solver projection (P1.5/P5), no release waivers (ReleaseManifest).
 - No cross-record checks. These belong to SIN-P1.1-009:
-  - the policy's `contract_hash` equals the task's `approved_contract_hash`;
-  - every obligation's requirement exists on the task;
-  - every approved mandatory requirement has at least one obligation (ADR-0004 completeness).
+  - `contract_hash` equals the task's `approved_contract_hash`;
+  - obligation requirements exist on the task;
+  - every approved mandatory requirement has at least one obligation;
+  - configuration parameter names match the task's contract.
 - No `VerificationPlan` (P4.1). No Observation, Finding or EpisodeState.
 
 ## Interfaces touched
-- Schemas: new `EvaluationPolicy` v1. IDs: additive `ObligationId`, `CheckId`, `ToolProfileId`, `ExceptionId`.
+- Schemas: new `EvaluationPolicy` v1.
+- IDs: additive `ObligationId`, `CheckId`, `ConfigurationId`, `ToolProfileId`, `ExceptionId`.
 - Tool APIs: none. DB/migrations: none. External dependencies: none new.
 
 ## Acceptance criteria
 Positive:
 - [ ] The adapted §20.10 example (per E1–E7) validates, round-trips and re-serializes to identical JSON.
-- [ ] Development and hidden checks coexist; a BMC check with depth and a prove/cover check without depth validate.
+- [ ] Development and hidden checks coexist; a `bmc` check with depth and a `prove` check without depth validate.
 - [ ] One requirement covered by several obligations, and one obligation using several checks, validate.
+- [ ] A narrow exception excluding one (check, configuration) pair of a multi-configuration mandatory check validates.
 
 Negative (each a separate test):
 - [ ] Every field required (no defaults), including `mandatory` and `visibility` on each check.
 - [ ] Unknown fields rejected at every level.
-- [ ] Duplicate check, obligation, configuration or exception IDs → rejected.
-- [ ] An obligation referencing a check not in the policy → rejected; an obligation with no checks → rejected.
-- [ ] A check referencing a configuration not in the policy → rejected.
-- [ ] A mandatory `quality` check → rejected; a policy with no mandatory correctness check → rejected.
-- [ ] BMC without depth, depth on prove/cover, or depth < 1 → rejected.
+- [ ] `mutation_qualification`, `clean_replay` or any unknown check kind → rejected (E3).
+- [ ] `formal_mode: cover` → rejected (E4); `bmc` without depth, depth on `prove`, depth < 1, or formal fields on a non-formal check → rejected.
+- [ ] A check referencing a configuration by index (an integer), or an unknown `ConfigurationId` → rejected (E5).
+- [ ] Duplicate configuration IDs or duplicate assignment sets → rejected; duplicate parameter names within a configuration → rejected.
+- [ ] Duplicate check, obligation or exception IDs → rejected.
+- [ ] An obligation with no checks, an unknown check, or only `quality` checks → rejected.
+- [ ] A mandatory `quality` check → rejected; a policy with no mandatory non-`quality` check → rejected.
+- [ ] An exception excluding a pair whose configuration the check does not target, or naming an unknown check → rejected.
+- [ ] Exceptions that together exclude every configuration of a mandatory check → rejected (E7 guard, if confirmed).
 - [ ] An environment assumption without `source_ref` → rejected.
-- [ ] An exception referencing an unknown check → rejected.
 - [ ] Version chain enforced; floats rejected at any depth; configuration values never coerced (`True` ≠ `1` ≠ `"1"`).
 - [ ] The record is immutable.
 
 Planted-bug checks (run, record in the handoff, revert):
 - [ ] Defaulting `mandatory=True` on checks makes the suite fail.
 - [ ] Removing the obligation→check resolution check makes the suite fail.
+- [ ] Allowing `cover` as a formal mode makes the suite fail.
 
 General:
 - [ ] `ruff`, `mypy --strict`, full `pytest` green; the boundary test still covers `schemas`.
-- [ ] `components/schemas.yaml` gains the policy invariants and the "judge-side protected record" rule (E2); `docs/REPO_MAP.md` updated.
+- [ ] `components/schemas.yaml` gains the policy invariants and the judge-side protection rule (E2); `docs/REPO_MAP.md` updated.
 - [ ] Handoff written; report ends with "Awaiting coordinator assignment."
 
 ## Verification commands
@@ -124,11 +145,11 @@ uv run pytest -q tests/contract
 `src/sindri/core/ids.py` (additive), `src/sindri/schemas/policy.py`, `src/sindri/schemas/__init__.py`, `tests/contract/test_evaluation_policy.py`, `tests/contract/examples/evaluation_policy.json`, `tests/unit/test_ids.py`, `components/schemas.yaml`, `docs/REPO_MAP.md`.
 
 ## Parallel work with SIN-P1.1-004
-- Shared files: `src/sindri/schemas/__init__.py` (exports), `components/schemas.yaml`, `docs/REPO_MAP.md`. These are append-only edits that merge trivially; the integrator resolves ordering.
+- Shared files: `src/sindri/schemas/__init__.py` (exports), `components/schemas.yaml`, `docs/REPO_MAP.md`, `implementation/task_board.yaml`. These are append-only edits; the integrator resolves ordering.
 - `src/sindri/core/ids.py` is edited **only by this task**; 004 must not touch it.
 
 ## Status
-`planned`. Draft for coordinator review; decisions E1–E7 open (authoritative status: `implementation/task_board.yaml`).
+`planned`. Coordinator decisions E1–E7 applied; awaiting final packet review, including the two derived invariants (authoritative status: `implementation/task_board.yaml`).
 
 ## Completion evidence
 - Files changed:
