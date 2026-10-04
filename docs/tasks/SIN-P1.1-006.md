@@ -116,36 +116,36 @@ PR #17 coordinator comment `5981249383` was posted before readiness and was not 
 
 ## Acceptance criteria
 Positive:
-- [ ] The adapted §20.6 Finding validates and round-trips. Each FD11 producer kind validates.
-- [ ] A Finding with only supporting evidence validates (an implicit hypothesis).
-- [ ] `hypothesis → check_proposed` validates with an `ExistingPolicyCheck` carrying `confirming_status` and with a pinned `DevelopmentProbeRequest`.
-- [ ] `check_proposed → confirmed` and `→ refuted` validate with deciding Observation citations.
-- [ ] `hypothesis → dropped (no_executable_check)` and `check_proposed → dropped (superseded, superseded_by)` validate.
+- [x] The adapted §20.6 Finding validates and round-trips. Each FD11 producer kind validates.
+- [x] A Finding with only supporting evidence validates (an implicit hypothesis).
+- [x] `hypothesis → check_proposed` validates with an `ExistingPolicyCheck` carrying `confirming_status` and with a pinned `DevelopmentProbeRequest`.
+- [x] `check_proposed → confirmed` and `→ refuted` validate with deciding Observation citations.
+- [x] `hypothesis → dropped (no_executable_check)` and `check_proposed → dropped (superseded, superseded_by)` validate.
 
 Negative:
-- [ ] Every field required (no defaults); unknown fields rejected at every level, including `status`, `proposed_check`, `rank` on Finding and `actor`, `direction` on FindingTransition.
-- [ ] A Finding with neither citations nor supporting evidence → rejected; `derived_from` equal to itself → rejected.
-- [ ] Edges outside the table (`hypothesis → confirmed`, `confirmed → refuted`, `refuted → check_proposed`, `dropped → hypothesis`) → rejected.
-- [ ] `check_proposed` without a `proposed_check`, or `proposed_check` on any other transition → rejected.
-- [ ] Confirmed/refuted with empty `deciding_citations` → rejected. There is no supporting-evidence field on transitions, so a probe or artifact cannot decide (ADR-0005, FD8).
-- [ ] Dropped without a reason, with deciding citations, or with `superseded_by` on a non-superseded reason → rejected.
-- [ ] A citation without `observation_hash` → rejected.
-- [ ] A model producer without `model`/`model_version`, a component producer without `component_hash`, a human producer without `reviewer_ref`, or `training_allowed` missing or non-bool → rejected.
-- [ ] An `ExistingPolicyCheck` missing/invalid `confirming_status` → rejected. A `DevelopmentProbeRequest` missing `policy_hash`, using a non-sim/formal action, mixing tests+properties, or carrying the wrong payload for its action → rejected; a cycle window with start > end → rejected.
-- [ ] Unknown uncertainty or float values; a blank or over-long claim → rejected.
-- [ ] Sequence 1 with a previous hash, or sequence > 1 without one → rejected.
-- [ ] Records are immutable.
+- [x] Every field required (no defaults); unknown fields rejected at every level, including `status`, `proposed_check`, `rank` on Finding and `actor`, `direction` on FindingTransition.
+- [x] A Finding with neither citations nor supporting evidence → rejected; `derived_from` equal to itself → rejected.
+- [x] Edges outside the table (`hypothesis → confirmed`, `confirmed → refuted`, `refuted → check_proposed`, `dropped → hypothesis`) → rejected.
+- [x] `check_proposed` without a `proposed_check`, or `proposed_check` on any other transition → rejected.
+- [x] Confirmed/refuted with empty `deciding_citations` → rejected. There is no supporting-evidence field on transitions, so a probe or artifact cannot decide (ADR-0005, FD8).
+- [x] Dropped without a reason, with deciding citations, or with `superseded_by` on a non-superseded reason → rejected.
+- [x] A citation without `observation_hash` → rejected.
+- [x] A model producer without `model`/`model_version`, a component producer without `component_hash`, a human producer without `reviewer_ref`, or `training_allowed` missing or non-bool → rejected.
+- [x] An `ExistingPolicyCheck` missing/invalid `confirming_status` → rejected. A `DevelopmentProbeRequest` missing `policy_hash`, using a non-sim/formal action, mixing tests+properties, or carrying the wrong payload for its action → rejected; a cycle window with start > end → rejected.
+- [x] Unknown uncertainty or float values; a blank or over-long claim → rejected.
+- [x] Sequence 1 with a previous hash, or sequence > 1 without one → rejected.
+- [x] Records are immutable.
 
 Planted-bug checks (run, record in handoff, revert):
-- [ ] Allowing `hypothesis → confirmed` makes the suite fail.
-- [ ] Allowing confirm/refute with empty `deciding_citations` makes the suite fail.
-- [ ] Making `proposed_check` optional on `check_proposed` makes the suite fail.
-- [ ] Defaulting `training_allowed=True` on producers makes the suite fail.
-- [ ] Removing/defaulting `confirming_status` or allowing an invalid DevelopmentProbeRequest action/payload makes the suite fail.
+- [x] Allowing `hypothesis → confirmed` makes the suite fail.
+- [x] Allowing confirm/refute with empty `deciding_citations` makes the suite fail.
+- [x] Making `proposed_check` optional on `check_proposed` makes the suite fail.
+- [x] Defaulting `training_allowed=True` on producers makes the suite fail.
+- [x] Removing/defaulting `confirming_status` or allowing an invalid DevelopmentProbeRequest action/payload makes the suite fail.
 
 General:
-- [ ] `ruff`, `mypy --strict`, full `pytest` green; boundary test covers `schemas`.
-- [ ] `components/schemas.yaml` and `docs/REPO_MAP.md` updated; handoff written; report ends with "Awaiting coordinator assignment."
+- [x] `ruff`, `mypy --strict`, full `pytest` green; boundary test covers `schemas`.
+- [x] `components/schemas.yaml` and `docs/REPO_MAP.md` updated; handoff written; report ends with "Awaiting coordinator assignment."
 
 ## Verification commands
 ```bash
@@ -166,8 +166,32 @@ uv run pytest -q tests/contract
 `blocked` (coordinator correction, 2026-10-05). PR #17 commit `1f50e904` recorded readiness even though final coordinator comment `5981249383` explicitly required additional fixes before merge/READY. Existing implementation work is accepted for review only; PR #18 must implement the final corrections above before merge (authoritative status: `implementation/task_board.yaml`).
 
 ## Completion evidence
-- Files changed:
-- Tests run/results:
+- Files changed: `src/sindri/schemas/finding.py` (new), `src/sindri/schemas/__init__.py` (exports), `tests/contract/test_finding.py` and three fixtures (new), `components/schemas.yaml`, `docs/REPO_MAP.md`, this packet, handoff. `core/ids.py` untouched (owned by 007).
+- Tests run/results (after the PR #18 review fixes, on top of `main` `b46be56`): `ruff` clean; `mypy --strict` clean (17 files); `pytest`: 707 passed, 8 skipped (105 Finding tests); contract: 594 passed.
 - Acceptance evidence:
-- Known limitations:
-- Handoff/next action:
+  - The adapted §20.6 Finding, a `check_proposed` transition carrying a **pinned** `run_sim` probe for `stall_stability_004`, and a `confirmed` transition validate and re-serialize to identical JSON.
+  - **Verdict mapping (PR #18 fix 1):**
+    - `ExistingPolicyCheck.confirming_status` is a `ToolStatus` restricted to PASS or FAIL;
+    - `refuting_status` returns the opposite, tested for both directions;
+    - a missing, `TIMEOUT`, `INCONCLUSIVE`, lowercase or `None` value is rejected.
+  - **Probe pinning and payloads (fix 2):**
+    - `DevelopmentProbeRequest.policy_hash` is required;
+    - `run_sim` needs tests and no properties; `run_formal` needs properties and no tests;
+    - `lint`, `compile`, `check_equiv` and `inspect_waveform` are rejected.
+  - Rejection reasons spot-checked for each new rule.
+  - Planted bugs, each caught and the source restored:
+    - `hypothesis → confirmed` → 2 failures;
+    - empty deciding citations → 2;
+    - optional `proposed_check` → 1;
+    - `training_allowed` default → 1;
+    - `confirming_status` defaulted → 1;
+    - `confirming_status` accepting any status → 2;
+    - any probe action allowed → 3;
+    - mixed probe payload allowed → 1.
+- Cross-transition rules recorded for SIN-P1.1-009 / P1.5 (not checkable in one record), PR #18 fix 3:
+  - a Finding whose `check_proposed` transition carried a `DevelopmentProbeRequest` can never transition to confirmed/refuted; it is dropped or superseded;
+  - promotion creates a new `derived_from` Finding proposing an `ExistingPolicyCheck`, and only that Finding may be decided;
+  - confirmed citations all match `confirming_status`, refuted ones the opposite, and mixed PASS/FAIL deciding citations are invalid.
+- Implementation interpretations (unchanged, for review): a first transition starts from `hypothesis` (in-record); duplicate citations rejected; deciding citations only on confirm/refute; `superseded_by` cannot equal the Finding itself.
+- Status: kept **`blocked`** on the board per the coordinator correction (PR #20); this PR is review-only until the coordinator clears it.
+- Handoff/next action: `docs/handoffs/SIN-P1.1-006.md`.

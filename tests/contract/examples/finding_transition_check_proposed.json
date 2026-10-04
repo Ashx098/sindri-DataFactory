@@ -1,0 +1,23 @@
+{
+  "schema_version": 1,
+  "finding_id": "F42",
+  "finding_hash": "sha256:dcfd86ce4d0f0fb21f62e1c5ff9ff6a2cb7650c616207304d85a5724377d7e2b",
+  "sequence": 1,
+  "previous_transition_hash": null,
+  "from_status": "hypothesis",
+  "to_status": "check_proposed",
+  "proposed_check": {
+    "proposal_kind": "development_probe",
+    "policy_hash": "sha256:b9b9b9b9b9b9b9b9b9b9b9b9b9b9b9b9b9b9b9b9b9b9b9b9b9b9b9b9b9b9b9b9",
+    "action": "run_sim",
+    "configuration_id": "cfg_w8_d8",
+    "test_ids": [
+      "stall_stability_004"
+    ],
+    "property_ids": [],
+    "rationale": "hold out_ready low 8 cycles with out_valid high; check out_data stability"
+  },
+  "deciding_citations": [],
+  "drop_reason": null,
+  "superseded_by": null
+}
