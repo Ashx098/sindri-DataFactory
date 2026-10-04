@@ -16,7 +16,8 @@ python scripts/show_ready_tasks.py --all
 - `SIN-P1.1-002` verified (coordinator, 2026-10-04). PR #6 merged as `4377df5`; merged-main CI `37154049449` passed.
 - `SIN-P1.1-003` verified (coordinator, 2026-10-04). PR #10 merged as `3a51766`; merged-main CI `37183976957` passed.
 - `SIN-P1.1-004` verified (coordinator, 2026-10-04). PR #11 merged as `d465850`; merged-main CI `37184201021` passed after the deliberate 003+004 integration.
-- **`SIN-P1.1-005 — Observation` is the only READY task** (coordinator, 2026-10-04). Its final packet was approved on PR #13, merged as `ce39c73`, and merged-main CI `37186781645` passed. Implementation is authorized only after this readiness transition is itself merged to `main`. No other task is authorized.
+- `SIN-P1.1-005 — Observation` verified (coordinator, 2026-10-04). PR #15 merged as `7f16bf3`; merged-main CI `37204008101` passed.
+- No task is currently READY. `SIN-P1.1-006 — Finding` and `SIN-P1.1-007 — EpisodeState` are now eligible for **packet drafting only**, in parallel. Neither is authorized for implementation until its own packet is reviewed, merged and marked READY.
 - Process deviation (recorded at the coordinator's request, not precedent): implementation of 003 and 004 began from the **unmerged** readiness commit `62a7834`, under delegation. The coordinator accepted that work for review, but READY was not yet authoritative on `main`. Future implementation waits until readiness is merged.
 
 ## P1.1 order (coordinator sequencing refinement, 2026-10-04; not an ADR change)
