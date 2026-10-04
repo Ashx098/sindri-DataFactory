@@ -11,8 +11,13 @@ the master architecture §20 examples:
     FamilyId       stream-framing       LineageId      pktfr
     VariantId      maxlen4-64_datasheet ContractId     ct_pktfr_0193_v3
 
-(Family, lineage, variant and contract IDs were added by SIN-P1.1-002, decision D2; the
-earlier types and patterns are frozen.)
+    ObligationId   sim_stall_01         CheckId        chk_formal_core
+    ConfigurationId cfg_w8_d8           ToolProfileId  tp_sby_bmc_v0
+    ExceptionId    ex_formal_w32
+
+(Family, lineage, variant and contract IDs were added by SIN-P1.1-002, decision D2; obligation,
+check, configuration, tool-profile and exception IDs by SIN-P1.1-003 for EvaluationPolicy. Earlier
+types and patterns are frozen.)
 
 Each ID type is a distinct `str` subclass that validates on construction, so a malformed value
 cannot exist and mypy rejects passing one kind of ID where another is expected.
@@ -116,6 +121,33 @@ class VariantId(_TypedId):
 class ContractId(_TypedId):
     __slots__ = ()
     PATTERN = re.compile(rf"ct_{_SLUG}")
+
+
+class ObligationId(_TypedId):
+    """Master §20.9 examples: `sim_stall_01`, `sva_stall_stable` (ADR-0004)."""
+
+    __slots__ = ()
+    PATTERN = re.compile(r"[a-z][a-z0-9]*(?:_[a-z0-9]+)*")
+
+
+class CheckId(_TypedId):
+    __slots__ = ()
+    PATTERN = re.compile(rf"chk_{_SLUG}")
+
+
+class ConfigurationId(_TypedId):
+    __slots__ = ()
+    PATTERN = re.compile(rf"cfg_{_SLUG}")
+
+
+class ToolProfileId(_TypedId):
+    __slots__ = ()
+    PATTERN = re.compile(rf"tp_{_SLUG}")
+
+
+class ExceptionId(_TypedId):
+    __slots__ = ()
+    PATTERN = re.compile(rf"ex_{_SLUG}")
 
 
 class ContentId(_TypedId):

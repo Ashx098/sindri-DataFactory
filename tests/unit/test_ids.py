@@ -11,16 +11,21 @@ from pydantic import BaseModel, ValidationError
 
 from sindri.core.ids import (
     CandidateId,
+    CheckId,
+    ConfigurationId,
     ContentId,
     ContractId,
     EpisodeId,
+    ExceptionId,
     FamilyId,
     FindingId,
     LineageId,
+    ObligationId,
     ObservationId,
     PolicyId,
     RequirementId,
     TaskId,
+    ToolProfileId,
     VariantId,
     canonical_json_bytes,
     canonical_json_id,
@@ -142,6 +147,12 @@ VALID = [
     (LineageId, "pktfr"),
     (VariantId, "maxlen4-64_datasheet"),
     (ContractId, "ct_pktfr_0193_v3"),
+    (ObligationId, "sim_stall_01"),
+    (ObligationId, "sva_stall_stable"),
+    (CheckId, "chk_formal_core"),
+    (ConfigurationId, "cfg_w8_d8"),
+    (ToolProfileId, "tp_sby_bmc_v0"),
+    (ExceptionId, "ex_formal_w32"),
 ]
 
 INVALID = [
@@ -169,6 +180,12 @@ INVALID = [
     (VariantId, "maxlen 4"),
     (ContractId, "pktfr_0193_v3"),
     (ContractId, "ct_"),
+    (ObligationId, "Sim_stall"),
+    (ObligationId, "1sim"),
+    (CheckId, "formal_core"),
+    (ConfigurationId, "cfg-w8"),
+    (ToolProfileId, "tp_"),
+    (ExceptionId, "exc_formal"),
 ]
 
 
