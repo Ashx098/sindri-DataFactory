@@ -15,6 +15,7 @@ python scripts/show_ready_tasks.py --all
   float/identity follow-up is carried forward (SIN-P1.1-002 decision D5, P1.1-G).
 - `SIN-P1.1-002` verified (coordinator, 2026-10-04). PR #6 merged as `4377df5`; merged-main CI `37154049449` passed.
 - **`SIN-P1.1-003` and `SIN-P1.1-004` are READY** (2026-10-04; decisions on PR #8, E8–E9 and readiness under coordinator delegation). They run in parallel in separate worktrees; 003 alone edits `core/ids.py`. No other task is authorized.
+- Process deviation (recorded at the coordinator's request, not precedent): implementation of 003 and 004 began from the **unmerged** readiness commit `62a7834`, under delegation. The coordinator accepted that work for review, but READY was not yet authoritative on `main`. Future implementation waits until readiness is merged.
 
 ## P1.1 order (coordinator sequencing refinement, 2026-10-04; not an ADR change)
 ```
@@ -46,7 +47,7 @@ says which may be opened.
 | SIN-P1.1-006 | Finding | status only via defined transitions; requirement, artifact and evidence references required |
 | SIN-P1.1-007 | EpisodeState | budgets spent/remaining consistent; WAITING representable; pending jobs recorded |
 | SIN-P1.1-008 | Serialization and schema-versioning tests | round-trip of every master §20 example; schema_version stored; old versions never silently reinterpreted |
-| SIN-P1.1-009 | Cross-record invariant tests | claims of pass/fail reference Observation IDs (master §8.7); IDs resolve across records; **task/family/lineage/split identity cannot change across manifest versions** and (`task_id`, `requirement_id`) is stable across requirement versions (coordinator C5) |
+| SIN-P1.1-009 | Cross-record invariant tests | claims of pass/fail reference Observation IDs (master §8.7); IDs resolve across records; **task/family/lineage/split identity cannot change across manifest versions** and (`task_id`, `requirement_id`) is stable across requirement versions (coordinator C5); **every approved mandatory requirement is enforced in every configuration where it applies, after policy exceptions: some obligation for it contains a mandatory, non-quality check that applies to that configuration** (PR #9 review) |
 | SIN-P1.1-G | Subphase integration verification | all P1.1 tasks verified on main; exported JSON Schemas match models; float/identity rule (SIN-P1.1-001 follow-up) applied consistently across records |
 
 ## Rule
