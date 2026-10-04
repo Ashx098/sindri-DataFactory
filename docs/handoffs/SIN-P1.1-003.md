@@ -46,13 +46,16 @@ E1–E7 (coordinator, PR #8) and E8–E9 (agent decisions under coordinator dele
 ## Open questions
 None.
 
+## Coordinator verification
+- PR #10 merged to `main` as `3a51766`; merged-main CI `37183976957` passed.
+- PR #11 later integrated CandidateManifest deliberately with this policy state and merged as `d465850`; merged-main CI `37184201021` passed.
+- Task status: `verified` on 2026-10-04.
+
 ## Blocked on
-- Merge of the ready-marking PR (`chore/SIN-P1.1-003-004-ready`), then coordinator review of this task's PR.
-- Integration with SIN-P1.1-004: both append to `schemas/__init__.py`, `components/schemas.yaml`, `docs/REPO_MAP.md` and `implementation/task_board.yaml`. Whichever PR merges second needs a **deliberate manual resolution**. "Accept both" is unsafe: a trial merge showed it breaks the `__init__.py` import block and duplicates repo-map lines. Re-run the full gate on the combined state.
+- None. This task is verified. No later task is authorized until its packet is separately reviewed and marked READY.
 
-## Next ready after approval
-After 003 and 004 are both merged and verified: SIN-P1.1-005 Observation (the coordinator opens its packet). Observation can now reference `CheckId` and `ConfigurationId` from this record.
-
+## Next eligible for packet drafting
+SIN-P1.1-005 Observation. It may now reference `CheckId` and `ConfigurationId` from this record.
 ## Do not start
 - 005–009, P1.1-G, any P1.2+ or P2+ work. No solver projection of the policy (P1.5/P5).
 
