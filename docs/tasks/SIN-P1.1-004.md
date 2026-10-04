@@ -130,7 +130,7 @@ uv run pytest -q tests/contract
 - This task does not touch `src/sindri/core/ids.py` and does not move `EditPath`.
 
 ## Status
-`review` (authoritative status: `implementation/task_board.yaml`). Decisions F1–F8 implemented as written.
+`verified` (coordinator, 2026-10-04). PR #11 merged as `d465850`; merged-main CI `37184201021` passed on the deliberately integrated 003+004 state.
 
 ## Completion evidence
 - Files changed: `src/sindri/schemas/candidate.py` (new), `src/sindri/schemas/__init__.py` (exports), `tests/contract/test_candidate_manifest.py` (new), `tests/contract/examples/candidate_manifest.json` (new), `components/schemas.yaml`, `docs/REPO_MAP.md`, `implementation/task_board.yaml`, this packet, handoff. `core/ids.py` and the verified schema files are untouched; `EditPath` is imported, not moved.
@@ -145,4 +145,5 @@ uv run pytest -q tests/contract
     - `training_allowed=True` default → 1.
 - Review fix (PR #11): with the old over-strict episode rule restored, the new solver-side explorer test fails (1 failure); with the corrected rule, all pass.
 - Known limitations: `seed` is any strict integer (no range is specified by the master); paths sort by Unicode code point (documented in `candidate_source_hash`).
+- Verification on merged main: PR #11 merge `d465850`; CI `37184201021` passed.
 - Handoff/next action: `docs/handoffs/SIN-P1.1-004.md`.
