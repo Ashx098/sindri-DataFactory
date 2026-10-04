@@ -48,7 +48,7 @@ None.
 
 ## Blocked on
 - Merge of the ready-marking PR (`chore/SIN-P1.1-003-004-ready`), then coordinator review of this task's PR.
-- Integration with SIN-P1.1-004: both append to `schemas/__init__.py`, `components/schemas.yaml`, `docs/REPO_MAP.md` and `implementation/task_board.yaml`. Whichever PR merges second needs a trivial conflict resolution.
+- Integration with SIN-P1.1-004: both append to `schemas/__init__.py`, `components/schemas.yaml`, `docs/REPO_MAP.md` and `implementation/task_board.yaml`. Whichever PR merges second needs a **deliberate manual resolution**. "Accept both" is unsafe: a trial merge showed it breaks the `__init__.py` import block and duplicates repo-map lines. Re-run the full gate on the combined state.
 
 ## Next ready after approval
 After 003 and 004 are both merged and verified: SIN-P1.1-005 Observation (the coordinator opens its packet). Observation can now reference `CheckId` and `ConfigurationId` from this record.
