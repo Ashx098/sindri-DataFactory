@@ -160,7 +160,7 @@ uv run pytest -q tests/contract
 - `src/sindri/core/ids.py` is edited **only by this task**; 004 must not touch it.
 
 ## Status
-`review` (authoritative status: `implementation/task_board.yaml`). Decisions E1–E9 implemented as written.
+`verified` (coordinator, 2026-10-04). PR #10 merged as `3a51766`; merged-main CI `37183976957` passed. The later 003+004 integrated main at `d465850` also passed CI `37184201021`.
 
 ## Completion evidence
 - Files changed: `src/sindri/core/ids.py` (additive: `ObligationId`, `CheckId`, `ConfigurationId`, `ToolProfileId`, `ExceptionId`; existing patterns untouched, only docstring lines edited), `src/sindri/schemas/policy.py` (new), `src/sindri/schemas/__init__.py` (exports), `tests/contract/test_evaluation_policy.py` and `tests/contract/examples/evaluation_policy.json` (new), `tests/unit/test_ids.py`, `components/schemas.yaml`, `docs/REPO_MAP.md`, `implementation/task_board.yaml`, this packet, handoff.
@@ -184,4 +184,5 @@ uv run pytest -q tests/contract
   - **E7a:** exceptions carry no expiry by design (semantic not-applicability); temporary waivers are release-layer.
   - **009:** the strengthened coverage rule (a mandatory, non-quality, applicable check per configuration after exceptions) is recorded in Non-goals and `CURRENT_PHASE.md`; it is not checked here because 003 cannot see `Requirement.mandatory` or applicability.
 - Known limitations: the solver-safe projection (E2) is not built (P1.5/P5); its rule is recorded as INV-EP-001. Cross-record checks are SIN-P1.1-009.
+- Verification on merged main: PR #10 merge `3a51766`, CI `37183976957`; integrated 003+004 merge `d465850`, CI `37184201021`.
 - Handoff/next action: `docs/handoffs/SIN-P1.1-003.md`.
