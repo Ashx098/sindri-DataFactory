@@ -17,7 +17,7 @@ python scripts/show_ready_tasks.py --all
 - `SIN-P1.1-003` verified (coordinator, 2026-10-04). PR #10 merged as `3a51766`; merged-main CI `37183976957` passed.
 - `SIN-P1.1-004` verified (coordinator, 2026-10-04). PR #11 merged as `d465850`; merged-main CI `37184201021` passed after the deliberate 003+004 integration.
 - `SIN-P1.1-005 — Observation` verified (coordinator, 2026-10-04). PR #15 merged as `7f16bf3`; merged-main CI `37204008101` passed.
-- No task is currently READY. `SIN-P1.1-006 — Finding` and `SIN-P1.1-007 — EpisodeState` are now eligible for **packet drafting only**, in parallel. Neither is authorized for implementation until its own packet is reviewed, merged and marked READY.
+- No task is currently READY. `SIN-P1.1-006 — Finding` and `SIN-P1.1-007 — EpisodeState` packets are **drafted for coordinator review** (`planned`; open decisions FD1–FD12 and ED1–ED15). Notable: ED1 surfaces a state-list conflict between master F3/§8.8 and constitution §15 (proposed ADR-0006); FD8 surfaces that a newly proposed discriminating test cannot confirm a Finding until it is a declared policy check. Neither task is authorized for implementation until its packet is reviewed, merged and marked READY on `main`.
 - Process deviation (recorded at the coordinator's request, not precedent): implementation of 003 and 004 began from the **unmerged** readiness commit `62a7834`, under delegation. The coordinator accepted that work for review, but READY was not yet authoritative on `main`. Future implementation waits until readiness is merged.
 
 ## P1.1 order (coordinator sequencing refinement, 2026-10-04; not an ADR change)
