@@ -1,0 +1,65 @@
+{
+  "schema_version": 1,
+  "observation_id": "ob_88121",
+  "candidate_id": "c_pktfr_0193_e17_v3",
+  "candidate_manifest_hash": "sha256:c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1",
+  "source_hash": "sha256:7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e",
+  "dependency_hash": "sha256:d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0",
+  "policy_id": "ep_pktfr_001",
+  "policy_hash": "sha256:b9b9b9b9b9b9b9b9b9b9b9b9b9b9b9b9b9b9b9b9b9b9b9b9b9b9b9b9b9b9b9b9",
+  "check_id": "chk_formal_core",
+  "configuration_id": "cfg_w8_d8",
+  "check_kind": "formal",
+  "visibility": "hidden",
+  "action": "run_formal",
+  "tool_profile_id": "tp_sby_bmc_v0",
+  "tool_profile_hash": "sha256:a4a4a4a4a4a4a4a4a4a4a4a4a4a4a4a4a4a4a4a4a4a4a4a4a4a4a4a4a4a4a4a4",
+  "tool_image_digest": "sha256:0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f",
+  "adapter_version": "sby-adapter 0.1.0",
+  "adapter_hash": "sha256:adadadadadadadadadadadadadadadadadadadadadadadadadadadadadadadad",
+  "evaluator_bundle_hash": "sha256:ebebebebebebebebebebebebebebebebebebebebebebebebebebebebebebebeb",
+  "seed": null,
+  "formal_mode": "bmc",
+  "formal_depth": 40,
+  "wall_time_limit_ms": 600000,
+  "execution_key": "sha256:a78bc052ff28da549254a15746cc297fec8a7b3c40c5e27c4e7bb3fc9b91fb54",
+  "started_at": "2026-10-04T09:15:00Z",
+  "duration_ms": 41200,
+  "status": "FAIL",
+  "summary": "R03 violated at cycle 23",
+  "diagnostics": [
+    {
+      "severity": "error",
+      "category": "candidate",
+      "code": "assert_failed",
+      "message": "assertion R03_sva failed at cycle 23",
+      "path": "rtl/pkt_framer.sv",
+      "line": 118
+    }
+  ],
+  "diagnostics_truncated": false,
+  "log_ref": "sha256:1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f",
+  "evidence_refs": [
+    {
+      "kind": "counterexample_trace",
+      "hash": "sha256:8e8e8e8e8e8e8e8e8e8e8e8e8e8e8e8e8e8e8e8e8e8e8e8e8e8e8e8e8e8e8e8e"
+    }
+  ],
+  "execution_report": {
+    "report_kind": "formal",
+    "mode": "bmc",
+    "requested_depth": 40,
+    "reached_depth": 23,
+    "proof_closed": null,
+    "expected_property_ids": [
+      "R03_sva",
+      "R17_sva"
+    ],
+    "property_results": [
+      {
+        "property_id": "R03_sva",
+        "outcome": "FAIL"
+      }
+    ]
+  }
+}

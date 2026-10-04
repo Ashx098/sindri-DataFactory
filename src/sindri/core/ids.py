@@ -13,10 +13,12 @@ the master architecture §20 examples:
 
     ObligationId   sim_stall_01         CheckId        chk_formal_core
     ConfigurationId cfg_w8_d8           ToolProfileId  tp_sby_bmc_v0
-    ExceptionId    ex_formal_w32
+    ExceptionId    ex_formal_w32        TestId         stall_stability_004
+    PropertyId     R03_sva
 
 (Family, lineage, variant and contract IDs were added by SIN-P1.1-002, decision D2; obligation,
-check, configuration, tool-profile and exception IDs by SIN-P1.1-003 for EvaluationPolicy. Earlier
+check, configuration, tool-profile and exception IDs by SIN-P1.1-003 for EvaluationPolicy; test and
+property IDs by SIN-P1.1-005 for Observation execution reports. Earlier
 types and patterns are frozen.)
 
 Each ID type is a distinct `str` subclass that validates on construction, so a malformed value
@@ -148,6 +150,20 @@ class ToolProfileId(_TypedId):
 class ExceptionId(_TypedId):
     __slots__ = ()
     PATTERN = re.compile(rf"ex_{_SLUG}")
+
+
+class TestId(_TypedId):
+    """Master §20.6 example: `stall_stability_004`."""
+
+    __slots__ = ()
+    PATTERN = re.compile(r"[a-z][a-z0-9]*(?:_[a-z0-9]+)*")
+
+
+class PropertyId(_TypedId):
+    """Master §20.4 example: `R03_sva` (property names may carry requirement-style capitals)."""
+
+    __slots__ = ()
+    PATTERN = re.compile(r"[A-Za-z][A-Za-z0-9]*(?:_[A-Za-z0-9]+)*")
 
 
 class ContentId(_TypedId):

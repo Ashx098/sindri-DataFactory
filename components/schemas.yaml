@@ -5,8 +5,9 @@ kind: deterministic
 purpose: >-
   Versioned boundary records shared by every component (master architecture ch. 20). Records are
   closed, immutable, float-free and coercion-free for identity-bearing scalars, so a record's
-  content ID is a stable identity. SIN-P1.1-002 adds TaskManifest and Requirement; later P1.1 tasks
-  add EvaluationPolicy, CandidateManifest, Observation, Finding and EpisodeState.
+  content ID is a stable identity. Current records: TaskManifest and Requirement (SIN-P1.1-002),
+  EvaluationPolicy (003), CandidateManifest (004) and Observation (005); Finding and EpisodeState
+  follow (006, 007).
 inputs:
   - JSON or Python mappings from other components
 outputs:
@@ -14,6 +15,7 @@ outputs:
   - Requirement
   - EvaluationPolicy
   - CandidateManifest
+  - Observation
 may_read:
   - sindri.core
 may_write: []
@@ -31,6 +33,21 @@ public_interfaces:
   - name: Requirement.model_validate / model_validate_json
     request: mapping or JSON
     response: Requirement
+  - name: EvaluationPolicy.model_validate / model_validate_json
+    request: mapping or JSON
+    response: EvaluationPolicy
+  - name: CandidateManifest.model_validate / model_validate_json
+    request: mapping or JSON
+    response: CandidateManifest
+  - name: candidate_source_hash
+    request: CandidateFile iterable
+    response: ContentId (candidate_file_set_v1)
+  - name: Observation.model_validate / model_validate_json
+    request: mapping or JSON
+    response: Observation
+  - name: observation_execution_key
+    request: the 15 execution-request fields
+    response: ContentId (observation_execution_key_v1)
   - name: Record.content_id
     request: record
     response: ContentId
@@ -69,6 +86,19 @@ invariants:
     text: solver requires episode_id; reconstructor forbids it; architecture_explorer has it optional (None = oracle-side, set = solver-side).
   - id: INV-CM-005
     text: author carries model, version, temperature_millis, seed, provenance_ref and a never-defaulted training_allowed.
+  # SIN-P1.1-005 Observation
+  - id: INV-OB-001
+    text: Observation is the record of an attempted execution of one declared policy check (ADR-0005); diagnostic/qualification results are other types; quality is not an Observation kind in v1.
+  - id: INV-OB-002
+    text: execution_key == canonical_json_id({"kind":"observation_execution_key_v1", request fields}); only observation_execution_key implements it; result fields never enter it.
+  - id: INV-OB-003
+    text: Raw ToolStatus is never rewritten; TIMEOUT/TOOL_ERROR/UNSUPPORTED/INCONCLUSIVE never carry candidate failure evidence.
+  - id: INV-OB-004
+    text: PASS needs a complete report (all expected tests/properties, bound met); FAIL needs a report with candidate-attributed failure evidence and may be partial (R3).
+  - id: INV-OB-006
+    text: Synthesis PASS needs zero black boxes (master §14 J1); synthesis FAIL may rest on errors, black boxes or latches together with a candidate error. Latches are recorded but not judged until evaluator/profile semantics define expected latches (P1.4/P1.6).
+  - id: INV-OB-005
+    text: Hidden-check Observations are judge-side protected and never reach solver context (O14); authentication is evidence-store write authority, not a record field (O13).
 failure_modes:
   - id: FM-001
     symptom: A field gains a default and silently fills authority/split/rights.
@@ -82,5 +112,5 @@ required_tests:
 observability:
   spans: []
   metrics: []
-related_adrs: [ADR-0001, ADR-0002, ADR-0004]
-related_docs: [docs/tasks/SIN-P1.1-002.md]
+related_adrs: [ADR-0001, ADR-0002, ADR-0004, ADR-0005]
+related_docs: [docs/tasks/SIN-P1.1-002.md, docs/tasks/SIN-P1.1-003.md, docs/tasks/SIN-P1.1-004.md, docs/tasks/SIN-P1.1-005.md]
