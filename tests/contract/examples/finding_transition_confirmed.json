@@ -1,0 +1,18 @@
+{
+  "schema_version": 1,
+  "finding_id": "F42",
+  "finding_hash": "sha256:dcfd86ce4d0f0fb21f62e1c5ff9ff6a2cb7650c616207304d85a5724377d7e2b",
+  "sequence": 2,
+  "previous_transition_hash": "sha256:7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a",
+  "from_status": "check_proposed",
+  "to_status": "confirmed",
+  "proposed_check": null,
+  "deciding_citations": [
+    {
+      "observation_id": "ob_88121",
+      "observation_hash": "sha256:0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b"
+    }
+  ],
+  "drop_reason": null,
+  "superseded_by": null
+}

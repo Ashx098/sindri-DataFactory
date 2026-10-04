@@ -1,0 +1,30 @@
+{
+  "schema_version": 1,
+  "finding_id": "F42",
+  "task_id": "pktfr_0193",
+  "candidate_id": "c_pktfr_0193_e17_v3",
+  "candidate_manifest_hash": "sha256:c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1",
+  "requirement_id": "R17",
+  "claim": "output may change while stalled",
+  "uncertainty": "medium",
+  "producer": {
+    "kind": "model",
+    "role": "triage",
+    "model": "nemotron-3-super",
+    "model_version": "2026-09-01",
+    "provenance_ref": "model_gateway:call/9b21",
+    "training_allowed": true
+  },
+  "correctness_citations": [],
+  "supporting_evidence": [
+    {
+      "kind": "trace",
+      "hash": "sha256:8888888888888888888888888888888888888888888888888888888888888888",
+      "cycle_window": {
+        "start": 40,
+        "end": 48
+      }
+    }
+  ],
+  "derived_from": null
+}
