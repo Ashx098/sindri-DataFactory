@@ -32,7 +32,7 @@ Each transition writes a new snapshot; history is never overwritten.
 - Phase/subphase: P1.1; order: 005 → **{006, 007}** → 008.
 
 ## Owner / coordinator
-- Owner: assigned by coordinator when marked ready
+- Owner: coding agent (Claude Code), assigned 2026-10-04
 - Integrator: Avinash
 - Reviewers: Avinash
 
@@ -177,7 +177,7 @@ uv run pytest -q tests/contract
 - This task alone edits `src/sindri/core/ids.py`.
 
 ## Status
-`planned`. PR #17 coordinator decisions and ADR-0006 applied; awaiting final packet review (authoritative status: `implementation/task_board.yaml`).
+`ready` (coordinator, 2026-10-04: "006 and 007 are ready, start both"; recorded by the agent). Decisions ED1–ED15, ADR-0006 final per PR #17. Implementation begins only after this readiness is merged to `main` (authoritative status: `implementation/task_board.yaml`).
 
 ## Completion evidence
 - Files changed:

@@ -24,7 +24,7 @@ not an argument, decides (§18.6).
 - ADRs/RFCs: ADR-0002, ADR-0004, **ADR-0005** (supporting evidence never substitutes for candidate-correctness Observations).
 
 ## Owner / coordinator
-- Owner: assigned by coordinator when marked ready
+- Owner: coding agent (Claude Code), assigned 2026-10-04
 - Integrator: Avinash
 - Reviewers: Avinash
 
@@ -155,7 +155,7 @@ uv run pytest -q tests/contract
 - `src/sindri/core/ids.py` is edited only by SIN-P1.1-007.
 
 ## Status
-`planned`. PR #17 coordinator decisions applied; awaiting final packet review (authoritative status: `implementation/task_board.yaml`).
+`ready` (coordinator, 2026-10-04: "006 and 007 are ready, start both"; recorded by the agent). Decisions FD1–FD12 final per PR #17. Implementation begins only after this readiness is merged to `main` (authoritative status: `implementation/task_board.yaml`).
 
 ## Completion evidence
 - Files changed:

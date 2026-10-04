@@ -17,7 +17,7 @@ python scripts/show_ready_tasks.py --all
 - `SIN-P1.1-003` verified (coordinator, 2026-10-04). PR #10 merged as `3a51766`; merged-main CI `37183976957` passed.
 - `SIN-P1.1-004` verified (coordinator, 2026-10-04). PR #11 merged as `d465850`; merged-main CI `37184201021` passed after the deliberate 003+004 integration.
 - `SIN-P1.1-005 — Observation` verified (coordinator, 2026-10-04). PR #15 merged as `7f16bf3`; merged-main CI `37204008101` passed.
-- No task is currently READY. `SIN-P1.1-006 — Finding` and `SIN-P1.1-007 — EpisodeState` packets carry the PR #17 coordinator decisions (`planned`; awaiting final packet review). ADR-0006 records the episode lifecycle (master F3 + WAITING; constitution §15 release states excluded). FD8 decided: development probes are supporting evidence only and never version the policy per probe. Neither task is authorized for implementation until its packet is merged and marked READY on `main`.
+- **`SIN-P1.1-006 — Finding` and `SIN-P1.1-007 — EpisodeState` are READY** (coordinator, 2026-10-04), in parallel worktrees, effective once this change is merged to `main`. 007 alone edits `core/ids.py`; shared files are integrated by hand. ADR-0006 records the episode lifecycle; FD8: development probes are supporting evidence only. No other task is authorized.
 - Process deviation (recorded at the coordinator's request, not precedent): implementation of 003 and 004 began from the **unmerged** readiness commit `62a7834`, under delegation. The coordinator accepted that work for review, but READY was not yet authoritative on `main`. Future implementation waits until readiness is merged.
 
 ## P1.1 order (coordinator sequencing refinement, 2026-10-04; not an ADR change)
