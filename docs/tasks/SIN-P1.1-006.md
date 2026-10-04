@@ -57,6 +57,12 @@ not an argument, decides (§18.6).
 ### Consequences the agent derived while applying the decisions (for final review)
 - **A Finding confirmed after a probe.** If the transition into `check_proposed` carried a `DevelopmentProbeRequest`, the same Finding can only reach `confirmed`/`refuted` by citing an Observation of a *declared* check. In practice that means a policy check promoted later and executed. Otherwise the Finding is dropped or superseded. The schema allows `check_proposed → confirmed` with any Observation citation; *which* Observations are admissible after a probe is a 009/P1.5 rule (listed below).
 
+### Final coordinator corrections omitted before the invalid readiness transition
+PR #17 coordinator comment `5981249383` was posted before readiness and was not applied by commit `1f50e904`. These rules are authoritative for implementation/review:
+- **Deterministic verdict mapping.** `ExistingPolicyCheck` additionally carries `confirming_status: PASS | FAIL`. The opposite verdict-bearing status is the refuting status. In 009, confirmed citations must all match `confirming_status`; refuted citations must all match the opposite; mixed PASS/FAIL deciding citations are invalid.
+- **Development probe pinning.** `DevelopmentProbeRequest` additionally carries `policy_hash` so `configuration_id` is in an exact policy namespace.
+- **Development probe payloads.** v1 accepts only `run_sim` with non-empty `test_ids` and empty `property_ids`, or `run_formal` with non-empty `property_ids` and empty `test_ids`; all other actions are rejected.
+- **No implicit probe promotion.** A Finding proposed with `DevelopmentProbeRequest` may not transition to confirmed/refuted. It must be dropped/superseded. If the probe is promoted into a declared policy check, a new `derived_from` Finding proposes an `ExistingPolicyCheck`; only that Finding may be decided.
 ## Scope
 - In scope:
   - `src/sindri/schemas/finding.py`:
@@ -64,7 +70,7 @@ not an argument, decides (§18.6).
     - `ObservationCitation{observation_id, observation_hash}`.
     - `SupportingArtifact{kind: trace | waveform_window | log_excerpt | reproducer, hash, cycle_window: {start, end} | None}`, where the cycle window has integer bounds and start ≤ end.
     - `ModelProducer | ComponentProducer | HumanProducer`, discriminated on `kind` (FD11).
-    - `ExistingPolicyCheck{policy_hash, check_id, configuration_id}` and `DevelopmentProbeRequest{action: ObservationAction, configuration_id, test_ids, property_ids, rationale}` (at least one of test/property IDs non-empty; never executable correctness evidence).
+    - `ExistingPolicyCheck{policy_hash, check_id, configuration_id, confirming_status: PASS|FAIL}` and `DevelopmentProbeRequest{policy_hash, action, configuration_id, test_ids, property_ids, rationale}`. DevelopmentProbeRequest v1 allows only `run_sim` with tests or `run_formal` with properties; it is never executable correctness evidence.
     - **`Finding`** (`Record`, immutable): `finding_id`, `task_id`, `candidate_id`, `candidate_manifest_hash`, `requirement_id`, `claim` (non-blank, ≤ 500 characters), `uncertainty`, `producer`, `correctness_citations`, `supporting_evidence`, `derived_from: FindingId | None`.
     - **`FindingTransition`** (`Record`, immutable): `finding_id`, `finding_hash`, `sequence ≥ 1`, `previous_transition_hash | None`, `from_status`, `to_status`, `proposed_check | None`, `deciding_citations`, `drop_reason | None`, `superseded_by: FindingId | None`.
   - In-record invariants:
@@ -94,7 +100,8 @@ not an argument, decides (§18.6).
 - `candidate_manifest_hash` equals the manifest of `candidate_id`, whose `task_id` equals the Finding's; `requirement_id` exists on that task.
 - Each `ObservationCitation` identifies one stored Observation by id + hash, bound to the Finding's exact `candidate_manifest_hash`.
 - `deciding_citations` of confirm/refute reference Observations with status PASS or FAIL.
-- If the `check_proposed` transition carried an `ExistingPolicyCheck`, the deciding Observation matches its `policy_hash`/`check_id`/`configuration_id`. If it carried a `DevelopmentProbeRequest`, deciding Observations must be of a *declared* (promoted) check, never the probe's own supporting result.
+- If the `check_proposed` transition carried an `ExistingPolicyCheck`, deciding Observations match its `policy_hash`/`check_id`/`configuration_id`; confirmed uses its `confirming_status`, refuted uses the opposite verdict-bearing status, and mixed deciding PASS/FAIL citations are invalid.
+- If the `check_proposed` transition carried a `DevelopmentProbeRequest`, that Finding cannot transition to confirmed/refuted. Promotion creates a new `derived_from` Finding whose proposal is `ExistingPolicyCheck`.
 - `ExistingPolicyCheck` resolves in the policy with `policy_hash`, and the pair is not excluded.
 - Transition chains:
   - `finding_hash` matches the Finding;
@@ -111,7 +118,7 @@ not an argument, decides (§18.6).
 Positive:
 - [ ] The adapted §20.6 Finding validates and round-trips. Each FD11 producer kind validates.
 - [ ] A Finding with only supporting evidence validates (an implicit hypothesis).
-- [ ] `hypothesis → check_proposed` validates with an `ExistingPolicyCheck` and with a `DevelopmentProbeRequest`.
+- [ ] `hypothesis → check_proposed` validates with an `ExistingPolicyCheck` carrying `confirming_status` and with a pinned `DevelopmentProbeRequest`.
 - [ ] `check_proposed → confirmed` and `→ refuted` validate with deciding Observation citations.
 - [ ] `hypothesis → dropped (no_executable_check)` and `check_proposed → dropped (superseded, superseded_by)` validate.
 
@@ -124,7 +131,7 @@ Negative:
 - [ ] Dropped without a reason, with deciding citations, or with `superseded_by` on a non-superseded reason → rejected.
 - [ ] A citation without `observation_hash` → rejected.
 - [ ] A model producer without `model`/`model_version`, a component producer without `component_hash`, a human producer without `reviewer_ref`, or `training_allowed` missing or non-bool → rejected.
-- [ ] A `DevelopmentProbeRequest` with neither tests nor properties → rejected; a cycle window with start > end → rejected.
+- [ ] An `ExistingPolicyCheck` missing/invalid `confirming_status` → rejected. A `DevelopmentProbeRequest` missing `policy_hash`, using a non-sim/formal action, mixing tests+properties, or carrying the wrong payload for its action → rejected; a cycle window with start > end → rejected.
 - [ ] Unknown uncertainty or float values; a blank or over-long claim → rejected.
 - [ ] Sequence 1 with a previous hash, or sequence > 1 without one → rejected.
 - [ ] Records are immutable.
@@ -134,6 +141,7 @@ Planted-bug checks (run, record in handoff, revert):
 - [ ] Allowing confirm/refute with empty `deciding_citations` makes the suite fail.
 - [ ] Making `proposed_check` optional on `check_proposed` makes the suite fail.
 - [ ] Defaulting `training_allowed=True` on producers makes the suite fail.
+- [ ] Removing/defaulting `confirming_status` or allowing an invalid DevelopmentProbeRequest action/payload makes the suite fail.
 
 General:
 - [ ] `ruff`, `mypy --strict`, full `pytest` green; boundary test covers `schemas`.
@@ -155,7 +163,7 @@ uv run pytest -q tests/contract
 - `src/sindri/core/ids.py` is edited only by SIN-P1.1-007.
 
 ## Status
-`ready` (coordinator, 2026-10-04: "006 and 007 are ready, start both"; recorded by the agent). Decisions FD1–FD12 final per PR #17. Implementation begins only after this readiness is merged to `main` (authoritative status: `implementation/task_board.yaml`).
+`blocked` (coordinator correction, 2026-10-05). PR #17 commit `1f50e904` recorded readiness even though final coordinator comment `5981249383` explicitly required additional fixes before merge/READY. Existing implementation work is accepted for review only; PR #18 must implement the final corrections above before merge (authoritative status: `implementation/task_board.yaml`).
 
 ## Completion evidence
 - Files changed:
