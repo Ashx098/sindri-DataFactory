@@ -129,37 +129,37 @@ Each transition writes a new snapshot; history is never overwritten.
 
 ## Acceptance criteria
 Positive:
-- [ ] The adapted §20.11 example validates and round-trips: WAITING on two jobs with request hashes, resuming to DEV_CHECK, active and best candidates bound by manifest hash, spent/reserved vectors, elapsed wall-clock.
-- [ ] Sequence-0 PREPARE with no candidates validates.
-- [ ] The first IMPLEMENT snapshot without an `active_candidate` validates.
-- [ ] WAITING resuming to PLAN without a candidate validates.
-- [ ] COMPLETED, and ABORTED (with and without a candidate, with a reason), validate with zero pending jobs.
-- [ ] `EpisodeBudget` with zero additive limits (e.g. `tokens=0`, `formal_ms=0`) validates.
-- [ ] `remaining()` equals limit − spent − reserved per additive dimension, and wall-clock limit − elapsed.
-- [ ] `checkpoint_ref = None` validates.
+- [x] The adapted §20.11 example validates and round-trips: WAITING on two jobs with request hashes, resuming to DEV_CHECK, active and best candidates bound by manifest hash, spent/reserved vectors, elapsed wall-clock.
+- [x] Sequence-0 PREPARE with no candidates validates.
+- [x] The first IMPLEMENT snapshot without an `active_candidate` validates.
+- [x] WAITING resuming to PLAN without a candidate validates.
+- [x] COMPLETED, and ABORTED (with and without a candidate, with a reason), validate with zero pending jobs.
+- [x] `EpisodeBudget` with zero additive limits (e.g. `tokens=0`, `formal_ms=0`) validates.
+- [x] `remaining()` equals limit − spent − reserved per additive dimension, and wall-clock limit − elapsed.
+- [x] `checkpoint_ref = None` validates.
 
 Negative:
-- [ ] Every field required (no defaults); unknown fields rejected, including `budget_id`, `best_reason`, `budget_remaining`, `limits`, and `wall_clock_ms` inside `BudgetVector` (ED7).
-- [ ] WAITING with no pending jobs, with no `resume_state`, or with `resume_state` WAITING/COMPLETED/ABORTED → rejected; a non-WAITING state with `resume_state` → rejected.
-- [ ] DEV_CHECK…COMPLETED without `active_candidate` → rejected; WAITING resuming to DEV_CHECK without one → rejected.
-- [ ] Terminal states with pending jobs → rejected; ABORTED without `abort_reason`, or a reason on non-ABORTED → rejected.
-- [ ] A `PendingJob` without `request_hash` → rejected; a candidate binding without a manifest hash → rejected; duplicate job IDs → rejected.
-- [ ] `reserved` ≠ Σ pending reservations → rejected; negative or float values → rejected.
-- [ ] `EpisodeBudget` with `wall_clock_limit_ms = 0` → rejected.
-- [ ] A failure signature with count 0, or a count ≥ 1 without a signature → rejected.
-- [ ] Sequence 0 with a previous hash, or sequence > 0 without one → rejected.
-- [ ] Records are immutable.
+- [x] Every field required (no defaults); unknown fields rejected, including `budget_id`, `best_reason`, `budget_remaining`, `limits`, and `wall_clock_ms` inside `BudgetVector` (ED7).
+- [x] WAITING with no pending jobs, with no `resume_state`, or with `resume_state` WAITING/COMPLETED/ABORTED → rejected; a non-WAITING state with `resume_state` → rejected.
+- [x] DEV_CHECK…COMPLETED without `active_candidate` → rejected; WAITING resuming to DEV_CHECK without one → rejected.
+- [x] Terminal states with pending jobs → rejected; ABORTED without `abort_reason`, or a reason on non-ABORTED → rejected.
+- [x] A `PendingJob` without `request_hash` → rejected; a candidate binding without a manifest hash → rejected; duplicate job IDs → rejected.
+- [x] `reserved` ≠ Σ pending reservations → rejected; negative or float values → rejected.
+- [x] `EpisodeBudget` with `wall_clock_limit_ms = 0` → rejected.
+- [x] A failure signature with count 0, or a count ≥ 1 without a signature → rejected.
+- [x] Sequence 0 with a previous hash, or sequence > 0 without one → rejected.
+- [x] Records are immutable.
 
 Planted-bug checks (run, record in handoff, revert):
-- [ ] Allowing WAITING with zero pending jobs makes the suite fail.
-- [ ] Skipping the `reserved == Σ reservations` check makes the suite fail.
-- [ ] Making `PendingJob.request_hash` optional makes the suite fail.
-- [ ] Requiring `active_candidate` in IMPLEMENT makes the suite fail (the first-IMPLEMENT positive test).
-- [ ] Rejecting zero additive limits makes the suite fail.
+- [x] Allowing WAITING with zero pending jobs makes the suite fail.
+- [x] Skipping the `reserved == Σ reservations` check makes the suite fail.
+- [x] Making `PendingJob.request_hash` optional makes the suite fail.
+- [x] Requiring `active_candidate` in IMPLEMENT makes the suite fail (the first-IMPLEMENT positive test).
+- [x] Rejecting zero additive limits makes the suite fail.
 
 General:
-- [ ] `ruff`, `mypy --strict`, full `pytest` green; boundary test covers `schemas`.
-- [ ] `components/schemas.yaml` and `docs/REPO_MAP.md` updated; handoff written; report ends with "Awaiting coordinator assignment."
+- [x] `ruff`, `mypy --strict`, full `pytest` green; boundary test covers `schemas`.
+- [x] `components/schemas.yaml` and `docs/REPO_MAP.md` updated; handoff written; report ends with "Awaiting coordinator assignment."
 
 ## Verification commands
 ```bash
@@ -177,11 +177,26 @@ uv run pytest -q tests/contract
 - This task alone edits `src/sindri/core/ids.py`.
 
 ## Status
-`ready` (coordinator, 2026-10-04: "006 and 007 are ready, start both"; recorded by the agent). Decisions ED1–ED15, ADR-0006 final per PR #17. Implementation begins only after this readiness is merged to `main` (authoritative status: `implementation/task_board.yaml`).
+`review` (authoritative status: `implementation/task_board.yaml`). Decisions ED1–ED15 and ADR-0006 implemented as written.
 
 ## Completion evidence
-- Files changed:
-- Tests run/results:
+- Files changed: `src/sindri/core/ids.py` (additive `JobId`; only docstring lines edited), `src/sindri/schemas/episode.py` (new), `src/sindri/schemas/__init__.py` (exports), `tests/contract/test_episode_state.py` and `tests/contract/examples/{episode_state,episode_budget}.json` (new), `tests/unit/test_ids.py`, `components/schemas.yaml`, `docs/REPO_MAP.md`, `implementation/task_board.yaml`, this packet, handoff.
+- Tests run/results: `ruff` clean; `mypy --strict` clean (17 files); `pytest`: 691 passed, 8 skipped (86 EpisodeState tests, 3 new ID tests).
 - Acceptance evidence:
-- Known limitations:
-- Handoff/next action:
+  - The adapted §20.11 snapshot validates and re-serializes to identical JSON: WAITING on two jobs with request hashes, resuming to DEV_CHECK, `reserved` = their sum, spent/elapsed, failure signature with count 2.
+  - `remaining()` is derived from the bound budget, including reservations. It refuses a snapshot bound to another budget.
+  - A test asserts that every ED13 restart field is required.
+  - Planted bugs, each caught and the source restored:
+    - WAITING with zero jobs → 1 failure;
+    - reserved-sum check skipped → 3;
+    - `request_hash` optional → 1;
+    - candidate required in IMPLEMENT → 1 (the first-IMPLEMENT positive test);
+    - zero additive limits rejected → 1.
+- Implementation interpretations for coordinator review:
+  1. **The transition table** has the explicit ADR-0006 lifecycle edges, `active → WAITING`, `WAITING → active`, and `non-terminal → ABORTED`. "WAITING returns only to its recorded `resume_state`" needs two snapshots → 009/P1.5.
+  2. **Pending jobs** are allowed in active non-WAITING states (ED10: dispatch then continue).
+  3. **`BudgetRemaining`** is a plain frozen dataclass and may hold negative values, so an overrun is representable rather than raising.
+  4. **`remaining()`** raises if the snapshot's `budget_hash` is not this budget's `content_id()`.
+  5. **Pending jobs need not bind the active candidate** (jobs may run against the best or an earlier candidate). Whether that is allowed per state is a P1.5 controller rule.
+- Known limitations: cross-snapshot rules (edge legality, resume-to-recorded-state, monotonic spent/elapsed, constant budget/policy/solver hashes, budget ceilings) are SIN-P1.1-009. Failure-signature normalization and hashing are P1.5 (ED11).
+- Handoff/next action: `docs/handoffs/SIN-P1.1-007.md`.

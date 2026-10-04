@@ -16,6 +16,8 @@ outputs:
   - EvaluationPolicy
   - CandidateManifest
   - Observation
+  - EpisodeBudget
+  - EpisodeState
 may_read:
   - sindri.core
 may_write: []
@@ -48,6 +50,12 @@ public_interfaces:
   - name: observation_execution_key
     request: the 15 execution-request fields
     response: ContentId (observation_execution_key_v1)
+  - name: EpisodeBudget / EpisodeState.model_validate
+    request: mapping or JSON
+    response: EpisodeBudget, EpisodeState
+  - name: EpisodeBudget.remaining
+    request: EpisodeState bound to this budget
+    response: BudgetRemaining (derived; never stored)
   - name: Record.content_id
     request: record
     response: ContentId
@@ -99,6 +107,13 @@ invariants:
     text: Synthesis PASS needs zero black boxes (master §14 J1); synthesis FAIL may rest on errors, black boxes or latches together with a candidate error. Latches are recorded but not judged until evaluator/profile semantics define expected latches (P1.4/P1.6).
   - id: INV-OB-005
     text: Hidden-check Observations are judge-side protected and never reach solver context (O14); authentication is evidence-store write authority, not a record field (O13).
+  # SIN-P1.1-007 EpisodeState
+  - id: INV-EP7-001
+    text: EpisodeState is an immutable hash-chained snapshot (sequence 0 has no predecessor); states and transitions follow ADR-0006 (ALLOWED_EPISODE_TRANSITIONS).
+  - id: INV-EP7-002
+    text: WAITING has a resume_state among the active states and at least one pending job; terminal states have none; abort_reason exactly on ABORTED; active_candidate required from DEV_CHECK onwards (and in WAITING when resume_state requires it).
+  - id: INV-EP7-003
+    text: EpisodeBudget is identified by its content_id; additive limits may be zero, wall_clock_limit_ms > 0; wall-clock is not additive; remaining is derived; reserved equals the sum of pending-job reservations; every pending job binds its request_hash.
 failure_modes:
   - id: FM-001
     symptom: A field gains a default and silently fills authority/split/rights.
@@ -112,5 +127,5 @@ required_tests:
 observability:
   spans: []
   metrics: []
-related_adrs: [ADR-0001, ADR-0002, ADR-0004, ADR-0005]
-related_docs: [docs/tasks/SIN-P1.1-002.md, docs/tasks/SIN-P1.1-003.md, docs/tasks/SIN-P1.1-004.md, docs/tasks/SIN-P1.1-005.md]
+related_adrs: [ADR-0001, ADR-0002, ADR-0004, ADR-0005, ADR-0006]
+related_docs: [docs/tasks/SIN-P1.1-002.md, docs/tasks/SIN-P1.1-003.md, docs/tasks/SIN-P1.1-004.md, docs/tasks/SIN-P1.1-005.md, docs/tasks/SIN-P1.1-007.md]

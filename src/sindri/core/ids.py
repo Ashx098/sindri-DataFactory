@@ -14,11 +14,12 @@ the master architecture §20 examples:
     ObligationId   sim_stall_01         CheckId        chk_formal_core
     ConfigurationId cfg_w8_d8           ToolProfileId  tp_sby_bmc_v0
     ExceptionId    ex_formal_w32        TestId         stall_stability_004
-    PropertyId     R03_sva
+    PropertyId     R03_sva              JobId          job_771
 
 (Family, lineage, variant and contract IDs were added by SIN-P1.1-002, decision D2; obligation,
 check, configuration, tool-profile and exception IDs by SIN-P1.1-003 for EvaluationPolicy; test and
-property IDs by SIN-P1.1-005 for Observation execution reports. Earlier
+property IDs by SIN-P1.1-005 for Observation execution reports; job IDs by SIN-P1.1-007 for
+EpisodeState pending jobs. Earlier
 types and patterns are frozen.)
 
 Each ID type is a distinct `str` subclass that validates on construction, so a malformed value
@@ -164,6 +165,13 @@ class PropertyId(_TypedId):
 
     __slots__ = ()
     PATTERN = re.compile(r"[A-Za-z][A-Za-z0-9]*(?:_[A-Za-z0-9]+)*")
+
+
+class JobId(_TypedId):
+    """Master §20.11 example: `job_771` (an asynchronous controller job)."""
+
+    __slots__ = ()
+    PATTERN = re.compile(rf"job_{_SLUG}")
 
 
 class ContentId(_TypedId):
