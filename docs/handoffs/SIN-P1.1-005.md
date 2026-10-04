@@ -60,12 +60,18 @@ None. Implementation started from `main` after READY was authoritative there.
 ## Open questions
 None.
 
-## Blocked on
-- Coordinator review and merge of this task's PR.
+## Coordinator verification
+- PR #15 merged to `main` as `7f16bf3`.
+- Merged-main CI run `37204008101` passed.
+- Task status: `verified` on 2026-10-04.
 
-## Next ready after approval
-Per the P1.1 order, once 005 is merged and verified (the coordinator opens them; the agent does not):
-- SIN-P1.1-006 Finding and SIN-P1.1-007 EpisodeState, which may run in parallel. 006 must decide how Findings cite Observations (by `observation_id` + `content_id()`) and diagnostic results (ADR-0005).
+## Blocked on
+- None. This task is verified. No later implementation task is authorized until its packet is separately reviewed and marked READY.
+
+## Next eligible for packet drafting
+- SIN-P1.1-006 Finding and SIN-P1.1-007 EpisodeState may now have planning packets drafted in parallel.
+- Neither is authorized for implementation until its packet is separately reviewed, merged, and marked READY.
+- 006 must decide how Findings cite Observations (by `observation_id` + `content_id()`) and how diagnostic/qualification results may appear as supporting, non-correctness evidence under ADR-0005.
 
 ## Do not start
 - 006, 007, 008, 009, P1.1-G, any diagnostic/qualification result type, P1.2+.

@@ -232,7 +232,7 @@ uv run pytest -q tests/contract
 `src/sindri/core/ids.py` (additive), `src/sindri/schemas/observation.py`, `src/sindri/schemas/__init__.py`, `tests/contract/test_observation.py`, `tests/contract/examples/observation.json`, `tests/unit/test_ids.py`, `components/schemas.yaml`, `docs/REPO_MAP.md`.
 
 ## Status
-`review` (authoritative status: `implementation/task_board.yaml`). Decisions O1–O15 and R1–R5 implemented as written.
+`verified` (coordinator, 2026-10-04). PR #15 merged to `main` as `7f16bf3`; merged-main CI run `37204008101` passed with the reviewed Observation semantics and contract suite. Decisions O1–O15 and R1–R5 are implemented as written.
 
 ## Completion evidence
 - Files changed:
@@ -267,4 +267,5 @@ uv run pytest -q tests/contract
   6. **`diagnostics_truncated=true`** requires exactly 200 entries; `started_at` must be zero-padded `YYYY-MM-DDTHH:MM:SSZ` (`strptime` alone accepts `2026-1-4`).
   7. The test suite imports `TestId` under an alias (`SimTestId`), because pytest otherwise tries to collect a domain type named `Test*` as a test class. No product code was changed for this.
 - Known limitations: completeness is relative to the adapter-reported inventory until the P1.4/P1.6 evaluator-bundle manifest anchors it (R5 follow-up). Cross-record invariants are SIN-P1.1-009.
+- Verification on merged main: PR #15 merge `7f16bf3`; CI `37204008101` passed.
 - Handoff/next action: `docs/handoffs/SIN-P1.1-005.md`.
