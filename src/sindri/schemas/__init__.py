@@ -1,6 +1,13 @@
 """Versioned boundary records (master architecture ch. 20). Each record is closed, immutable,
 float-free and coercion-free for identity-bearing scalars; see `_base.py`."""
 
+from sindri.schemas.candidate import (
+    CandidateFile,
+    CandidateManifest,
+    ModelAuthor,
+    ProducerRole,
+    candidate_source_hash,
+)
 from sindri.schemas.requirement import (
     AllSupportedConfigs,
     Assumption,
@@ -23,6 +30,11 @@ from sindri.schemas.task import (
 )
 
 __all__ = [
+    "CandidateFile",
+    "CandidateManifest",
+    "ModelAuthor",
+    "ProducerRole",
+    "candidate_source_hash",
     "READ_ONLY_TASK_TYPES",
     "AllSupportedConfigs",
     "Assumption",

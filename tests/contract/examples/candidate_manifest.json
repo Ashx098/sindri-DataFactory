@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "candidate_id": "c_pktfr_0193_e17_v3",
+  "task_id": "pktfr_0193",
+  "producer_role": "solver",
+  "episode_id": "e17",
+  "parent_candidate_id": "c_pktfr_0193_e17_v2",
+  "patch_hash": "sha256:5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e",
+  "files": [
+    {
+      "path": "rtl/pkt_framer.sv",
+      "hash": "sha256:4f4f4f4f4f4f4f4f4f4f4f4f4f4f4f4f4f4f4f4f4f4f4f4f4f4f4f4f4f4f4f4f"
+    },
+    {
+      "path": "rtl/pkt_framer_fsm.sv",
+      "hash": "sha256:a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7"
+    }
+  ],
+  "source_hash": "sha256:7e0150612277edb50caf1cc993dd4dfbfe088626fd00ecfbd481e23f44467740",
+  "dependency_hash": "sha256:d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0",
+  "author": {
+    "model": "nemotron-3-super",
+    "model_version": "2026-09-01",
+    "temperature_millis": 800,
+    "seed": 1234,
+    "provenance_ref": "model_gateway:call/7f3a",
+    "training_allowed": true
+  }
+}

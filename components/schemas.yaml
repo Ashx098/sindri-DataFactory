@@ -12,6 +12,7 @@ inputs:
 outputs:
   - TaskManifest
   - Requirement
+  - CandidateManifest
 may_read:
   - sindri.core
 may_write: []
@@ -47,6 +48,17 @@ invariants:
     text: Requirement records carry no verification obligations (ADR-0004).
   - id: INV-007
     text: Rights never forbid the use the split assigns (train needs training_allowed; dev/final need evaluation_allowed).
+  # SIN-P1.1-004 CandidateManifest
+  - id: INV-CM-001
+    text: source_hash == canonical_json_id({"kind":"candidate_file_set_v1","files":[{path,hash}...] sorted by path}); only candidate_source_hash implements it.
+  - id: INV-CM-002
+    text: dependency_hash None means "explicitly no dependency bundle", never "unknown".
+  - id: INV-CM-003
+    text: parent_candidate_id and patch_hash are both set or both null; a candidate is never its own parent.
+  - id: INV-CM-004
+    text: episode_id is set if and only if producer_role is solver.
+  - id: INV-CM-005
+    text: author carries model, version, temperature_millis, seed, provenance_ref and a never-defaulted training_allowed.
 failure_modes:
   - id: FM-001
     symptom: A field gains a default and silently fills authority/split/rights.
