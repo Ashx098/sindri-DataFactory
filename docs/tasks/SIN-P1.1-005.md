@@ -171,6 +171,7 @@ canonical_json_id({"kind": "observation_execution_key_v1",
 
 ## Follow-ups owned by later tasks (not 009)
 - P1.4/P1.6, evaluator-bundle manifest (R5): the bundle commits to the expected test and property inventories, and `Observation.expected_test_ids` / `expected_property_ids` must equal them. Until then, 005 guarantees completeness only relative to the adapter-reported expectation.
+- P1.4/P1.6, expected-latch semantics (PR #15 review): the evaluator or tool profile defines which latches are expected for a task/configuration, and the synthesis adapter emits a **candidate error diagnostic** when a latch is unexpected. Until then, Observation records latch counts without judging them, and only black boxes block a synthesis PASS.
 
 ## Interfaces touched
 - Schemas: new `Observation` v1. IDs: additive `TestId`, `PropertyId`.
@@ -239,12 +240,12 @@ uv run pytest -q tests/contract
   - `src/sindri/schemas/observation.py` (new), `src/sindri/schemas/__init__.py` (exports);
   - `tests/contract/test_observation.py` and `tests/contract/examples/observation.json` (new), `tests/unit/test_ids.py`;
   - `components/schemas.yaml`, `docs/REPO_MAP.md`, `implementation/task_board.yaml`, this packet, handoff.
-- Tests run/results:
+- Tests run/results (after the PR #15 review fixes):
   - `ruff` clean; `mypy --strict` clean (16 files);
-  - `pytest`: 595 passed, 8 skipped, no warnings (165 Observation contract tests, 482 contract tests in total).
+  - `pytest`: 602 passed, 8 skipped, no warnings (172 Observation contract tests, 489 contract tests in total).
 - Acceptance evidence:
   - The adapted §20.4 fixture is itself a **partial-report FAIL**: R17_sva never checked, and BMC stopped at depth 23 of 40 at the counterexample. It validates and re-serializes to identical JSON (R3).
-  - `observation_execution_key` is pinned by an independent byte-level `hashlib` vector over all 16 request fields. Twelve tests show each request input changes the key, a further test shows `formal_mode` does too, and ten show that result and handle fields do not.
+  - `observation_execution_key` is pinned by an independent byte-level `hashlib` vector over all **15 request fields plus the `kind` domain tag** (16 JSON members). Twelve tests show each request input changes the key, a further test shows `formal_mode` does too, and ten show that result and handle fields do not.
   - Rejection reasons spot-checked: incomplete sim/formal PASS, TIMEOUT or TOOL_ERROR with failure evidence, INCONCLUSIVE on sim, action mismatch, seed on formal, `None` bundle, and infrastructure-only structural FAIL each fail on their own rule.
   - Planted bugs, each caught and the source restored byte-identical:
     - TIMEOUT with a failing test allowed → 3 failures;
@@ -252,12 +253,16 @@ uv run pytest -q tests/contract
     - formal PASS with checked ⊂ expected → 1;
     - `candidate_manifest_hash` dropped from the key → 12;
     - `adapter_hash` dropped from the key → 12;
-    - `evaluator_bundle_hash` nullable → 1.
+    - `evaluator_bundle_hash` nullable → 1;
+    - synthesis black-box rule removed (the reviewed bug) → 1 (PR #15 fix).
 - Implementation interpretations where the packet left detail open, for coordinator review:
   1. **Formal FAIL** requires both a failing property *and* a counterexample ref; equivalence FAIL requires `proved=false` and a counterexample. Both are part of "sufficient candidate-attributed failure evidence" (R3).
   2. **Results outside the expected inventory, or duplicated results, are rejected for every status**, not only PASS: a result for an undeclared test means the inventory itself is wrong.
   3. **Non-verdict statuses** (TIMEOUT, TOOL_ERROR, UNSUPPORTED, INCONCLUSIVE) reject any candidate failure evidence, including candidate-category error diagnostics.
-  4. **Structural PASS** means zero errors. Latch/blackbox counts are recorded for synthesis but not judged, because "unexpected" latches need policy semantics this record does not have.
+  4. **Structural PASS** means zero errors. **Corrected in the PR #15 review:**
+     - synthesis PASS additionally needs **zero black boxes** (master §14 J1);
+     - synthesis FAIL may rest on errors, black boxes or latches together with a candidate error diagnostic;
+     - latches are recorded but not judged until expected-latch semantics exist (follow-up below).
   5. The **formal report must echo** the requested mode and depth.
   6. **`diagnostics_truncated=true`** requires exactly 200 entries; `started_at` must be zero-padded `YYYY-MM-DDTHH:MM:SSZ` (`strptime` alone accepts `2026-1-4`).
   7. The test suite imports `TestId` under an alias (`SimTestId`), because pytest otherwise tries to collect a domain type named `Test*` as a test class. No product code was changed for this.

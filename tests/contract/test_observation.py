@@ -13,6 +13,7 @@ from sindri.schemas import (
     ACTION_FOR_KIND,
     Observation,
     ObservationAction,
+    StructuralReport,
     observation_execution_key,
 )
 from sindri.schemas.policy import CheckKind, FormalMode
@@ -381,6 +382,41 @@ def test_structural_and_equivalence_pass() -> None:
     rejects(obs("lint", "PASS", execution_report=structural(errors=1)))
     rejects(obs("equivalence", "PASS", execution_report={"report_kind": "equivalence",
                                                          "proved": False}))
+
+
+def test_synthesis_pass_rejects_black_boxes() -> None:
+    """Master §14 J1: synthesisable with no black boxes (PR #15 review)."""
+    rejects(obs("synthesis", "PASS", execution_report=structural(latches=0, blackboxes=3)),
+            match="black boxes")
+
+
+def test_synthesis_pass_records_latches_without_judging_them() -> None:
+    # Only *unexpected* latches fail; "expected" needs evaluator/profile semantics (P1.4/P1.6).
+    o = accepts(obs("synthesis", "PASS", execution_report=structural(latches=2, blackboxes=0)))
+    assert isinstance(o.execution_report, StructuralReport) and o.execution_report.latch_count == 2
+
+
+@pytest.mark.parametrize(("latches", "blackboxes"), [(0, 2), (1, 0)])
+def test_synthesis_fail_on_structural_violation_with_candidate_error(
+    latches: int, blackboxes: int
+) -> None:
+    accepts(obs("synthesis", "FAIL", diagnostics=[diag("candidate")],
+                execution_report=structural(errors=0, latches=latches, blackboxes=blackboxes)))
+
+
+@pytest.mark.parametrize(
+    ("kind", "report", "diagnostics"),
+    [
+        ("synthesis", structural(errors=0, latches=0, blackboxes=2), []),  # no candidate error
+        ("synthesis", structural(errors=0, latches=0, blackboxes=0), [diag("candidate")]),
+        ("lint", structural(errors=0), [diag("candidate")]),  # latch/blackbox rule is synth-only
+    ],
+)
+def test_structural_fail_needs_violation_and_candidate_error(
+    kind: str, report: dict[str, Any], diagnostics: list[dict[str, Any]]
+) -> None:
+    rejects(obs(kind, "FAIL", execution_report=report, diagnostics=diagnostics),
+            match="structural FAIL")
 
 
 @pytest.mark.parametrize(("kind", "latches", "blackboxes"),

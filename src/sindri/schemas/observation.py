@@ -441,8 +441,14 @@ class Observation(Record):
                     raise ValueError("PASS needs every test/property to pass")
             if isinstance(report, EquivalenceReport) and not report.proved:
                 raise ValueError("equivalence PASS needs proved=true")
-            if isinstance(report, StructuralReport) and report.error_count != 0:
-                raise ValueError("structural PASS needs zero errors")
+            if isinstance(report, StructuralReport):
+                if report.error_count != 0:
+                    raise ValueError("structural PASS needs zero errors")
+                # Master §14 J1: synthesis with no black boxes. Latches are not judged here: only
+                # *unexpected* latches fail, and "expected" needs evaluator/profile semantics
+                # (P1.4/P1.6 follow-up); the adapter will then emit a candidate error.
+                if kind is CheckKind.SYNTHESIS and report.blackbox_count != 0:
+                    raise ValueError("synthesis PASS needs zero black boxes")
             if any(d.severity is Severity.ERROR for d in self.diagnostics):
                 raise ValueError("PASS cannot carry error diagnostics")
             if self._has_counterexample():
@@ -462,10 +468,16 @@ class Observation(Record):
                 report.proved or not self._has_counterexample()
             ):
                 raise ValueError("equivalence FAIL needs proved=false and a counterexample")
-            if isinstance(report, StructuralReport) and not (
-                report.error_count >= 1 and self._has_candidate_error()
-            ):
-                raise ValueError("structural FAIL needs a candidate error")
+            if isinstance(report, StructuralReport):
+                violations = report.error_count > 0
+                if kind is CheckKind.SYNTHESIS:
+                    violations = violations or bool(report.blackbox_count) or bool(
+                        report.latch_count
+                    )
+                if not (violations and self._has_candidate_error()):
+                    raise ValueError(
+                        "structural FAIL needs a candidate error and a structural violation"
+                    )
             return
 
         # Every remaining status is a non-verdict: it must not carry candidate failure evidence.

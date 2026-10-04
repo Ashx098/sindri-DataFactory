@@ -7,7 +7,7 @@
 - Finished at: 2026-10-04
 - Agent / person: coding agent (Claude Code), assigned by the coordinator
 - Branch/worktree: `feat/SIN-P1.1-005-observation` at `../worktrees/SIN-P1.1-005`
-- HEAD commit: the commit that adds this file
+- HEAD commit: the PR #15 review-fix commit (child of `9294d16`, whose CI run 37187622159 passed)
 - Base commit: `08bda00` (`main`, PR #14: SIN-P1.1-005 READY on `main`, so the process rule was satisfied)
 - Dirty files, if any: none after commit
 
@@ -27,15 +27,16 @@
 |---|---|---|
 | `uv run ruff check .` | pass | |
 | `uv run mypy` (strict) | pass | 16 files |
-| `uv run pytest -q` | 595 passed, 8 skipped, no warnings | |
-| `uv run pytest -q tests/contract` | 482 passed | 165 Observation tests |
-| Byte-level `hashlib` vector for the execution key | match | all 16 request fields |
+| `uv run pytest -q` | 602 passed, 8 skipped, no warnings | after PR #15 fixes |
+| `uv run pytest -q tests/contract` | 489 passed | 172 Observation tests |
+| Byte-level `hashlib` vector for the execution key | match | 15 request fields + the `kind` tag |
 | Planted: TIMEOUT with failing test allowed | 3 failures | restored |
 | Planted: sim PASS with executed ⊂ expected | 1 failure | restored |
 | Planted: formal PASS with checked ⊂ expected | 1 failure | restored |
 | Planted: `candidate_manifest_hash` dropped from key | 12 failures | restored |
 | Planted: `adapter_hash` dropped from key | 12 failures | restored |
 | Planted: `evaluator_bundle_hash` nullable | 1 failure | restored byte-identical |
+| PR #15: synthesis black-box rule removed | 1 failure | restored byte-identical |
 
 ## Changed
 `src/sindri/core/ids.py` (additive), `src/sindri/schemas/observation.py` (new), `src/sindri/schemas/__init__.py`, `tests/contract/test_observation.py`, `tests/contract/examples/observation.json`, `tests/unit/test_ids.py`, `components/schemas.yaml`, `docs/REPO_MAP.md`, `implementation/task_board.yaml` (→ `review`), task packet, this handoff. All within the packet's allowed paths.
@@ -49,8 +50,15 @@ No new decisions. Seven implementation interpretations are listed in the packet'
 ## Deviations
 None. Implementation started from `main` after READY was authoritative there.
 
+## Review fixes (PR #15)
+- Synthesis PASS now rejects `blackbox_count > 0` (master §14 J1). Synthesis FAIL may rest on errors, black boxes or latches when a candidate error diagnostic is present. Latches are not judged in PASS.
+- Expected-latch semantics recorded as a P1.4/P1.6 follow-up: the evaluator/profile defines expected latches; the adapter emits a candidate error for unexpected ones.
+- `components/schemas.yaml`: ADR-0005 added to `related_adrs`; `related_docs`, `purpose` and `public_interfaces` refreshed for 003/004/005; INV-OB-006 added.
+- Execution-key count corrected: 15 request fields plus the `kind` tag (previously written as "16 request fields").
+- Coordinator approved the other six implementation interpretations as-is.
+
 ## Open questions
-- Interpretation 4: structural PASS means zero errors, and latch/blackbox counts are recorded but not judged. Should an "unexpected latch" rule appear once the evaluator-bundle/policy semantics define what is expected (P1.4/P1.6)?
+None.
 
 ## Blocked on
 - Coordinator review and merge of this task's PR.
