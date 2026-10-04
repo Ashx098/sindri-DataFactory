@@ -8,6 +8,7 @@
   "to_status": "check_proposed",
   "proposed_check": {
     "proposal_kind": "development_probe",
+    "policy_hash": "sha256:b9b9b9b9b9b9b9b9b9b9b9b9b9b9b9b9b9b9b9b9b9b9b9b9b9b9b9b9b9b9b9b9",
     "action": "run_sim",
     "configuration_id": "cfg_w8_d8",
     "test_ids": [

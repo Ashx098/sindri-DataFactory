@@ -10,6 +10,8 @@ from pydantic import ValidationError
 
 from sindri.schemas import (
     ALLOWED_FINDING_TRANSITIONS,
+    DevelopmentProbeRequest,
+    ExistingPolicyCheck,
     Finding,
     FindingStatus,
     FindingTransition,
@@ -27,7 +29,16 @@ def H(byte: str) -> str:
 
 CITATION = {"observation_id": "ob_88121", "observation_hash": H("0b")}
 EXISTING = {"proposal_kind": "existing_policy_check", "policy_hash": H("b9"),
-            "check_id": "chk_stall", "configuration_id": "cfg_w8_d8"}
+            "check_id": "chk_stall", "configuration_id": "cfg_w8_d8", "confirming_status": "FAIL"}
+
+
+def probe(action: str = "run_sim", tests: list[str] | None = None,
+          props: list[str] | None = None, **changes: Any) -> dict[str, Any]:
+    data = {"proposal_kind": "development_probe", "policy_hash": H("b9"), "action": action,
+            "configuration_id": "cfg_w8_d8", "test_ids": tests if tests is not None else [],
+            "property_ids": props if props is not None else [], "rationale": "discriminate R17"}
+    data.update(changes)
+    return data
 
 
 def finding(**changes: Any) -> dict[str, Any]:
@@ -171,7 +182,26 @@ def test_example_transitions_validate_and_round_trip() -> None:
 
 def test_check_proposed_with_existing_policy_check_or_probe() -> None:
     FindingTransition.model_validate(transition("hypothesis", "check_proposed"))
-    FindingTransition.model_validate(CHECK_PROPOSED)  # development probe
+    FindingTransition.model_validate(CHECK_PROPOSED)  # pinned run_sim development probe
+    FindingTransition.model_validate(
+        transition("hypothesis", "check_proposed", proposed_check=probe("run_formal",
+                                                                        props=["R17_sva"])))
+
+
+@pytest.mark.parametrize(("confirming", "refuting"), [("PASS", "FAIL"), ("FAIL", "PASS")])
+def test_verdict_mapping_is_deterministic(confirming: str, refuting: str) -> None:
+    proposal = {**EXISTING, "confirming_status": confirming}
+    t = FindingTransition.model_validate(
+        transition("hypothesis", "check_proposed", proposed_check=proposal))
+    assert isinstance(t.proposed_check, ExistingPolicyCheck)
+    assert t.proposed_check.confirming_status == confirming
+    assert t.proposed_check.refuting_status == refuting
+
+
+def test_probe_payload_is_pinned_to_a_policy() -> None:
+    t = FindingTransition.model_validate(CHECK_PROPOSED)
+    assert isinstance(t.proposed_check, DevelopmentProbeRequest)
+    assert t.proposed_check.policy_hash.startswith("sha256:")
 
 
 @pytest.mark.parametrize("to", ["confirmed", "refuted"])
@@ -262,12 +292,23 @@ def test_drop_reason_only_on_drops() -> None:
     "proposal",
     [
         {**EXISTING, "check_id": None},
-        {"proposal_kind": "development_probe", "action": "run_sim", "configuration_id": "cfg_a",
-         "test_ids": [], "property_ids": [], "rationale": "r"},  # no targets
-        {"proposal_kind": "development_probe", "action": "inspect_waveform",
-         "configuration_id": "cfg_a", "test_ids": ["t_a"], "property_ids": [], "rationale": "r"},
-        {"proposal_kind": "development_probe", "action": "run_sim", "configuration_id": "cfg_a",
-         "test_ids": ["t_a", "t_a"], "property_ids": [], "rationale": "r"},
+        {k: v for k, v in EXISTING.items() if k != "confirming_status"},  # missing
+        {**EXISTING, "confirming_status": "TIMEOUT"},  # not verdict-bearing
+        {**EXISTING, "confirming_status": "INCONCLUSIVE"},
+        {**EXISTING, "confirming_status": "pass"},
+        {**EXISTING, "confirming_status": None},
+        {k: v for k, v in probe(tests=["t_a"]).items() if k != "policy_hash"},  # unpinned
+        probe("run_sim"),  # no tests
+        probe("run_sim", tests=["t_a"], props=["R17_sva"]),  # mixed payload
+        probe("run_sim", props=["R17_sva"]),  # wrong payload for action
+        probe("run_formal"),  # no properties
+        probe("run_formal", props=["R17_sva"], tests=["t_a"]),
+        probe("run_formal", tests=["t_a"]),
+        probe("lint", tests=["t_a"]),  # only run_sim / run_formal in v1
+        probe("compile", props=["R17_sva"]),
+        probe("check_equiv", props=["R17_sva"]),
+        probe("inspect_waveform", tests=["t_a"]),
+        probe("run_sim", tests=["t_a", "t_a"]),
         {"proposal_kind": "new_policy_section", "check_id": "chk_x"},
     ],
 )

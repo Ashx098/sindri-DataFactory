@@ -109,6 +109,8 @@ invariants:
     text: Finding is an immutable claim about one exact candidate (task + candidate id + manifest hash) and one requirement; it carries no status; lifecycle lives in FindingTransition records.
   - id: INV-FD-002
     text: Transitions follow ALLOWED_FINDING_TRANSITIONS (no hypothesis->confirmed); exactly the transition into check_proposed carries a ProposedCheck; confirm/refute need deciding Observation citations (id + hash); dropped needs a typed reason.
+  - id: INV-FD-004
+    text: ExistingPolicyCheck carries confirming_status PASS|FAIL (the opposite refutes; mixed deciding PASS/FAIL invalid, checked in 009); DevelopmentProbeRequest is pinned by policy_hash and v1 allows only run_sim with tests or run_formal with properties; a probe-proposed Finding is never decided (009/P1.5).
   - id: INV-FD-003
     text: Supporting artifacts and development probes never decide a Finding (FD5, FD8, ADR-0005); producer provenance is a closed model|component|human union with a never-defaulted training_allowed.
 failure_modes:

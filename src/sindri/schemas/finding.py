@@ -30,6 +30,7 @@ from sindri.core.ids import (
     TaskId,
     TestId,
 )
+from sindri.core.status import ToolStatus
 from sindri.schemas._base import NonEmptyText, Record, StrictModel
 from sindri.schemas.observation import ObservationAction
 
@@ -164,23 +165,46 @@ Producer = Annotated[
 # ---- proposed checks (FD8) ----------------------------------------------------------------------
 
 
+def _verdict_status(value: ToolStatus) -> ToolStatus:
+    if value not in (ToolStatus.PASS, ToolStatus.FAIL):
+        raise ValueError("confirming_status must be PASS or FAIL")
+    return value
+
+
 class ExistingPolicyCheck(StrictModel):
-    """A declared policy check; once executed, its Observation can decide the Finding."""
+    """A declared policy check; once executed, its Observation can decide the Finding.
+
+    `confirming_status` makes the verdict mapping deterministic: claim prose cannot tell a
+    controller whether PASS confirms or refutes. The opposite verdict-bearing status refutes.
+    In SIN-P1.1-009, confirmed citations must all carry `confirming_status`, refuted citations
+    all carry `refuting_status`, and mixed PASS/FAIL deciding citations are invalid.
+    """
 
     proposal_kind: Literal["existing_policy_check"]
     policy_hash: ContentId
     check_id: CheckId
     configuration_id: ConfigurationId
+    confirming_status: Annotated[ToolStatus, AfterValidator(_verdict_status)]
+
+    @property
+    def refuting_status(self) -> ToolStatus:
+        return ToolStatus.FAIL if self.confirming_status is ToolStatus.PASS else ToolStatus.PASS
 
 
 class DevelopmentProbeRequest(StrictModel):
     """A triage probe. Never executable correctness evidence: its result only supports (FD8).
 
-    Making it correctness-bearing requires explicit promotion into a declared development policy
-    check through a new policy version (P1.5/P4), never through this record.
+    Pinned to an exact policy namespace by `policy_hash`. v1 payloads are strict: `run_sim` names
+    tests only, `run_formal` names properties only; every other action is rejected.
+
+    A Finding proposed with a probe can never be confirmed or refuted (a cross-transition rule
+    enforced in SIN-P1.1-009 / P1.5): it is dropped or superseded. If the probe is promoted into a
+    declared policy check, a new `derived_from` Finding proposes an `ExistingPolicyCheck`, and only
+    that Finding may be decided. 006 defines no promotion relation.
     """
 
     proposal_kind: Literal["development_probe"]
+    policy_hash: ContentId
     action: ObservationAction
     configuration_id: ConfigurationId
     test_ids: tuple[TestId, ...]
@@ -188,9 +212,15 @@ class DevelopmentProbeRequest(StrictModel):
     rationale: NonEmptyText
 
     @model_validator(mode="after")
-    def _targets(self) -> Self:
-        if not self.test_ids and not self.property_ids:
-            raise ValueError("a development probe names at least one test or property")
+    def _payload(self) -> Self:
+        if self.action is ObservationAction.RUN_SIM:
+            if not self.test_ids or self.property_ids:
+                raise ValueError("a run_sim probe names tests only (non-empty test_ids)")
+        elif self.action is ObservationAction.RUN_FORMAL:
+            if not self.property_ids or self.test_ids:
+                raise ValueError("a run_formal probe names properties only (non-empty)")
+        else:
+            raise ValueError("development probes support only run_sim and run_formal in v1")
         _unique(self.test_ids, "test_ids")
         _unique(self.property_ids, "property_ids")
         return self
