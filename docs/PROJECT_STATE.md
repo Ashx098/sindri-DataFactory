@@ -28,7 +28,7 @@ Roles must exist even when one person holds several. `unassigned` roles are real
 | Workstream | Status | Active task | Blocking decision |
 |---|---|---|---|
 | Governance/bootstrap | complete | — | — |
-| Foundation (P1) | active | SIN-P1.1-001…005 verified; 006 + 007 ready (parallel) | — |
+| Foundation (P1) | active | SIN-P1.1-001…005 verified; 006 + 007 implementation PRs under correction | Final PR #17 coordinator decisions were omitted before readiness; PRs #18/#19 must conform before merge |
 | Task Forge | planned | — | P1.G |
 | Spec Forge | planned | — | P1.G + P2 assets |
 | Verification Forge | planned | — | P1.G + P3 contracts |
@@ -44,7 +44,8 @@ Roles must exist even when one person holds several. `unassigned` roles are real
 | Second reviewer for code-owner-required reviews | before enabling "require code owner review" | open |
 
 ## Current blockers
-- None. Recommended: enable "Do not allow bypassing the above settings" on `main` (required checks are currently enforced for non-admins only).
+- SIN-P1.1-006/007: readiness was recorded on PR #17 before the final coordinator review was applied. PRs #18/#19 must implement the missing review decisions before either can merge.
+- Recommended: enable "Do not allow bypassing the above settings" on `main` (required checks are currently enforced for non-admins only).
 
 ## Risks being watched
 Verification/formal engineer key-person dependency; density of weeks 10–16 (P4 tail + P5).
