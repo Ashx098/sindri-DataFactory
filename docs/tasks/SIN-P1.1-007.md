@@ -43,7 +43,7 @@ Each transition writes a new snapshot; history is never overwritten.
 
 ## Dependencies
 - Required completed tasks: SIN-P1.1-005 (verified)
-- Required schemas/contracts: `sindri.schemas._base`, `sindri.schemas.observation` (`ObservationAction`; import only), `sindri.core.ids` (`EpisodeId`, `TaskId`, `CandidateId`, `PolicyId`, `ContentId`; plus new `JobId`)
+- Required schemas/contracts: `sindri.schemas._base`, `sindri.core.ids` (`EpisodeId`, `TaskId`, `CandidateId`, `PolicyId`, `ContentId`; plus new `JobId`)
 
 ## Coordinator decisions (PR #17, 2026-10-04; recorded, not made, by the agent)
 | ID | Decision |
@@ -69,13 +69,18 @@ Each transition writes a new snapshot; history is never overwritten.
 - **WAITING's candidate requirement follows `resume_state`.** WAITING requires `active_candidate` if and only if its `resume_state` is in the candidate-required set (DEV_CHECK … RECORD); for PREPARE, PLAN or IMPLEMENT it is optional.
 - **Aborting with jobs outstanding.** ABORTED is terminal and requires zero pending jobs, so the controller must cancel or censor outstanding jobs before writing the ABORTED snapshot. Whether a cancelled job's reservation becomes spent or is released is P1.5 accounting; the schema only requires `reserved == Σ pending reservations`, which is zero when ABORTED.
 
+### Final coordinator corrections omitted before the invalid readiness transition
+PR #17 coordinator comment `5981249383` was posted before readiness and was not applied by commit `1f50e904`. These rules are authoritative for implementation/review:
+- **PendingJob candidate is required-but-nullable.** `candidate: CandidateBinding | None`; this permits candidate-less WAITING/PLAN/IMPLEMENT/model/diagnostic jobs while keeping the key explicit.
+- **PendingJob carries no ObservationAction.** EpisodeState is generic controller state; `request_hash` is the exact immutable request identity. P1.5/P1.4 later resolves the typed operation and whether a candidate is required.
+- **Budget helper binding.** `EpisodeBudget.remaining(state)` must reject a state whose `budget_hash != budget.content_id()` before calculating.
 ## Scope
 - In scope:
   - `src/sindri/core/ids.py`, additive only: `JobId` (`job_771`).
   - `src/sindri/schemas/episode.py`:
     - `EpisodeStatus` and `ALLOWED_EPISODE_TRANSITIONS` (the ADR-0006 table as data, with WAITING enter/resume expressed generically).
     - `AbortReason`: `budget_exhausted`, `wall_clock_exhausted`, `infrastructure_failure`, `stagnation`, `cancelled`.
-    - `BudgetVector` (6 additive fields, each `StrictInt ≥ 0`), `CandidateBinding{candidate_id, candidate_manifest_hash}`, `PendingJob{job_id, request_hash, action: ObservationAction, candidate: CandidateBinding, reserved: BudgetVector}`.
+    - `BudgetVector` (6 additive fields, each `StrictInt ≥ 0`), `CandidateBinding{candidate_id, candidate_manifest_hash}`, `PendingJob{job_id, request_hash, candidate: CandidateBinding | None, reserved: BudgetVector}`. The `candidate` key is required even when null; there is no duplicated ObservationAction field.
     - `EpisodeBudget` (`Record`): `limits: BudgetVector` (zeros allowed) and `wall_clock_limit_ms ≥ 1`. No `budget_id`. A `remaining(state)` helper computes both remainders (ED8).
     - **`EpisodeState`** (`Record`, an immutable snapshot) with these fields:
       - identity: `episode_id`, `task_id`, `sequence ≥ 0`, `previous_state_hash`;
@@ -120,7 +125,7 @@ Each transition writes a new snapshot; history is never overwritten.
   - `spent` and `wall_clock_elapsed_ms` never decrease;
   - against the `EpisodeBudget`, `spent + reserved ≤ limits` per dimension and `wall_clock_elapsed_ms ≤ wall_clock_limit_ms`, except at an ABORTED snapshot whose reason is `budget_exhausted` or `wall_clock_exhausted`.
 - Candidate bindings resolve to CandidateManifests of the same task, produced by `solver` with this `episode_id` or by a solver-side `architecture_explorer` with it (004 F6).
-- `request_hash` resolves to the immutable job request recorded in the event log (P1.2). `JobId`s are unique within an episode.
+- `request_hash` resolves to the immutable job request recorded in the event log (P1.2); P1.5/P1.4 verifies whether that request requires a candidate and, if so, that the nullable binding is correct. `JobId`s are unique within an episode.
 - (`task_id`, `episode_id`) is unique.
 
 ## Interfaces touched
@@ -129,33 +134,35 @@ Each transition writes a new snapshot; history is never overwritten.
 
 ## Acceptance criteria
 Positive:
-- [x] The adapted §20.11 example validates and round-trips: WAITING on two jobs with request hashes, resuming to DEV_CHECK, active and best candidates bound by manifest hash, spent/reserved vectors, elapsed wall-clock.
-- [x] Sequence-0 PREPARE with no candidates validates.
-- [x] The first IMPLEMENT snapshot without an `active_candidate` validates.
-- [x] WAITING resuming to PLAN without a candidate validates.
-- [x] COMPLETED, and ABORTED (with and without a candidate, with a reason), validate with zero pending jobs.
-- [x] `EpisodeBudget` with zero additive limits (e.g. `tokens=0`, `formal_ms=0`) validates.
-- [x] `remaining()` equals limit − spent − reserved per additive dimension, and wall-clock limit − elapsed.
-- [x] `checkpoint_ref = None` validates.
+- [ ] The adapted §20.11 example validates and round-trips: WAITING on two jobs with request hashes, resuming to DEV_CHECK, active and best candidates bound by manifest hash, spent/reserved vectors, elapsed wall-clock.
+- [ ] WAITING resuming to PLAN with `active_candidate = None` and a pending job whose required `candidate` key is `None` validates.
+- [ ] Sequence-0 PREPARE with no candidates validates.
+- [ ] The first IMPLEMENT snapshot without an `active_candidate` validates.
+- [ ] WAITING resuming to PLAN without a candidate validates.
+- [ ] COMPLETED, and ABORTED (with and without a candidate, with a reason), validate with zero pending jobs.
+- [ ] `EpisodeBudget` with zero additive limits (e.g. `tokens=0`, `formal_ms=0`) validates.
+- [ ] `remaining()` equals limit − spent − reserved per additive dimension, and wall-clock limit − elapsed.
+- [ ] `checkpoint_ref = None` validates.
 
 Negative:
-- [x] Every field required (no defaults); unknown fields rejected, including `budget_id`, `best_reason`, `budget_remaining`, `limits`, and `wall_clock_ms` inside `BudgetVector` (ED7).
-- [x] WAITING with no pending jobs, with no `resume_state`, or with `resume_state` WAITING/COMPLETED/ABORTED → rejected; a non-WAITING state with `resume_state` → rejected.
-- [x] DEV_CHECK…COMPLETED without `active_candidate` → rejected; WAITING resuming to DEV_CHECK without one → rejected.
-- [x] Terminal states with pending jobs → rejected; ABORTED without `abort_reason`, or a reason on non-ABORTED → rejected.
-- [x] A `PendingJob` without `request_hash` → rejected; a candidate binding without a manifest hash → rejected; duplicate job IDs → rejected.
-- [x] `reserved` ≠ Σ pending reservations → rejected; negative or float values → rejected.
-- [x] `EpisodeBudget` with `wall_clock_limit_ms = 0` → rejected.
-- [x] A failure signature with count 0, or a count ≥ 1 without a signature → rejected.
-- [x] Sequence 0 with a previous hash, or sequence > 0 without one → rejected.
-- [x] Records are immutable.
+- [ ] Every field required (no defaults); unknown fields rejected, including `budget_id`, `best_reason`, `budget_remaining`, `limits`, and `wall_clock_ms` inside `BudgetVector` (ED7).
+- [ ] WAITING with no pending jobs, with no `resume_state`, or with `resume_state` WAITING/COMPLETED/ABORTED → rejected; a non-WAITING state with `resume_state` → rejected.
+- [ ] DEV_CHECK…COMPLETED without `active_candidate` → rejected; WAITING resuming to DEV_CHECK without one → rejected.
+- [ ] Terminal states with pending jobs → rejected; ABORTED without `abort_reason`, or a reason on non-ABORTED → rejected.
+- [ ] A `PendingJob` without `request_hash` or without the required `candidate` key → rejected; `candidate: None` is valid; a non-null candidate binding without a manifest hash → rejected; duplicate job IDs → rejected; an `action` field is rejected.
+- [ ] `reserved` ≠ Σ pending reservations → rejected; negative or float values → rejected.
+- [ ] `EpisodeBudget` with `wall_clock_limit_ms = 0` → rejected.
+- [ ] A failure signature with count 0, or a count ≥ 1 without a signature → rejected.
+- [ ] Sequence 0 with a previous hash, or sequence > 0 without one → rejected.
+- [ ] Records are immutable.
 
 Planted-bug checks (run, record in handoff, revert):
-- [x] Allowing WAITING with zero pending jobs makes the suite fail.
-- [x] Skipping the `reserved == Σ reservations` check makes the suite fail.
-- [x] Making `PendingJob.request_hash` optional makes the suite fail.
-- [x] Requiring `active_candidate` in IMPLEMENT makes the suite fail (the first-IMPLEMENT positive test).
-- [x] Rejecting zero additive limits makes the suite fail.
+- [ ] Allowing WAITING with zero pending jobs makes the suite fail.
+- [ ] Skipping the `reserved == Σ reservations` check makes the suite fail.
+- [ ] Making `PendingJob.request_hash` optional makes the suite fail.
+- [ ] Requiring a non-null PendingJob candidate, or reintroducing an ObservationAction field, makes the suite fail.
+- [ ] Requiring `active_candidate` in IMPLEMENT makes the suite fail (the first-IMPLEMENT positive test).
+- [ ] Rejecting zero additive limits makes the suite fail.
 
 General:
 - [x] `ruff`, `mypy --strict`, full `pytest` green; boundary test covers `schemas`.
@@ -177,7 +184,7 @@ uv run pytest -q tests/contract
 - This task alone edits `src/sindri/core/ids.py`.
 
 ## Status
-`review` (authoritative status: `implementation/task_board.yaml`). Decisions ED1–ED15 and ADR-0006 implemented as written.
+`blocked` (coordinator correction, 2026-10-05). PR #17 commit `1f50e904` recorded readiness even though final coordinator comment `5981249383` explicitly required additional fixes before merge/READY. Existing implementation work is accepted for review only; PR #19 must implement the final corrections above before merge (authoritative status: `implementation/task_board.yaml`).
 
 ## Completion evidence
 - Files changed: `src/sindri/core/ids.py` (additive `JobId`; only docstring lines edited), `src/sindri/schemas/episode.py` (new), `src/sindri/schemas/__init__.py` (exports), `tests/contract/test_episode_state.py` and `tests/contract/examples/{episode_state,episode_budget}.json` (new), `tests/unit/test_ids.py`, `components/schemas.yaml`, `docs/REPO_MAP.md`, `implementation/task_board.yaml`, this packet, handoff.

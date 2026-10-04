@@ -71,7 +71,7 @@ tasks:
     title: Finding
     phase: P1
     subphase: P1.1
-    status: ready
+    status: blocked
     depends_on: [SIN-P1.1-005]
     packet: docs/tasks/SIN-P1.1-006.md
 
@@ -79,6 +79,6 @@ tasks:
     title: EpisodeState
     phase: P1
     subphase: P1.1
-    status: review
+    status: blocked
     depends_on: [SIN-P1.1-005]
     packet: docs/tasks/SIN-P1.1-007.md
