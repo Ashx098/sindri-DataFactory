@@ -23,6 +23,7 @@
 | `uv run mypy` (strict) | pass | 14 files |
 | `uv run pytest -q` | 328 passed, 8 skipped | 64 CandidateManifest tests (after PR #11 fixes) |
 | F6 fix: old over-strict episode rule restored | 1 failure | confirms the new test catches it |
+| **Combined gate after integrating `main` (`3a51766`, PRs #9 + #10)** | ruff, mypy clean; 423 passed, 8 skipped (317 contract) | 16 unique invariants; 32 exports resolve |
 | Planted bug: domain tag dropped | 15 failures | reverted |
 | Planted bug: source_hash recomputation skipped | 4 failures | reverted |
 | Planted bug: `training_allowed=True` default | 1 failure | reverted |
@@ -44,8 +45,15 @@ None beyond F1–F8. `seed` has no range constraint (none specified).
 None.
 
 ## Blocked on
-- Merge of the ready-marking PR (`chore/SIN-P1.1-003-004-ready`), then coordinator review of this task's PR.
-- Integration with SIN-P1.1-003: both edit `schemas/__init__.py`, `components/schemas.yaml`, `docs/REPO_MAP.md` and `implementation/task_board.yaml` (append-only). This PR merges second and needs a **deliberate manual resolution**. "Accept both" is unsafe: a trial merge showed it breaks the `__init__.py` import block and duplicates repo-map lines. Re-run the full gate on the combined state.
+- Coordinator final review and merge of PR #11.
+
+## Integration with SIN-P1.1-003 (done)
+`main` at `3a51766` (PRs #9 and #10) was merged into this branch. Three files were resolved **by hand**, not with "accept both":
+- `src/sindri/schemas/__init__.py`: rebuilt as four valid import blocks (candidate, policy, requirement, task) and a sorted `__all__` of all 32 names.
+- `components/schemas.yaml`: outputs in P1.1 order (TaskManifest, Requirement, EvaluationPolicy, CandidateManifest); policy invariants INV-EP-* followed by candidate invariants INV-CM-*.
+- `docs/REPO_MAP.md`: one schemas line naming all four records; the "remaining records" row is now SIN-P1.1-005 … 007.
+
+`implementation/task_board.yaml` merged automatically and is consistent. The full gate ran on the combined state (see Verified).
 
 ## Next ready after approval
 After 003 and 004 are both merged and verified: SIN-P1.1-005 Observation (the coordinator opens its packet).
