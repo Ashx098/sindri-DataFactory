@@ -41,7 +41,7 @@ judgement can then bind to an exact, reproducible candidate identity (master pri
 | F3 | **Accepted, tightened.** `source_hash` is required and must equal exactly `canonical_json_id({"kind": "candidate_file_set_v1", "files": [{"path": p, "hash": h}, …]})`, with files sorted by `path`. The construction is domain-separated and versioned, so different implementations cannot produce different identities for the same file set. Changing the construction means a new `kind` tag. |
 | F4 | **Accepted, with one meaning for `None`.** `dependency_hash: ContentId \| None` is a required key. `None` means **this task explicitly has no external dependency bundle**. It never means "unknown" or "not computed yet"; a manifest whose dependencies are not yet known cannot be created. |
 | F5 | **Accepted.** `parent_candidate_id` and `patch_hash` are both required keys and must be both present or both `None`. |
-| F6 | **Accepted.** `producer_role: solver \| reconstructor \| architecture_explorer`; `episode_id` is required if and only if the role is `solver`. |
+| F6 | **Accepted, corrected in PR #11 review.** `producer_role: solver \| reconstructor \| architecture_explorer`. `solver` requires `episode_id`; `reconstructor` forbids it; `architecture_explorer` has it optional: `None` means oracle-side exploration, a value means solver-side exploration inside that episode (master X4 uses the explorer in both places, so the solver-side episode provenance must be kept). |
 | F7 | **Corrected.** Provenance is recorded at the source, not first at DatasetRecord. `author` must contain at least: `model`, `model_version`, `temperature_millis`, `seed: StrictInt`, `provenance_ref` (non-blank) and `training_allowed: StrictBool` (required, no default). Later, the model gateway (F6/P5.1) makes `provenance_ref` resolve to the exact call/provider/terms record. DatasetRecord may derive export eligibility from it, but must not be the first place provenance appears. |
 | F8 | **Accepted.** Candidate IDs are opaque; relationships are explicit fields only. |
 | Path reuse | **Decided.** 004 imports `EditPath` from the verified `schemas/task.py`. It must **not** refactor it into `_base.py` during this task, because that kind of innocent cleanup makes parallel branches overlap. |
@@ -58,7 +58,7 @@ judgement can then bind to an exact, reproducible candidate identity (master pri
   - In-record invariants:
     - `source_hash` equals `candidate_source_hash(files)`;
     - the parent/patch pairing;
-    - the episode/role pairing;
+    - the episode/role rule (F6: solver requires, reconstructor forbids, explorer optional);
     - a candidate is not its own parent;
     - unique, safe file paths;
     - floats rejected (inherited).
@@ -88,31 +88,31 @@ judgement can then bind to an exact, reproducible candidate identity (master pri
 
 ## Acceptance criteria
 Positive:
-- [ ] The adapted §20.3 example (per F1–F8) validates, round-trips and re-serializes to identical JSON.
-- [ ] First candidate (no parent, no patch), derived candidate (parent + patch), and reconstructor candidate (no episode) each validate.
-- [ ] `candidate_source_hash` equals a hand-computed `canonical_json_id({"kind": "candidate_file_set_v1", "files": [...]})` known vector; it is independent of `files` input order and changes when any path or hash changes.
-- [ ] `training_allowed: false` validates (provenance that forbids training is representable).
+- [x] The adapted §20.3 example (per F1–F8) validates, round-trips and re-serializes to identical JSON.
+- [x] First candidate (no parent, no patch), derived candidate (parent + patch), and reconstructor candidate (no episode) each validate.
+- [x] `candidate_source_hash` equals a hand-computed `canonical_json_id({"kind": "candidate_file_set_v1", "files": [...]})` known vector; it is independent of `files` input order and changes when any path or hash changes.
+- [x] `training_allowed: false` validates (provenance that forbids training is representable).
 
 Negative (each a separate test):
-- [ ] Every field required (no defaults), including the nullable ones as explicit keys and every `author` field.
-- [ ] Unknown fields rejected at every level, including `frozen` (F2) and `temperature` (F1).
-- [ ] A `source_hash` computed without the domain tag, with a different tag, or over unsorted files → rejected.
-- [ ] Parent without patch, patch without parent, or a candidate as its own parent → rejected.
-- [ ] `solver` without `episode_id`, or a non-solver role with one → rejected.
-- [ ] Empty files, duplicate paths, absolute paths, `..`, empty segments or backslashes → rejected.
-- [ ] Blank `provenance_ref`, `model` or `model_version` → rejected; `training_allowed` given as `1` or `"true"` → rejected.
-- [ ] Negative `temperature_millis`; `"800"`, `True` or `0.8` as numbers → rejected (no coercion, no floats).
-- [ ] The record is immutable.
+- [x] Every field required (no defaults), including the nullable ones as explicit keys and every `author` field.
+- [x] Unknown fields rejected at every level, including `frozen` (F2) and `temperature` (F1).
+- [x] A `source_hash` computed without the domain tag, with a different tag, or over unsorted files → rejected.
+- [x] Parent without patch, patch without parent, or a candidate as its own parent → rejected.
+- [x] `solver` without `episode_id`, or `reconstructor` with one → rejected; `architecture_explorer` validates both with an episode (solver-side) and without (oracle-side) (F6, PR #11 review).
+- [x] Empty files, duplicate paths, absolute paths, `..`, empty segments or backslashes → rejected.
+- [x] Blank `provenance_ref`, `model` or `model_version` → rejected; `training_allowed` given as `1` or `"true"` → rejected.
+- [x] Negative `temperature_millis`; `"800"`, `True` or `0.8` as numbers → rejected (no coercion, no floats).
+- [x] The record is immutable.
 
 Planted-bug checks (run, record in the handoff, revert):
-- [ ] Dropping the domain tag from `candidate_source_hash` makes the suite fail.
-- [ ] Skipping the `source_hash` recomputation makes the suite fail.
-- [ ] Defaulting `training_allowed=True` in `author` makes the suite fail.
+- [x] Dropping the domain tag from `candidate_source_hash` makes the suite fail.
+- [x] Skipping the `source_hash` recomputation makes the suite fail.
+- [x] Defaulting `training_allowed=True` in `author` makes the suite fail.
 
 General:
-- [ ] `ruff`, `mypy --strict`, full `pytest` green; the boundary test still covers `schemas`.
-- [ ] `components/schemas.yaml` gains the candidate invariants (incl. the F3 construction and F4 meaning of `None`); `docs/REPO_MAP.md` updated.
-- [ ] Handoff written; report ends with "Awaiting coordinator assignment."
+- [x] `ruff`, `mypy --strict`, full `pytest` green; the boundary test still covers `schemas`.
+- [x] `components/schemas.yaml` gains the candidate invariants (incl. the F3 construction and F4 meaning of `None`); `docs/REPO_MAP.md` updated.
+- [x] Handoff written; report ends with "Awaiting coordinator assignment."
 
 ## Verification commands
 ```bash
@@ -130,11 +130,19 @@ uv run pytest -q tests/contract
 - This task does not touch `src/sindri/core/ids.py` and does not move `EditPath`.
 
 ## Status
-`ready` (2026-10-04; coordinator decisions F1–F8 on PR #8, readiness under coordinator delegation; authoritative status: `implementation/task_board.yaml`).
+`review` (authoritative status: `implementation/task_board.yaml`). Decisions F1–F8 implemented as written.
 
 ## Completion evidence
-- Files changed:
-- Tests run/results:
+- Files changed: `src/sindri/schemas/candidate.py` (new), `src/sindri/schemas/__init__.py` (exports), `tests/contract/test_candidate_manifest.py` (new), `tests/contract/examples/candidate_manifest.json` (new), `components/schemas.yaml`, `docs/REPO_MAP.md`, `implementation/task_board.yaml`, this packet, handoff. `core/ids.py` and the verified schema files are untouched; `EditPath` is imported, not moved.
+- Tests run/results (after PR #11 review fixes): `ruff` clean; `mypy --strict` clean (14 files); `pytest`: 328 passed, 8 skipped (64 CandidateManifest contract tests).
 - Acceptance evidence:
-- Known limitations:
-- Handoff/next action:
+  - The F3 construction is pinned by a **byte-level vector built with `hashlib` from a hand-written canonical JSON string**, independent of `canonical_json_id`. Hashes from four other constructions (no tag, other tag, unsorted, bare list) are rejected.
+  - The adapted §20.3 example validates and re-serializes to identical JSON. Its `source_hash` was produced by `candidate_source_hash`, and the byte-level vector independently confirms that function.
+  - Rejection reasons spot-checked: absolute path, duplicate path, backslash and malformed hash each fail on their own rule, not on a hash mismatch.
+  - Planted bugs, each caught and reverted:
+    - domain tag dropped → 15 failures;
+    - recomputation skipped → 4;
+    - `training_allowed=True` default → 1.
+- Review fix (PR #11): with the old over-strict episode rule restored, the new solver-side explorer test fails (1 failure); with the corrected rule, all pass.
+- Known limitations: `seed` is any strict integer (no range is specified by the master); paths sort by Unicode code point (documented in `candidate_source_hash`).
+- Handoff/next action: `docs/handoffs/SIN-P1.1-004.md`.

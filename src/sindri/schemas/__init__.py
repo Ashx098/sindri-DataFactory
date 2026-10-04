@@ -1,6 +1,13 @@
 """Versioned boundary records (master architecture ch. 20). Each record is closed, immutable,
 float-free and coercion-free for identity-bearing scalars; see `_base.py`."""
 
+from sindri.schemas.candidate import (
+    CandidateFile,
+    CandidateManifest,
+    ModelAuthor,
+    ProducerRole,
+    candidate_source_hash,
+)
 from sindri.schemas.policy import (
     Check,
     CheckKind,
@@ -36,25 +43,28 @@ from sindri.schemas.task import (
 )
 
 __all__ = [
+    "AllSupportedConfigs",
+    "Assumption",
+    "CandidateFile",
+    "CandidateManifest",
     "Check",
     "CheckKind",
     "Configuration",
     "EnvironmentAssumption",
+    "EnvironmentRule",
     "EvaluationPolicy",
     "ExcludedPair",
     "FormalMode",
+    "GeneratorSource",
+    "ModelAuthor",
+    "MutationSource",
     "Obligation",
     "ParameterAssignment",
-    "PolicyException",
-    "Visibility",
-    "READ_ONLY_TASK_TYPES",
-    "AllSupportedConfigs",
-    "Assumption",
-    "EnvironmentRule",
-    "GeneratorSource",
-    "MutationSource",
     "ParameterScope",
     "ParameterValues",
+    "PolicyException",
+    "ProducerRole",
+    "READ_ONLY_TASK_TYPES",
     "RepoSource",
     "Requirement",
     "RequirementDisposition",
@@ -63,4 +73,6 @@ __all__ = [
     "TaskManifest",
     "TaskType",
     "UseCaseSource",
+    "Visibility",
+    "candidate_source_hash",
 ]
