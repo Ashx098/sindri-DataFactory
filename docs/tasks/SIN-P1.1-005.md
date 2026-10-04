@@ -8,25 +8,25 @@
 - Implementation-plan version: `execution-v1.0`
 
 ## Outcome
-`Observation` exists as a strict, immutable record of **authenticated evidence from one exact
-execution of one declared check**: which exact candidate, under which exact policy version, check
-and configuration, by which exact executor (action, profile, image, adapter), over which exact
-inputs. It carries the raw `ToolStatus`, typed proof that the declared check actually ran, short
-typed diagnostics, and content-addressed references to raw evidence. It is the record that
-Findings cite, the judge consumes, ReleaseManifests cite and DatasetRecords inherit, so nothing
-above the tool layer trusts anything that is not traceable to one of these.
+`Observation` exists as a strict, immutable record of **an attempted execution of one declared
+EvaluationPolicy check** against one exact candidate: which exact candidate, under which exact
+policy version, check and configuration, by which exact executor (action, profile, image, adapter
+build), over which exact inputs (including seed and wall-time limit). It carries the raw
+`ToolStatus`, typed proof of execution where the status makes a correctness claim, short typed
+diagnostics, and content-addressed references to raw evidence. Findings cite it, the judge consumes
+it, ReleaseManifests cite it and DatasetRecords inherit it, so everything above the tool layer
+trusts only what is traceable to one of these.
 
 ## Why / architecture references
 - Master architecture:
-  - §4 principles 1 and 9 (only deterministic tools produce observations; results bind to exact artifacts);
-  - §8 F1 (Observation: normalised status, summary, parsed details, raw logs, hashes of everything used; "the adapter checks that expected test IDs appear in the results");
-  - §8.7 ("authenticated tool output tied to immutable inputs; status, scope, diagnostics and raw evidence", and the repository invariant that pass/fail claims must reference Observation IDs);
-  - §8.8–8.9 (complete cache keys; "a PASS from a previous candidate, tool image, parameter set or evaluator version is not reusable unless the complete key matches");
-  - §11.7 (random runs record seed, configuration, tool image); §11.10 (formal observations record solver, mode, depth, assumptions, configuration);
-  - §13 X3 (observations short and structured);
-  - §14 J2 (status taxonomy and training use); §20.4 example (starting point only).
-- Phase/subphase: P1.1; order in `docs/implementation/CURRENT_PHASE.md`: {003, 004} → **005** → {006, 007}.
-- ADRs/RFCs: **ADR-0002** (raw status is never rewritten; TIMEOUT stays TIMEOUT), ADR-0004.
+  - §4 principles 1 and 9;
+  - §8 F1 (normalised status, summary, parsed details, raw logs, hashes of everything used; "the adapter checks that expected test IDs appear in the results"; typed tool `run_sim(candidate, test_ids, seed)`);
+  - §8.7 (Observation definition; the repository invariant that pass/fail claims reference Observation IDs);
+  - §8.8–8.9 (complete keys; no PASS reuse across candidate, tool image, parameter set or evaluator version; broad early invalidation);
+  - §11.7 (each random run individually replayable); §11.10 (formal observations record mode, depth, assumptions, configuration);
+  - §13 X3 (short, structured observations); §14 J2 (status taxonomy); §20.4 example (starting point only).
+- Phase/subphase: P1.1; order: {003, 004} → **005** → {006, 007}.
+- ADRs/RFCs: ADR-0002 (raw status never rewritten), ADR-0004, **ADR-0005** (Observation is check evidence; diagnostic and qualification results are separate types).
 
 ## Owner / coordinator
 - Owner: assigned by coordinator when marked ready
@@ -35,216 +35,179 @@ above the tool layer trusts anything that is not traceable to one of these.
 
 ## Base
 - Base branch: `main`
-- Base commit: `main` when the packet is merged **and** marked ready (implementation waits for both; see the process deviation recorded for 003/004)
+- Base commit: `main` after this packet is merged **and** marked ready on `main` (implementation waits for both; process rule from 003/004)
 - Worktree: `../worktrees/SIN-P1.1-005`
 
 ## Dependencies
 - Required completed tasks: SIN-P1.1-003 and SIN-P1.1-004 (both verified)
 - Required schemas/contracts: `sindri.schemas._base`, `sindri.schemas.policy` (`CheckKind`, `Visibility`, `FormalMode`; import only), `sindri.schemas.task.EditPath` (import only), `sindri.core.ids`, `sindri.core.status.ToolStatus`
 
-## Open decisions (coordinator to decide; the agent recommends)
+## Coordinator decisions (PR #13, 2026-10-04; recorded, not made, by the agent)
+| ID | Decision |
+|---|---|
+| O1 | **Accepted, with ADR-0005.** Observation v1 is for declared EvaluationPolicy-check executions only. Waveform inspection, coverage queries, formal `cover` and ad-hoc undeclared queries use a separate result type, defined later by its first consumer. |
+| O2 | **Accepted, amended.** Binding is `candidate_id` + `candidate_manifest_hash` (authoritative) + `source_hash` + `dependency_hash`. **`candidate_manifest_hash` is inside the v1 `execution_key`.** No cross-candidate cache reuse until P1.2 designs derived-observation provenance. |
+| O3 | **Accepted.** `policy_id` + `policy_hash` + `check_id` + `configuration_id`. |
+| O4 | **Accepted, amended.** `check_id`/`configuration_id` are always required; one Observation per (check, configuration) execution. **Random simulation: one seed per Observation.** The canonical API is `run_sim(…, seed)`, singular, and each random run must be atomic and replayable: status, duration, log, waveform, failure and key are per seed. |
+| O5 | **Accepted, strengthened.** Executor identity is `action`, `tool_profile_id`, `tool_profile_hash`, `tool_image_digest`, `adapter_version` (human-readable) **and `adapter_hash: ContentId`**. The hash, not the version string, goes into `execution_key`, because a rebuilt "1.4" adapter must not keep the same key. |
+| O6 | **Accepted, amended.** `execution_key` includes `candidate_manifest_hash`, `adapter_hash`, the singular `seed`, `evaluator_bundle_hash` and `wall_time_limit_ms` (construction below). **`evaluator_bundle_hash` is always required**: when a check uses no evaluator artifacts, it is the canonical hash of an empty evaluator bundle. One uniform invariant: every Observation binds its exact evaluator-side artifacts. |
+| O7 | **Accepted, amended.** Typed execution reports. **Formal gets expected-property coverage like simulation's expected tests**: `expected_property_ids` vs checked properties, and PASS requires expected == checked, plus reached ≥ requested depth (BMC) or a closed proof (prove). **`EquivalenceRelationId` dropped**: no authoritative relation record consumes it, and the relation is already committed by policy, contract, evaluator bundle and golden. |
+| O8 | **Accepted.** Typed compact diagnostics plus content-addressed logs, traces and reports; no `dict[str, Any]`. |
+| O9 | **Accepted, amended.** `duration_ms` (integer) and a UTC `started_at`. **`wall_time_limit_ms` is a required execution input on every Observation** (and in `execution_key`), not a nullable field appearing only for TIMEOUT. |
+| O10 | **Accepted.** Raw `ToolStatus` only; `INVALID_SUBMISSION`/`INVALID_TASK` stay judge-layer `CheckStatus`. |
+| O11 | **Accepted, amended.** Status matrix with the universal wall-time field, and **no `quality` Observation in v1**: quality has no defined acceptance semantics (units, thresholds, library, corner), so a "quality PASS" would only mean "the report was produced". |
+| O12 | **Accepted.** Immutable, non-versioned; a rerun is a new Observation. `observation_id` is the handle and `content_id()` the exact identity. |
+| O13 | **Principle accepted; self-attested `producer` rejected.** A writer can put any string in a `producer` field. Authentication comes from evidence-store/gateway write authority and append-only event provenance (P1.2–P1.4). `adapter_version`/`adapter_hash`, profile and image already identify *what implementation* produced the semantics. |
+| O14 | **Accepted.** Hidden-check Observation contents are protected and never reach solver context. |
+| O15 | **Recorded semantic distinction (coordinator).** An Observation is the record of an *attempted* declared check execution, not proof that execution completed. PASS/FAIL require strong typed execution evidence. TOOL_ERROR, TIMEOUT, UNSUPPORTED and INCONCLUSIVE may be partial or may never have reached the candidate, so a TOOL_ERROR must not be required to prove that the check ran. |
 
-### O1 — Scope: is every Tool Gateway operation an Observation?
-**Recommendation: no.** `Observation` is reserved for executions of a **declared EvaluationPolicy check** against a candidate. Diagnostic operations produce a different, separately typed record, so a diagnostic success **cannot be spelled as a correctness PASS at all**.
-- The master's typed tools split into two families:
-  - **check executions**: `lint`, `compile`, `run_sim`, `run_formal` (bmc/prove), `check_equiv`, `synth`. These run the candidate and can map to a `CheckKind`.
-  - **diagnostic queries**: `inspect_waveform(run_id, …)` and `coverage(run_id)`. These take a previous run as input; they query an execution's artifacts rather than execute the candidate.
-- Two further cases fall outside correctness evidence:
-  - `run_formal` in `cover` mode is a reachability/qualification run, which E4 excludes from obligations;
-  - a solver's ad-hoc `lint`/`compile`/`run_sim` that matches no declared check is also not policy evidence.
-- The master uses "observation" informally for any tool output (§13: the solver sees "its own tool observations"). The schema narrows the *record type* name; it does not forbid giving the solver diagnostic results.
-- **Proposed shape:** a separate `DiagnosticResult` record (no `ToolStatus`; its own outcome type), defined by the first task with a real consumer (P1.4 `inspect_waveform`/`coverage`, or P1.8's repair loop), following the no-abstraction-without-consumer rule. Judge, qualification and dataset APIs accept `Observation` only, so the type system enforces the boundary.
-- Findings (006) may cite diagnostic results as *supporting* evidence for a hypothesis, but confirming or refuting a correctness claim needs an `Observation`. This is for decision in 006.
-- Solver development runs of **development-visibility** policy checks *are* Observations (`visibility: development`), as the trajectory format requires.
-- Alternatives:
-  - (b) a single Observation type with a `scope: check | diagnostic` discriminator, where diagnostics forbid PASS/FAIL. Weaker: every consumer must remember to filter on scope.
-  - (c) every gateway call is an Observation. **Rejected**: a waveform query could carry PASS, and cover runs contradict E4.
+### Consequences the agent derived while applying the decisions (coordinator to confirm at final review)
+- **R1. Seed scope.** The master API is `run_sim(candidate, test_ids, seed)` for *all* simulation. Proposal: `seed: StrictInt | None` is a required key; it is **non-null for both `directed_sim` and `random_sim`** (simulator seeding affects replay even for directed tests) and `None` for every other kind. If directed runs should carry no seed, the rule becomes "non-null for `random_sim` only".
+- **R2. Action ↔ kind mapping** (one-to-one, enforced in-record):
 
-### O2 — Exact candidate binding
-**Recommendation:**
-- `candidate_id` (lookup) and `candidate_manifest_hash` (the CandidateManifest's `content_id()`, the authoritative binding that commits to files, ancestry and provenance).
-- Also `source_hash` and `dependency_hash` copied from the manifest, because they are the **execution-relevant** subset used in the execution key (O6).
-- Consistency with the manifest is a 009 cross-record check. `candidate_id` alone is never sufficient.
+  | Check kind | Action |
+  |---|---|
+  | `integrity_scan` | `integrity_scan` |
+  | `parse_elaborate` | `compile` |
+  | `lint` | `lint` |
+  | `synthesis` | `synth` |
+  | `directed_sim`, `random_sim` | `run_sim` |
+  | `formal` | `run_formal` |
+  | `equivalence` | `check_equiv` |
 
-### O3 — Exact policy binding
-**Recommendation:** `policy_id`, plus `policy_hash` (the EvaluationPolicy's `content_id()`, which pins the exact version), plus `check_id` and `configuration_id`. IDs alone could recur in a later policy version. Policy/check/configuration consistency is checked in 009.
+  `quality` is excluded (O11).
+- **R3. Report presence by status (from O15):**
+  - PASS/FAIL require a complete report of the kind's variant.
+  - INCONCLUSIVE requires a formal or equivalence report showing the unmet bound.
+  - TOOL_ERROR, TIMEOUT and UNSUPPORTED take `execution_report: None` or a partial report. A partial report may never satisfy PASS rules, and the status cannot be inferred from it.
+- **R4. Equivalence report without a relation ID (from O7):** `EquivalenceReport{proved: bool}`. PASS requires `proved`. FAIL requires a counterexample ref. INCONCLUSIVE means not proved and no counterexample.
+- **R5. Empty evaluator bundle.** The canonical empty-bundle hash is defined by the task that defines evaluator-bundle construction (P1.4/P1.6). This record only requires a `ContentId`; it never accepts `None`.
 
-### O4 — Check/configuration semantics
-**Recommendation:** under O1, `check_id` and `configuration_id` are **always required**, with no nullable diagnostic variant. An Observation never declares its own checks; the check must exist in the bound policy and target the configuration (009).
-- **One Observation per (check, configuration) execution.** A check over four configurations yields four Observations.
-- A `random_sim` execution over several seeds is one Observation with a `seeds` tuple (O6).
-- The record carries `check_kind` (and `visibility`) copied from the policy check so in-record rules (O7, O11) can be enforced, with equality to the policy checked in 009.
-
-### O5 — Executor identity
-**Recommendation:**
-- `action` (enum of the check-execution tools: `lint`, `compile`, `run_sim`, `run_formal`, `check_equiv`, `synth`, `integrity_scan`), with an in-record compatibility rule against `check_kind`.
-- `tool_profile_id` plus `tool_profile_hash` (the exact profile content; the profile record arrives in P1.4).
-- `tool_image_digest` (OCI `sha256:` digest).
-- `adapter_version`. The status is produced by the gateway's parser/normaliser, so the same tool output under a fixed adapter could normalise differently. The adapter is part of the executor.
-
-### O6 — Complete input identity and execution key
-**Recommendation:** a required `execution_key: ContentId`, recomputed in-record from a domain-separated construction (like `candidate_file_set_v1`):
+## Execution key (single implementation, recomputed in-record)
 ```
 canonical_json_id({"kind": "observation_execution_key_v1",
-  "source_hash", "dependency_hash", "policy_hash", "check_id", "configuration_id",
-  "action", "tool_profile_hash", "tool_image_digest", "adapter_version",
-  "evaluator_bundle_hash", "seeds", "formal_mode", "formal_depth"})
+  "candidate_manifest_hash", "source_hash", "dependency_hash",
+  "policy_hash", "check_id", "configuration_id",
+  "action", "tool_profile_hash", "tool_image_digest", "adapter_hash",
+  "evaluator_bundle_hash", "seed", "formal_mode", "formal_depth",
+  "wall_time_limit_ms"})
 ```
-- **New input `evaluator_bundle_hash: ContentId | None`:** the exact test/property/reference-model/golden artifacts used. The policy does not hash these, yet §8.9 forbids reuse across "evaluator versions". It is `None` only for kinds that use no evaluator artifacts (`lint`, `parse_elaborate`, `synthesis`, `integrity_scan`); it is required for `directed_sim`, `random_sim`, `formal` and `equivalence` (equivalence's bundle includes the golden).
-- **Seeds:** `seeds: tuple[StrictInt, …]`, non-empty for `random_sim` and empty otherwise.
-- **Assumptions** are covered via `policy_hash`, because assumptions live in the policy.
-- **Not included:** `candidate_manifest_hash` (it includes model provenance, which does not affect execution). That allows a future cache to reuse results across content-identical candidates. *Whether* and *how* a cache hit is recorded (new Observation or reference) is P1.2/F5's decision, not this record's.
+- **Execution request** (in the key): everything listed above.
+- **Execution result** (never in the key): `observation_id`, `started_at`, `duration_ms`, `status`, `summary`, `diagnostics`, `log_ref`, `evidence_refs`, `execution_report`.
+- `adapter_version`, `tool_profile_id`, `policy_id` and `candidate_id` are human-readable or lookup handles; the key uses their hash counterparts.
 
-### O7 — Execution proof (what shows the declared check actually ran)
-**Recommendation:** a typed `execution_report`, discriminated by kind. Each variant is structured, cross-checkable evidence parsed from tool output, not a bare `executed: true`:
-- **`SimulationReport`** (directed/random sim):
-  - `expected_test_ids`, declared from the evaluator bundle before the run;
-  - `test_results`, a tuple of `{test_id, outcome: ToolStatus}` parsed from the tool.
-  - PASS requires every expected test to appear exactly once with outcome PASS. A test that never ran makes PASS impossible.
-- **`FormalReport`:**
-  - `mode` (bmc/prove), `requested_depth` (bmc), `reached_depth` (bmc), `proof_closed` (prove);
-  - `properties_checked` (property names) and `assumption_count`.
-  - BMC PASS requires `reached_depth ≥ requested_depth`. Prove PASS requires `proof_closed`. Anything short of that is INCONCLUSIVE, never PASS.
-- **`EquivalenceReport`:** `relation` (the declared equivalence relation ID), `bounded_depth | None`, `proved`.
-- **`StructuralReport`** (lint/parse/synth/integrity): `error_count`, `warning_count`, plus kind-specific counts (synth: `latch_count`, `blackbox_count`).
-- Requested values (mode, depth) must equal the bound policy's (009). Parser correctness is proven by P1.4 golden-log tests; this record makes a false "ran" claim *structurally inconsistent* rather than merely asserted.
-
-### O8 — Raw evidence and diagnostics
-**Recommendation (no `dict[str, Any]`):**
-- `summary`: non-blank, at most 500 characters ("short and structured").
-- `diagnostics`: tuple of `Diagnostic{severity: error|warning|info, category: candidate|evaluator|infrastructure, code: str|None, message, path: EditPath|None, line: int ≥ 1|None}`, capped at 200 entries, with a required `diagnostics_truncated: bool`.
-- `log_ref: ContentId`: the raw log blob, required.
-- `evidence_refs`: tuple of `EvidenceRef{kind: counterexample_trace|waveform|coverage_db|tool_report, hash: ContentId}`.
-- Larger or tool-specific detail always goes in a referenced blob, never inline.
-
-### O9 — Timing and resources
-**Recommendation:**
-- `duration_ms: StrictInt ≥ 0` (D5: no floats; replaces §20.4's `duration_s: 41.2`).
-- `started_at`: a UTC RFC 3339 string with second precision and a `Z` suffix, pattern-validated. It is an audit fact, not an input, and is excluded from `execution_key`.
-- For TIMEOUT, `timeout_limit_ms` is required.
-- No CPU, memory or cost fields in v1: those are observability (non-authoritative, §13 telemetry). Resource *limits* are already inside `tool_profile_hash`.
-
-### O10 — Status authority
-**Recommendation:** `status: ToolStatus`, with no second raw taxonomy. `INVALID_SUBMISSION` and `INVALID_TASK` stay judge-layer `CheckStatus` concepts (§14 J2): integrity-scan *findings* are FAILs of an `integrity_scan` check, and the judge decides `INVALID_SUBMISSION`. The raw status is never rewritten by any component (ADR-0002); TIMEOUT stays TIMEOUT.
-
-### O11 — Status-conditional invariants (a kind × status matrix)
-**Recommendation:**
-- **PASS:**
-  - the execution report is complete per O7;
-  - no `error`-severity diagnostics;
-  - no counterexample refs.
-- **FAIL:** at least one candidate-attributed failure locus:
-  - sim: ≥ 1 test with outcome FAIL;
-  - formal/equivalence: a `counterexample_trace` evidence ref is required;
-  - structural kinds: ≥ 1 `error` diagnostic with category `candidate`.
-- **TOOL_ERROR:**
-  - ≥ 1 diagnostic with category `infrastructure`;
-  - **no** candidate-category error, failing test or counterexample. It identifies an infrastructure failure without labelling the RTL.
-- **TIMEOUT:**
-  - `timeout_limit_ms` set and `duration_ms ≥ timeout_limit_ms`;
-  - no failure locus. Partial results are not a verdict, and a TIMEOUT is never re-expressed as FAIL.
-- **INCONCLUSIVE:**
-  - only for `formal` and `equivalence`;
-  - the report shows the unmet bound (reached depth < requested, or proof not closed).
-- **UNSUPPORTED:** ≥ 1 diagnostic with a `code` naming the unsupported capability.
-- **Timeout context:** `timeout_limit_ms` must be `None` for any status other than TIMEOUT.
-
-### O12 — Identity and versioning
-**Recommendation:**
-- **Immutable and non-versioned**: no `observation_version` and no `supersedes`. A rerun is a new Observation; corrections are new records (§8 F2).
-- `observation_id` (assigned by the gateway, unique) is the reference handle.
-- `content_id()` is the exact record identity. Citations in later records (Finding, judge verdicts, ReleaseManifest) carry both, and 009 checks they agree.
-
-### O13 — Authentication (derived; not in the coordinator's list)
-**Recommendation:**
-- For v1, "authenticated" means **provenance plus write authority**, not cryptographic signatures.
-- The record carries `producer: {component: "tool_gateway", adapter_version}`, and only the gateway may write Observations. Write authority is enforced by the evidence store and permissions (P1.2/P1.3), not by a field an adapter could fill in.
-- Signing is deferred to the security work in P1.3/P4.9 if needed.
-
-### O14 — Visibility (derived)
-**Recommendation:**
-- `visibility` is copied from the policy check; equality is checked in 009.
-- Observations of `hidden` checks are judge-side protected.
-- A solver may receive development-check Observations only; the projection is P1.5/P5.
-- `summary` and `diagnostics` of hidden Observations must never reach solver context (§14 J4).
-
-## Scope (written for the recommended options; finalized after decisions)
+## Scope (finalized after confirmation of R1–R5)
 - In scope:
-  - `src/sindri/core/ids.py`, additive only: `TestId` (e.g. `stall_stability_004`), `PropertyId` (e.g. `R03_sva`), and `EquivalenceRelationId` if O7's relation stays.
+  - `src/sindri/core/ids.py`, additive only: `TestId` (e.g. `stall_stability_004`) and `PropertyId` (e.g. `R03_sva`). No `EquivalenceRelationId`.
   - `src/sindri/schemas/observation.py`:
-    - `Observation` (`Record`, non-versioned), with all fields from O2–O9, O13 and O14;
-    - `Diagnostic`, `EvidenceRef`, `Producer`;
-    - the four `execution_report` variants (O7);
-    - `ObservationAction` (O5);
-    - `observation_execution_key()`: the single implementation of O6.
+    - `Observation` (`Record`, non-versioned), with these fields:
+      - **binding:** `observation_id`, `candidate_id`, `candidate_manifest_hash`, `source_hash`, `dependency_hash`, `policy_id`, `policy_hash`, `check_id`, `configuration_id`, `check_kind`, `visibility`;
+      - **executor:** `action`, `tool_profile_id`, `tool_profile_hash`, `tool_image_digest`, `adapter_version`, `adapter_hash`;
+      - **inputs:** `evaluator_bundle_hash`, `seed`, `formal_mode`, `formal_depth`, `wall_time_limit_ms`;
+      - **key:** `execution_key`;
+      - **result:** `started_at`, `duration_ms`, `status: ToolStatus`, `summary`, `diagnostics`, `diagnostics_truncated`, `log_ref`, `evidence_refs`, `execution_report`.
+    - Typed parts: `Diagnostic` (severity, category `candidate|evaluator|infrastructure`, optional code/path/line), `EvidenceRef` (kind `counterexample_trace|waveform|tool_report`, hash), `ObservationAction`.
+    - Execution reports:
+      - `SimulationReport`: `expected_test_ids`, `test_results` of `{test_id, outcome}`;
+      - `FormalReport`: `mode`, `requested_depth`, `reached_depth`, `proof_closed`, `expected_property_ids`, `property_results` of `{property_id, outcome}`;
+      - `EquivalenceReport`: `proved`;
+      - `StructuralReport`: error/warning counts; synth adds latch/blackbox counts.
+    - `observation_execution_key()`: the single implementation of the construction above.
   - In-record invariants:
-    - `execution_key` recomputation;
-    - action ↔ `check_kind` compatibility;
-    - report variant ↔ `check_kind`;
-    - the evaluator-bundle and seeds rules (O6);
-    - the O11 status matrix;
-    - diagnostics cap/truncation;
+    - key recomputation;
+    - `check_kind ≠ quality`; action ↔ kind (R2); report variant ↔ kind;
+    - seed rule (R1); formal mode/depth only on `formal`, with depth iff `bmc`;
+    - `wall_time_limit_ms ≥ 1`;
+    - the O11/R3 status matrix (below);
+    - diagnostics cap of 200 with a truncation flag; summary ≤ 500 characters;
     - `started_at` format;
     - floats rejected (inherited).
-  - Tests under `tests/contract/`, with an adapted §20.4 fixture: a FAIL BMC run with a counterexample, `duration_ms` and full bindings.
+  - Status matrix:
+    - **PASS:**
+      - complete report;
+      - sim: every expected test present exactly once with PASS;
+      - formal: expected properties == checked, all PASS, reached ≥ requested (BMC) or `proof_closed` (prove);
+      - equivalence: `proved`;
+      - structural: zero errors;
+      - in every case: no `error` diagnostics and no counterexample refs.
+    - **FAIL:** a candidate-attributed failure locus:
+      - sim: ≥ 1 test FAIL;
+      - formal/equivalence: a counterexample ref;
+      - structural: ≥ 1 candidate-category error.
+    - **TOOL_ERROR:** ≥ 1 infrastructure diagnostic, and no candidate error, failing test or counterexample.
+    - **TIMEOUT:** `duration_ms ≥ wall_time_limit_ms`, and no failure locus.
+    - **INCONCLUSIVE:** formal or equivalence only, with a report showing the unmet bound.
+    - **UNSUPPORTED:** ≥ 1 diagnostic whose code names the unsupported capability.
+  - Tests under `tests/contract/`, with an adapted §20.4 fixture.
 - Allowed paths: `src/sindri/schemas/observation.py`, `src/sindri/schemas/__init__.py` (exports only), `src/sindri/core/ids.py` (additive only), `tests/contract/`, `tests/unit/test_ids.py`, `components/schemas.yaml`, `docs/REPO_MAP.md`, this packet, `docs/handoffs/SIN-P1.1-005.md`, `implementation/task_board.yaml` (status-only governance state).
 
 ## Forbidden paths / authority boundaries
 - Hidden evaluator/final-eval paths: none; fixtures use synthetic IDs and hashes only.
 - Other forbidden paths:
-  - all verified records (`_base`, `task`, `requirement`, `policy`, `candidate`): import only;
+  - verified records (`_base`, `task`, `requirement`, `policy`, `candidate`): import only;
   - existing ID patterns;
-  - `core/status.py`: no new statuses (O10).
+  - `core/status.py`: no new statuses.
 
 ## Non-goals
-- No `DiagnosticResult` record (O1: introduced by its first consumer).
-- No gateway, adapters, parsers, sandbox or golden-log tests (P1.3/P1.4). No cache semantics (P1.2/F5).
-- No judge logic and no `CheckStatus`/`Verdict` mapping (P1.7). No solver projection (P1.5/P5). No signing (O13).
+- No diagnostic/qualification result type (ADR-0005: first consumer defines it). No `quality` Observations (O11).
+- No `producer` field and no signing (O13): authentication is write authority, P1.2–P1.4.
+- No cross-candidate cache reuse or derived-observation provenance (O2: P1.2). No gateway, adapters, parsers, sandbox, golden logs or evaluator-bundle construction (P1.3/P1.4/P1.6).
+- No judge logic or verdict mapping (P1.7). No solver projection (P1.5/P5).
 - No Finding, EpisodeState, ReleaseManifest or DatasetRecord.
 
 ## Cross-record invariants deferred to SIN-P1.1-009
-- `candidate_manifest_hash` is the `content_id()` of the CandidateManifest with `candidate_id`; `source_hash` and `dependency_hash` equal that manifest's.
+- `candidate_manifest_hash` is the `content_id()` of the CandidateManifest with `candidate_id`; `source_hash`/`dependency_hash` equal that manifest's.
 - `policy_hash` is the `content_id()` of the EvaluationPolicy with `policy_id`; the policy's `task_id` equals the candidate's `task_id`.
-- `check_id` exists in that policy; `configuration_id` is targeted by that check; the pair is **not** excluded by a policy exception.
-- `check_kind`, `visibility` and `tool_profile_id` equal the policy check's. Requested formal mode/depth equal the policy check's.
-- `evaluator_bundle_hash` equals the bundle referenced by the task's EvaluatorCertificate (once that record exists). For equivalence, the bundle commits to the task's `golden_hash`.
-- Citations carry an `observation_id` and `content_id()` that agree (O12).
+- `check_id` exists in that policy; `configuration_id` is targeted by that check; the pair is not excluded by a policy exception.
+- `check_kind`, `visibility`, `tool_profile_id` and the requested formal mode/depth equal the policy check's.
+- `evaluator_bundle_hash` matches the bundle bound to the task's evaluator (once that record exists); for equivalence it commits to the task's `golden_hash`.
+- Citations carry an `observation_id` and `content_id()` that agree.
 - The P1.1-009 enforcement rule (PR #9) is evaluated over Observations of mandatory, non-quality, applicable checks.
 
 ## Interfaces touched
-- Schemas: new `Observation` v1. IDs: additive per Scope.
-- Tool APIs: none (this record is what P1.4 adapters will emit). DB/migrations: none. External dependencies: none new.
+- Schemas: new `Observation` v1. IDs: additive `TestId`, `PropertyId`.
+- Tool APIs: none (P1.4 adapters will emit this record). DB/migrations: none. External dependencies: none new.
 
 ## Acceptance criteria
 Positive:
-- [ ] The adapted §20.4 example (FAIL, BMC, counterexample ref, `duration_ms`, full bindings) validates, round-trips and re-serializes to identical JSON.
-- [ ] One valid Observation per status that the matrix allows for representative kinds, including a sim PASS with every expected test passed, a TIMEOUT with a limit, a TOOL_ERROR with an infrastructure diagnostic, a formal INCONCLUSIVE with unmet depth, and an UNSUPPORTED with a capability code.
-- [ ] `observation_execution_key` matches an independent byte-level `hashlib` vector (as in 004) and changes when any input in its construction changes; it does **not** change with `started_at`, `duration_ms`, `observation_id` or `candidate_manifest_hash`.
+- [ ] The adapted §20.4 example (FAIL, BMC, expected properties, a counterexample ref, `duration_ms`, `wall_time_limit_ms`, full bindings) validates, round-trips and re-serializes to identical JSON.
+- [ ] One valid Observation for each allowed status on representative kinds, including:
+  - a sim PASS with every expected test passed;
+  - a formal PASS with every expected property checked;
+  - a TIMEOUT with no report;
+  - a TOOL_ERROR with no report and an infrastructure diagnostic;
+  - a formal INCONCLUSIVE with unmet depth;
+  - an UNSUPPORTED with a capability code.
+- [ ] Two random-sim Observations differing only in seed have different execution keys.
+- [ ] `observation_execution_key` matches an independent byte-level `hashlib` vector and changes when any key input changes. It does **not** change with `observation_id`, `started_at`, `duration_ms`, `status`, `summary` or `log_ref`.
 
 Negative (each a separate test):
-- [ ] Every field required (no defaults); unknown fields rejected at every level (including `executed`, `duration_s`, `tool`).
-- [ ] A stored `execution_key` that disagrees with its recomputation → rejected (wrong tag, missing field, unsorted, or one tampered input).
+- [ ] Every field required (no defaults); unknown fields rejected at every level, including `producer`, `seeds`, `duration_s`, `tool`, `executed`.
+- [ ] A stored `execution_key` that disagrees with recomputation → rejected (wrong tag, unsorted, or one tampered input, e.g. a different `candidate_manifest_hash` or `adapter_hash`).
+- [ ] `check_kind: quality` → rejected; an action incompatible with the kind (R2) or a report variant incompatible with the kind → rejected.
+- [ ] Missing `evaluator_bundle_hash` or `None` → rejected (always required); `wall_time_limit_ms` missing or < 1 → rejected.
+- [ ] Seed violating R1 (missing on sim, present on non-sim) → rejected.
+- [ ] Sim PASS with a missing, extra, duplicated or non-PASS test → rejected.
+- [ ] Formal PASS with a missing, extra or non-PASS property; BMC `reached_depth < requested_depth`; prove PASS without `proof_closed` → rejected.
+- [ ] PASS or FAIL without a report → rejected; a partial report cannot make PASS (R3).
+- [ ] FAIL without a failure locus (per kind) → rejected.
+- [ ] TOOL_ERROR with a candidate error, failing test or counterexample, or without an infrastructure diagnostic → rejected.
+- [ ] TIMEOUT with `duration_ms < wall_time_limit_ms` or with a failure locus → rejected.
+- [ ] INCONCLUSIVE on a non-formal/non-equivalence kind, or with a met bound → rejected.
 - [ ] A `ToolStatus` outside the enum, or `INVALID_SUBMISSION`/`INVALID_TASK` → rejected.
-- [ ] Sim PASS with a missing, extra or duplicated expected test, or any non-PASS test → rejected.
-- [ ] BMC PASS with `reached_depth < requested_depth`; prove PASS without `proof_closed` → rejected.
-- [ ] FAIL without a failure locus (per kind) → rejected; formal/equivalence FAIL without a counterexample ref → rejected.
-- [ ] TOOL_ERROR carrying a candidate error, failing test or counterexample → rejected; TOOL_ERROR without an infrastructure diagnostic → rejected.
-- [ ] TIMEOUT without `timeout_limit_ms`, with `duration_ms < timeout_limit_ms`, or with a failure locus → rejected; `timeout_limit_ms` on a non-TIMEOUT → rejected.
-- [ ] INCONCLUSIVE on a non-formal/non-equivalence kind, or with a fully met bound → rejected.
-- [ ] Action incompatible with `check_kind`; report variant incompatible with `check_kind` → rejected.
-- [ ] `evaluator_bundle_hash` missing for sim/formal/equivalence, or present for structural kinds; seeds present for non-random kinds or empty for `random_sim` → rejected.
-- [ ] More than 200 diagnostics, `summary` over the limit or blank, malformed `started_at`, float `duration` → rejected.
+- [ ] More than 200 diagnostics, a blank or over-long summary, malformed `started_at`, float duration → rejected.
 - [ ] The record is immutable; there is no `supersedes` field.
 
 Planted-bug checks (run, record in the handoff, revert):
-- [ ] Allowing TIMEOUT with a failing test (i.e. "timeout means fail") makes the suite fail.
+- [ ] Allowing TIMEOUT with a failing test ("timeout means fail") makes the suite fail.
 - [ ] Accepting sim PASS when executed tests ⊂ expected makes the suite fail.
-- [ ] Dropping the domain tag from `observation_execution_key` makes the suite fail.
-- [ ] Removing `evaluator_bundle_hash` from the key makes the suite fail.
+- [ ] Accepting formal PASS when checked properties ⊂ expected makes the suite fail.
+- [ ] Dropping `candidate_manifest_hash` or `adapter_hash` from the key makes the suite fail.
+- [ ] Making `evaluator_bundle_hash` nullable makes the suite fail.
 
 General:
 - [ ] `ruff`, `mypy --strict`, full `pytest` green; the boundary test still covers `schemas`.
-- [ ] `components/schemas.yaml` gains Observation invariants (O1 reservation, O6 key, O11 matrix, O14 protection); `docs/REPO_MAP.md` updated.
+- [ ] `components/schemas.yaml` gains Observation invariants (ADR-0005 boundary, execution key, status matrix, hidden protection); `docs/REPO_MAP.md` updated.
 - [ ] Handoff written; report ends with "Awaiting coordinator assignment."
 
 ## Verification commands
@@ -259,7 +222,7 @@ uv run pytest -q tests/contract
 `src/sindri/core/ids.py` (additive), `src/sindri/schemas/observation.py`, `src/sindri/schemas/__init__.py`, `tests/contract/test_observation.py`, `tests/contract/examples/observation.json`, `tests/unit/test_ids.py`, `components/schemas.yaml`, `docs/REPO_MAP.md`.
 
 ## Status
-`planned`. Draft for coordinator review; decisions O1–O14 open (authoritative status: `implementation/task_board.yaml`).
+`planned`. PR #13 decisions O1–O15 applied; awaiting final packet review, including R1–R5 (authoritative status: `implementation/task_board.yaml`).
 
 ## Completion evidence
 - Files changed:
