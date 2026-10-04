@@ -66,3 +66,19 @@ tasks:
     status: verified
     depends_on: [SIN-P1.1-003, SIN-P1.1-004]
     packet: docs/tasks/SIN-P1.1-005.md
+
+  - id: SIN-P1.1-006
+    title: Finding
+    phase: P1
+    subphase: P1.1
+    status: ready
+    depends_on: [SIN-P1.1-005]
+    packet: docs/tasks/SIN-P1.1-006.md
+
+  - id: SIN-P1.1-007
+    title: EpisodeState
+    phase: P1
+    subphase: P1.1
+    status: ready
+    depends_on: [SIN-P1.1-005]
+    packet: docs/tasks/SIN-P1.1-007.md
