@@ -28,7 +28,7 @@ Roles must exist even when one person holds several. `unassigned` roles are real
 | Workstream | Status | Active task | Blocking decision |
 |---|---|---|---|
 | Governance/bootstrap | complete | — | — |
-| Foundation (P1) | active | SIN-P1.1-001 verified; SIN-P1.1-002 ready (only ready task) | — |
+| Foundation (P1) | active | SIN-P1.1-002 verified; 003 + 004 packets amended with PR #8 decisions (planned) | coordinator final packet review |
 | Task Forge | planned | — | P1.G |
 | Spec Forge | planned | — | P1.G + P2 assets |
 | Verification Forge | planned | — | P1.G + P3 contracts |

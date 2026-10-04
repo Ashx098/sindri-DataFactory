@@ -42,3 +42,19 @@ tasks:
     status: verified
     depends_on: [SIN-P1.1-001]
     packet: docs/tasks/SIN-P1.1-002.md
+
+  - id: SIN-P1.1-003
+    title: EvaluationPolicy and requirement-obligation mapping
+    phase: P1
+    subphase: P1.1
+    status: planned
+    depends_on: [SIN-P1.1-002]
+    packet: docs/tasks/SIN-P1.1-003.md
+
+  - id: SIN-P1.1-004
+    title: CandidateManifest
+    phase: P1
+    subphase: P1.1
+    status: planned
+    depends_on: [SIN-P1.1-002]
+    packet: docs/tasks/SIN-P1.1-004.md
