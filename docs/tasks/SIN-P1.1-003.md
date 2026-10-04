@@ -21,7 +21,7 @@ pass" for a task.
 - ADRs/RFCs: ADR-0002 (statuses), **ADR-0004** (this record owns the obligation mapping and introduces `ObligationId`).
 
 ## Owner / coordinator
-- Owner: assigned by coordinator when marked ready
+- Owner: coding agent (Claude Code), assigned 2026-10-04
 - Integrator: Avinash
 - Reviewers: Avinash; DV/formal reviewer for check kinds and formal modes once assigned (role unassigned)
 
@@ -44,10 +44,20 @@ pass" for a task.
 | E5 | **Accepted, with `ConfigurationId`.** Configurations are explicit, each with a `ConfigurationId` (its first real consumer, so it is introduced here). Checks reference configurations **by ID, never by list index**, because evidence must be scoped to exact finite configurations (§11.14). |
 | E6 | **Accepted.** One obligation → exactly one `RequirementId` → one or more checks of this policy. Cross-record completeness stays in SIN-P1.1-009. |
 | E7 | **Corrected semantics.** A policy exception is a narrow **not-applicable exclusion** for specific (check, configuration) pairs. It never turns an executed FAIL into PASS. An alternative checker requires a new policy version. Release-level waivers stay a ReleaseManifest concern. |
+| E7a | **Clarified (PR #9 review): no wall-clock expiry.** A PolicyException means "(check X, configuration Y) is semantically not applicable under this exact policy version". It has no expiry, because an immutable policy must not behave differently depending on the day it runs. Temporary, contextual waivers of failures are release waivers and live in the release layer (ReleaseManifest). |
+| E5a | **Corrected (PR #9 review): zero-parameter designs.** `EvaluationPolicy.configurations` must contain ≥ 1 configuration, but `Configuration.assignments` **may be empty**. A design with no parameters has one explicit default configuration, e.g. `{"configuration_id": "cfg_default", "assignments": []}`. Two configurations with the same assignment set (including two empty ones) are still rejected. |
 
-### Consequences the agent derived (coordinator to confirm at final review)
-- **Quality-only obligations.** Because `quality` is never evidence of functional correctness (E3), an obligation whose checks are all `quality` checks would leave its requirement effectively unverified. Proposed invariant: every obligation includes at least one non-`quality` check.
-- **E7 guard.** Read literally, E7 would let a set of exclusions cover every configuration of a mandatory check, quietly removing it without a new policy version. Proposed in-record invariant: **an exception set may not exclude all configurations of a mandatory check.** Dropping a mandatory check requires a new policy version, the same route E7 prescribes for alternative checkers. Expiry dates are not modelled: removing an exception is also a new policy version.
+### Delegated decisions (2026-10-04), approved by the coordinator on PR #9
+The coordinator delegated these two calls to the agent ("do what feels right and correct and why").
+The agent decided them; the coordinator then **approved E8 and E9** in the PR #9 review.
+
+| ID | Decision | Rationale |
+|---|---|---|
+| E8 | **Adopted.** Every obligation includes at least one non-`quality` check. | Follows from E3 (quality is never correctness evidence); otherwise a requirement could be "satisfied" by an area report. |
+| E9 | **Adopted.** An exception set may not exclude every configuration of a mandatory check. Removing or replacing a mandatory check requires a new policy version. | Enforces E7's own route (new policy version) and prevents silent weakening through exclusions. |
+
+Both rules only restrict. Relaxing a schema later is backward compatible (stored records stay valid),
+while tightening it later invalidates stored records, so foundation schemas start strict.
 
 ## Scope
 - In scope:
@@ -56,7 +66,7 @@ pass" for a task.
     - `CheckId` (`chk_…`), `ConfigurationId` (`cfg_…`), `ToolProfileId` (`tp_…`), `ExceptionId` (`ex_…`).
   - `src/sindri/schemas/policy.py`: `EvaluationPolicy` (`Record`):
     - Identity: `policy_id: PolicyId`, `policy_version` and `supersedes` (version chain as in 002), `task_id: TaskId`, `contract_hash: ContentId`.
-    - `configurations`: non-empty. Each has a `configuration_id` and `assignments`, a non-empty tuple of `{name: ParameterName, value: ExactScalar}` with unique names. Configuration IDs are unique, and no two configurations may have the same assignment set.
+    - `configurations`: non-empty. Each has a `configuration_id` and `assignments`, a tuple of `{name: ParameterName, value: ExactScalar}` with unique names. The tuple is empty for a no-parameter design (E5a). Configuration IDs are unique, and no two configurations may have the same assignment set; two empty sets count as the same.
     - `checks`: non-empty, unique `CheckId`. Each check has:
       - `kind: CheckKind` (E3), `mandatory: StrictBool` (no default), `visibility` (E2);
       - `tool_profile_id`;
@@ -70,9 +80,9 @@ pass" for a task.
     - all references resolve inside the policy;
     - no mandatory `quality` check;
     - at least one mandatory non-`quality` check;
-    - an obligation may not rely only on `quality` checks;
+    - no quality-only obligation (E8);
     - formal-mode/depth pairing;
-    - the E7 guard (pending confirmation);
+    - no all-configuration exclusion of a mandatory check (E9);
     - floats rejected (inherited).
   - Tests under `tests/contract/`, with an adapted §20.10 example fixture.
 - Allowed paths: `src/sindri/schemas/policy.py`, `src/sindri/schemas/__init__.py` (exports only), `src/sindri/core/ids.py` (additive only), `tests/contract/`, `tests/unit/test_ids.py`, `components/schemas.yaml`, `docs/REPO_MAP.md`, this packet, `docs/handoffs/SIN-P1.1-003.md`, `implementation/task_board.yaml` (status-only governance state).
@@ -91,7 +101,7 @@ pass" for a task.
 - No cross-record checks. These belong to SIN-P1.1-009:
   - `contract_hash` equals the task's `approved_contract_hash`;
   - obligation requirements exist on the task;
-  - every approved mandatory requirement has at least one obligation;
+  - every approved mandatory requirement is **enforced** (strengthened in the PR #9 review): for each configuration where it applies, after exceptions are applied, some obligation for it contains at least one **mandatory, non-quality check that applies to that configuration**. Merely having an obligation is not enough, because an obligation that uses only optional checks would let the judge accept without enforcing the requirement;
   - configuration parameter names match the task's contract.
 - No `VerificationPlan` (P4.1). No Observation, Finding or EpisodeState.
 
@@ -118,7 +128,7 @@ Negative (each a separate test):
 - [ ] An obligation with no checks, an unknown check, or only `quality` checks → rejected.
 - [ ] A mandatory `quality` check → rejected; a policy with no mandatory non-`quality` check → rejected.
 - [ ] An exception excluding a pair whose configuration the check does not target, or naming an unknown check → rejected.
-- [ ] Exceptions that together exclude every configuration of a mandatory check → rejected (E7 guard, if confirmed).
+- [ ] Exceptions that together exclude every configuration of a mandatory check → rejected (E9).
 - [ ] An environment assumption without `source_ref` → rejected.
 - [ ] Version chain enforced; floats rejected at any depth; configuration values never coerced (`True` ≠ `1` ≠ `"1"`).
 - [ ] The record is immutable.
@@ -149,7 +159,7 @@ uv run pytest -q tests/contract
 - `src/sindri/core/ids.py` is edited **only by this task**; 004 must not touch it.
 
 ## Status
-`planned`. Coordinator decisions E1–E7 applied; awaiting final packet review, including the two derived invariants (authoritative status: `implementation/task_board.yaml`).
+`ready` (2026-10-04; coordinator decisions E1–E7 on PR #8, delegated decisions E8–E9; authoritative status: `implementation/task_board.yaml`).
 
 ## Completion evidence
 - Files changed:

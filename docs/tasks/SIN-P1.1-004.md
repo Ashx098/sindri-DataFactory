@@ -20,7 +20,7 @@ judgement can then bind to an exact, reproducible candidate identity (master pri
 - ADRs/RFCs: ADR-0001, ADR-0002.
 
 ## Owner / coordinator
-- Owner: assigned by coordinator when marked ready
+- Owner: coding agent (Claude Code), assigned 2026-10-04
 - Integrator: Avinash
 - Reviewers: Avinash
 
@@ -130,7 +130,7 @@ uv run pytest -q tests/contract
 - This task does not touch `src/sindri/core/ids.py` and does not move `EditPath`.
 
 ## Status
-`planned`. Coordinator decisions F1–F8 applied; awaiting final packet review (authoritative status: `implementation/task_board.yaml`).
+`ready` (2026-10-04; coordinator decisions F1–F8 on PR #8, readiness under coordinator delegation; authoritative status: `implementation/task_board.yaml`).
 
 ## Completion evidence
 - Files changed:
