@@ -112,36 +112,37 @@ while tightening it later invalidates stored records, so foundation schemas star
 
 ## Acceptance criteria
 Positive:
-- [ ] The adapted §20.10 example (per E1–E7) validates, round-trips and re-serializes to identical JSON.
-- [ ] Development and hidden checks coexist; a `bmc` check with depth and a `prove` check without depth validate.
-- [ ] One requirement covered by several obligations, and one obligation using several checks, validate.
-- [ ] A narrow exception excluding one (check, configuration) pair of a multi-configuration mandatory check validates.
+- [x] The adapted §20.10 example (per E1–E7) validates, round-trips and re-serializes to identical JSON.
+- [x] Development and hidden checks coexist; a `bmc` check with depth and a `prove` check without depth validate.
+- [x] One requirement covered by several obligations, and one obligation using several checks, validate.
+- [x] A narrow exception excluding one (check, configuration) pair of a multi-configuration mandatory check validates.
 
 Negative (each a separate test):
-- [ ] Every field required (no defaults), including `mandatory` and `visibility` on each check.
-- [ ] Unknown fields rejected at every level.
-- [ ] `mutation_qualification`, `clean_replay` or any unknown check kind → rejected (E3).
-- [ ] `formal_mode: cover` → rejected (E4); `bmc` without depth, depth on `prove`, depth < 1, or formal fields on a non-formal check → rejected.
-- [ ] A check referencing a configuration by index (an integer), or an unknown `ConfigurationId` → rejected (E5).
-- [ ] Duplicate configuration IDs or duplicate assignment sets → rejected; duplicate parameter names within a configuration → rejected.
-- [ ] Duplicate check, obligation or exception IDs → rejected.
-- [ ] An obligation with no checks, an unknown check, or only `quality` checks → rejected.
-- [ ] A mandatory `quality` check → rejected; a policy with no mandatory non-`quality` check → rejected.
-- [ ] An exception excluding a pair whose configuration the check does not target, or naming an unknown check → rejected.
-- [ ] Exceptions that together exclude every configuration of a mandatory check → rejected (E9).
-- [ ] An environment assumption without `source_ref` → rejected.
-- [ ] Version chain enforced; floats rejected at any depth; configuration values never coerced (`True` ≠ `1` ≠ `"1"`).
-- [ ] The record is immutable.
+- [x] Every field required (no defaults), including `mandatory` and `visibility` on each check.
+- [x] Unknown fields rejected at every level.
+- [x] `mutation_qualification`, `clean_replay` or any unknown check kind → rejected (E3).
+- [x] `formal_mode: cover` → rejected (E4); `bmc` without depth, depth on `prove`, depth < 1, or formal fields on a non-formal check → rejected.
+- [x] A check referencing a configuration by index (an integer), or an unknown `ConfigurationId` → rejected (E5).
+- [x] Duplicate configuration IDs or duplicate assignment sets → rejected; duplicate parameter names within a configuration → rejected.
+- [x] A zero-parameter design validates with one explicit `cfg_default` configuration with empty assignments; two empty configurations are rejected as the same assignment set; an empty `configurations` list is rejected (E5a, PR #10 review).
+- [x] Duplicate check, obligation or exception IDs → rejected.
+- [x] An obligation with no checks, an unknown check, or only `quality` checks → rejected.
+- [x] A mandatory `quality` check → rejected; a policy with no mandatory non-`quality` check → rejected.
+- [x] An exception excluding a pair whose configuration the check does not target, or naming an unknown check → rejected.
+- [x] Exceptions that together exclude every configuration of a mandatory check → rejected (E9).
+- [x] An environment assumption without `source_ref` → rejected.
+- [x] Version chain enforced; floats rejected at any depth; configuration values never coerced (`True` ≠ `1` ≠ `"1"`).
+- [x] The record is immutable.
 
 Planted-bug checks (run, record in the handoff, revert):
-- [ ] Defaulting `mandatory=True` on checks makes the suite fail.
-- [ ] Removing the obligation→check resolution check makes the suite fail.
-- [ ] Allowing `cover` as a formal mode makes the suite fail.
+- [x] Defaulting `mandatory=True` on checks makes the suite fail.
+- [x] Removing the obligation→check resolution check makes the suite fail.
+- [x] Allowing `cover` as a formal mode makes the suite fail.
 
 General:
-- [ ] `ruff`, `mypy --strict`, full `pytest` green; the boundary test still covers `schemas`.
-- [ ] `components/schemas.yaml` gains the policy invariants and the judge-side protection rule (E2); `docs/REPO_MAP.md` updated.
-- [ ] Handoff written; report ends with "Awaiting coordinator assignment."
+- [x] `ruff`, `mypy --strict`, full `pytest` green; the boundary test still covers `schemas`.
+- [x] `components/schemas.yaml` gains the policy invariants and the judge-side protection rule (E2); `docs/REPO_MAP.md` updated.
+- [x] Handoff written; report ends with "Awaiting coordinator assignment."
 
 ## Verification commands
 ```bash
@@ -159,11 +160,28 @@ uv run pytest -q tests/contract
 - `src/sindri/core/ids.py` is edited **only by this task**; 004 must not touch it.
 
 ## Status
-`ready` (2026-10-04; coordinator decisions E1–E7 on PR #8, delegated decisions E8–E9; authoritative status: `implementation/task_board.yaml`).
+`review` (authoritative status: `implementation/task_board.yaml`). Decisions E1–E9 implemented as written.
 
 ## Completion evidence
-- Files changed:
-- Tests run/results:
+- Files changed: `src/sindri/core/ids.py` (additive: `ObligationId`, `CheckId`, `ConfigurationId`, `ToolProfileId`, `ExceptionId`; existing patterns untouched, only docstring lines edited), `src/sindri/schemas/policy.py` (new), `src/sindri/schemas/__init__.py` (exports), `tests/contract/test_evaluation_policy.py` and `tests/contract/examples/evaluation_policy.json` (new), `tests/unit/test_ids.py`, `components/schemas.yaml`, `docs/REPO_MAP.md`, `implementation/task_board.yaml`, this packet, handoff.
+- Tests run/results (after PR #10 review fixes): `ruff` clean; `mypy --strict` clean (14 files); `pytest`: 359 passed, 8 skipped (83 EvaluationPolicy contract tests, 12 new ID tests).
 - Acceptance evidence:
-- Known limitations:
-- Handoff/next action:
+  - The adapted §20.10 example (4 explicit configurations, 6 checks across development/hidden, `bmc` depth 24, one quality check, 3 obligations over 2 requirements, one narrow formal exclusion) validates and re-serializes to identical JSON.
+  - Rejection reasons spot-checked:
+    - `cover` → enum error;
+    - depth 0 → bound;
+    - integer configuration index → type error;
+    - empty obligation → length;
+    - `r01` → ID pattern;
+    - empty exclusion → length.
+  - Planted bugs, each caught and reverted:
+    - `mandatory` default → 1 failure;
+    - obligation→check resolution removed → 1;
+    - `cover` allowed → 1.
+  - **mypy found a real bug during implementation:** a variable reused for configuration IDs and check IDs. The distinct ID types made the type checker reject the mix.
+- Review fixes (PR #10):
+  - **E5a:** `Configuration.assignments` may be empty. The new test fails with the original `min_length=1` restored (1 failure) and passes with the fix.
+  - **E7a:** exceptions carry no expiry by design (semantic not-applicability); temporary waivers are release-layer.
+  - **009:** the strengthened coverage rule (a mandatory, non-quality, applicable check per configuration after exceptions) is recorded in Non-goals and `CURRENT_PHASE.md`; it is not checked here because 003 cannot see `Requirement.mandatory` or applicability.
+- Known limitations: the solver-safe projection (E2) is not built (P1.5/P5); its rule is recorded as INV-EP-001. Cross-record checks are SIN-P1.1-009.
+- Handoff/next action: `docs/handoffs/SIN-P1.1-003.md`.

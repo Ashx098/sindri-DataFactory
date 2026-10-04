@@ -1,0 +1,44 @@
+{
+  "schema_version": 1,
+  "policy_id": "ep_fifo_004",
+  "policy_version": 1,
+  "supersedes": null,
+  "task_id": "fifo_0001",
+  "contract_hash": "sha256:1a2b3c4d5e6f708192a3b4c5d6e7f8091a2b3c4d5e6f708192a3b4c5d6e7f809",
+  "configurations": [
+    {"configuration_id": "cfg_w1_d1", "assignments": [{"name": "WIDTH", "value": 1}, {"name": "DEPTH", "value": 1}]},
+    {"configuration_id": "cfg_w8_d3", "assignments": [{"name": "WIDTH", "value": 8}, {"name": "DEPTH", "value": 3}]},
+    {"configuration_id": "cfg_w8_d8", "assignments": [{"name": "WIDTH", "value": 8}, {"name": "DEPTH", "value": 8}]},
+    {"configuration_id": "cfg_w32_d8", "assignments": [{"name": "WIDTH", "value": 32}, {"name": "DEPTH", "value": 8}]}
+  ],
+  "checks": [
+    {"check_id": "chk_parse", "kind": "parse_elaborate", "mandatory": true, "visibility": "development",
+     "tool_profile_id": "tp_slang_v0", "configuration_ids": ["cfg_w1_d1", "cfg_w8_d3", "cfg_w8_d8", "cfg_w32_d8"],
+     "formal_mode": null, "depth": null},
+    {"check_id": "chk_directed", "kind": "directed_sim", "mandatory": true, "visibility": "development",
+     "tool_profile_id": "tp_verilator_v0", "configuration_ids": ["cfg_w8_d8"], "formal_mode": null, "depth": null},
+    {"check_id": "chk_random", "kind": "random_sim", "mandatory": true, "visibility": "hidden",
+     "tool_profile_id": "tp_verilator_v0", "configuration_ids": ["cfg_w1_d1", "cfg_w8_d3", "cfg_w8_d8", "cfg_w32_d8"],
+     "formal_mode": null, "depth": null},
+    {"check_id": "chk_formal_core", "kind": "formal", "mandatory": true, "visibility": "hidden",
+     "tool_profile_id": "tp_sby_bmc_v0", "configuration_ids": ["cfg_w1_d1", "cfg_w8_d3", "cfg_w32_d8"],
+     "formal_mode": "bmc", "depth": 24},
+    {"check_id": "chk_synth", "kind": "synthesis", "mandatory": true, "visibility": "hidden",
+     "tool_profile_id": "tp_yosys_v0", "configuration_ids": ["cfg_w8_d8"], "formal_mode": null, "depth": null},
+    {"check_id": "chk_area", "kind": "quality", "mandatory": false, "visibility": "hidden",
+     "tool_profile_id": "tp_yosys_v0", "configuration_ids": ["cfg_w8_d8"], "formal_mode": null, "depth": null}
+  ],
+  "environment_assumptions": [
+    {"text": "in_valid stays high until accepted", "source_ref": "contract:ct_fifo_0001_v1/env_rules/valid_holds_until_ready"}
+  ],
+  "obligations": [
+    {"obligation_id": "sim_stall_01", "requirement_id": "R01", "check_ids": ["chk_directed", "chk_random"]},
+    {"obligation_id": "sva_stall_stable", "requirement_id": "R01", "check_ids": ["chk_formal_core"]},
+    {"obligation_id": "sim_push_pop_full", "requirement_id": "R02", "check_ids": ["chk_random", "chk_formal_core", "chk_area"]}
+  ],
+  "exceptions": [
+    {"exception_id": "ex_formal_w32", "excludes": [{"check_id": "chk_formal_core", "configuration_id": "cfg_w32_d8"}],
+     "justification": "BMC state space at WIDTH=32 exceeds the profile budget; data-width independence covered by cfg_w1_d1/cfg_w8_d3 and random_sim",
+     "approved_by": "Avinash"}
+  ]
+}
