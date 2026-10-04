@@ -58,3 +58,11 @@ tasks:
     status: verified
     depends_on: [SIN-P1.1-002]
     packet: docs/tasks/SIN-P1.1-004.md
+
+  - id: SIN-P1.1-005
+    title: Observation
+    phase: P1
+    subphase: P1.1
+    status: planned
+    depends_on: [SIN-P1.1-003, SIN-P1.1-004]
+    packet: docs/tasks/SIN-P1.1-005.md
