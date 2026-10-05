@@ -103,6 +103,6 @@ tasks:
     title: P1.1-G — P1.1 foundation integration gate
     phase: P1
     subphase: P1.1
-    status: review
+    status: verified
     depends_on: [SIN-P1.1-009]
     packet: docs/tasks/SIN-P1.1-010.md
