@@ -154,12 +154,12 @@ The probes used scratch copies of draft RTL, testbench and mutants, outside the 
 ## Decisions requested (agent recommendations)
 | ID | Question | Recommendation |
 |---|---|---|
-| F1 | Handshake | valid/ready on both sides (closest to the §20 examples, e.g. stall stability). |
-| F2 | Reset | synchronous, active-high, ≥ 1 edge; data storage not reset. |
-| F3 | Push when full while popping | not accepted (`in_ready = !full`); simplest, no combinational path from `out_ready` to `in_ready`. |
-| F4 | Fall-through | none (registered visibility); simpler, and P9 shows its edge cases. |
-| F5 | Depth constraint | any `DEPTH ≥ 1`, including non-power-of-two (required by P8). |
-| F6 | Language | Verilog-2005 subset for the seed; SystemVerilog only once a pinned SV-capable tool exists (P5). |
+| F1 | Handshake | **Accepted:** valid/ready on both sides. |
+| F2 | Reset | **Accepted:** synchronous, active-high, held for ≥ 1 rising edge; data storage not reset and is unobservable while `out_valid=0`. |
+| F3 | Push when full while popping | **Accepted:** not accepted (`in_ready = !full`), even if a pop occurs in that cycle; no `out_ready -> in_ready` combinational path. |
+| F4 | Fall-through | **Accepted:** none; push into empty becomes visible on the following cycle. |
+| F5 | Depth constraint | **Accepted:** `WIDTH ≥ 1`, `DEPTH ≥ 1`, including non-power-of-two depths. |
+| F6 | Language | **Accepted for the engineering seed:** synthesizable Verilog-2005 subset with explicit future tool-profile language mode; this is not a permanent Sindri language restriction. |
 | F7 | Result protocol | **Accepted with strict completeness rules.** `tb/tests.json` is **configuration-scoped** and lists the exact expected `TestId`s for each configuration (R07 is absent at DEPTH=1). The transcript must contain each expected `TEST <TestId> PASS|FAIL` exactly once, no duplicates or unexpected IDs, plus exactly one terminal `RESULT PASS|FAIL`. `RESULT PASS` is valid only when every expected test is present exactly once and PASS and the final result agrees. Missing/duplicate/unexpected tests or disagreement fail closed. `$fatal(1,…)` remains a failure signal, but exit code is never the semantic oracle. |
 | F8 | Tool provisioning for the requested Verilator/slang/Yosys evidence | **Coordinator decision: pinned OCI/container tooling.** No host-package installs. P1.3 owns provisioning/isolation and pins immutable digests. First execution/simulation profile: Icarus 12.x. Before a P1.4 compile/lint normalizer is considered stable, repeat diagnostics on pinned Verilator 5.x and slang/pyslang profiles. Yosys/SBY do not block this seed; provision them when synthesis/formal first enters the vertical slice and before P1.6/P1.7 certification claims depend on them. Do not invent image digests in this packet; P1.3 records the verified images. |
 | F9 | Task source for an in-house seed | **Accepted narrowly:** use `use_case` for this exact coordinator-approved internal engineering use case, with a stable intake ref such as `sindri:p1.6/fifo-seed-v1`. This is not precedent for all authored assets; if authored seeds recur, surface a real source-kind change later. |
