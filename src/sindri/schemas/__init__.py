@@ -23,6 +23,9 @@ from sindri.schemas.episode import (
     EpisodeStatus,
     PendingJob,
 )
+
+# Finding's ProducerRole shares its class name with CandidateManifest's, so it is exported as
+# FindingProducerRole (P1.1-G B5: found by the A3 public-API inventory).
 from sindri.schemas.finding import (
     ALLOWED_FINDING_TRANSITIONS,
     ComponentProducer,
@@ -40,6 +43,7 @@ from sindri.schemas.finding import (
     SupportingArtifactKind,
     Uncertainty,
 )
+from sindri.schemas.finding import ProducerRole as FindingProducerRole
 from sindri.schemas.observation import (
     ACTION_FOR_KIND,
     Diagnostic,
@@ -127,6 +131,7 @@ __all__ = [
     "ExistingPolicyCheck",
     "Finding",
     "FindingStatus",
+    "FindingProducerRole",
     "FindingTransition",
     "FormalMode",
     "FormalReport",

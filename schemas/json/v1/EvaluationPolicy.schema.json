@@ -1,0 +1,344 @@
+{
+  "$defs": {
+    "Check": {
+      "additionalProperties": false,
+      "properties": {
+        "check_id": {
+          "title": "Check Id",
+          "type": "string"
+        },
+        "configuration_ids": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Configuration Ids",
+          "type": "array"
+        },
+        "depth": {
+          "anyOf": [
+            {
+              "minimum": 1,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Depth"
+        },
+        "formal_mode": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/FormalMode"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "kind": {
+          "$ref": "#/$defs/CheckKind"
+        },
+        "mandatory": {
+          "title": "Mandatory",
+          "type": "boolean"
+        },
+        "tool_profile_id": {
+          "title": "Tool Profile Id",
+          "type": "string"
+        },
+        "visibility": {
+          "$ref": "#/$defs/Visibility"
+        }
+      },
+      "required": [
+        "check_id",
+        "kind",
+        "mandatory",
+        "visibility",
+        "tool_profile_id",
+        "configuration_ids",
+        "formal_mode",
+        "depth"
+      ],
+      "title": "Check",
+      "type": "object"
+    },
+    "CheckKind": {
+      "description": "Per-candidate checks, in judge order (master §14 J1). `quality` is never correctness.",
+      "enum": [
+        "integrity_scan",
+        "parse_elaborate",
+        "lint",
+        "synthesis",
+        "directed_sim",
+        "random_sim",
+        "formal",
+        "equivalence",
+        "quality"
+      ],
+      "title": "CheckKind",
+      "type": "string"
+    },
+    "Configuration": {
+      "additionalProperties": false,
+      "description": "One exact, finite parameter assignment (E5, master §11.14).\n\n`assignments` is empty for a design with no parameters: that design still has exactly one\nexplicit configuration (e.g. `cfg_default`) so evidence stays configuration-scoped (E5a).",
+      "properties": {
+        "assignments": {
+          "items": {
+            "$ref": "#/$defs/ParameterAssignment"
+          },
+          "title": "Assignments",
+          "type": "array"
+        },
+        "configuration_id": {
+          "title": "Configuration Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "configuration_id",
+        "assignments"
+      ],
+      "title": "Configuration",
+      "type": "object"
+    },
+    "EnvironmentAssumption": {
+      "additionalProperties": false,
+      "properties": {
+        "source_ref": {
+          "title": "Source Ref",
+          "type": "string"
+        },
+        "text": {
+          "title": "Text",
+          "type": "string"
+        }
+      },
+      "required": [
+        "text",
+        "source_ref"
+      ],
+      "title": "EnvironmentAssumption",
+      "type": "object"
+    },
+    "ExcludedPair": {
+      "additionalProperties": false,
+      "properties": {
+        "check_id": {
+          "title": "Check Id",
+          "type": "string"
+        },
+        "configuration_id": {
+          "title": "Configuration Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "check_id",
+        "configuration_id"
+      ],
+      "title": "ExcludedPair",
+      "type": "object"
+    },
+    "FormalMode": {
+      "description": "Correctness modes only (E4). Covers prove reachability, not behaviour, so they are absent.",
+      "enum": [
+        "bmc",
+        "prove"
+      ],
+      "title": "FormalMode",
+      "type": "string"
+    },
+    "Obligation": {
+      "additionalProperties": false,
+      "description": "Covers exactly one requirement of this policy's task with one or more checks (E6).",
+      "properties": {
+        "check_ids": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Check Ids",
+          "type": "array"
+        },
+        "obligation_id": {
+          "title": "Obligation Id",
+          "type": "string"
+        },
+        "requirement_id": {
+          "title": "Requirement Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "obligation_id",
+        "requirement_id",
+        "check_ids"
+      ],
+      "title": "Obligation",
+      "type": "object"
+    },
+    "ParameterAssignment": {
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "value": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "string"
+            },
+            {
+              "type": "boolean"
+            }
+          ],
+          "title": "Value"
+        }
+      },
+      "required": [
+        "name",
+        "value"
+      ],
+      "title": "ParameterAssignment",
+      "type": "object"
+    },
+    "PolicyException": {
+      "additionalProperties": false,
+      "description": "A not-applicable exclusion of exact (check, configuration) pairs (E7).\n\nIt never turns an executed FAIL into PASS. An alternative checker, or dropping a mandatory\ncheck, requires a new policy version (E9). Release waivers belong to ReleaseManifest.",
+      "properties": {
+        "approved_by": {
+          "title": "Approved By",
+          "type": "string"
+        },
+        "exception_id": {
+          "title": "Exception Id",
+          "type": "string"
+        },
+        "excludes": {
+          "items": {
+            "$ref": "#/$defs/ExcludedPair"
+          },
+          "minItems": 1,
+          "title": "Excludes",
+          "type": "array"
+        },
+        "justification": {
+          "title": "Justification",
+          "type": "string"
+        }
+      },
+      "required": [
+        "exception_id",
+        "excludes",
+        "justification",
+        "approved_by"
+      ],
+      "title": "PolicyException",
+      "type": "object"
+    },
+    "Visibility": {
+      "enum": [
+        "development",
+        "hidden"
+      ],
+      "title": "Visibility",
+      "type": "string"
+    }
+  },
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "checks": {
+      "items": {
+        "$ref": "#/$defs/Check"
+      },
+      "minItems": 1,
+      "title": "Checks",
+      "type": "array"
+    },
+    "configurations": {
+      "items": {
+        "$ref": "#/$defs/Configuration"
+      },
+      "minItems": 1,
+      "title": "Configurations",
+      "type": "array"
+    },
+    "contract_hash": {
+      "title": "Contract Hash",
+      "type": "string"
+    },
+    "environment_assumptions": {
+      "items": {
+        "$ref": "#/$defs/EnvironmentAssumption"
+      },
+      "title": "Environment Assumptions",
+      "type": "array"
+    },
+    "exceptions": {
+      "items": {
+        "$ref": "#/$defs/PolicyException"
+      },
+      "title": "Exceptions",
+      "type": "array"
+    },
+    "obligations": {
+      "items": {
+        "$ref": "#/$defs/Obligation"
+      },
+      "minItems": 1,
+      "title": "Obligations",
+      "type": "array"
+    },
+    "policy_id": {
+      "title": "Policy Id",
+      "type": "string"
+    },
+    "policy_version": {
+      "minimum": 1,
+      "title": "Policy Version",
+      "type": "integer"
+    },
+    "schema_version": {
+      "title": "Schema Version",
+      "type": "integer"
+    },
+    "supersedes": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Supersedes"
+    },
+    "task_id": {
+      "title": "Task Id",
+      "type": "string"
+    }
+  },
+  "required": [
+    "schema_version",
+    "policy_id",
+    "policy_version",
+    "supersedes",
+    "task_id",
+    "contract_hash",
+    "configurations",
+    "checks",
+    "environment_assumptions",
+    "obligations",
+    "exceptions"
+  ],
+  "title": "EvaluationPolicy",
+  "type": "object"
+}

@@ -1,0 +1,296 @@
+{
+  "$defs": {
+    "AbortReason": {
+      "enum": [
+        "budget_exhausted",
+        "wall_clock_exhausted",
+        "infrastructure_failure",
+        "stagnation",
+        "cancelled"
+      ],
+      "title": "AbortReason",
+      "type": "string"
+    },
+    "BudgetVector": {
+      "additionalProperties": false,
+      "description": "Additive, reservable resources (ED7). Wall-clock is deliberately not here.",
+      "properties": {
+        "candidate_versions": {
+          "minimum": 0,
+          "title": "Candidate Versions",
+          "type": "integer"
+        },
+        "formal_ms": {
+          "minimum": 0,
+          "title": "Formal Ms",
+          "type": "integer"
+        },
+        "repair_attempts": {
+          "minimum": 0,
+          "title": "Repair Attempts",
+          "type": "integer"
+        },
+        "sim_jobs": {
+          "minimum": 0,
+          "title": "Sim Jobs",
+          "type": "integer"
+        },
+        "tokens": {
+          "minimum": 0,
+          "title": "Tokens",
+          "type": "integer"
+        },
+        "tool_calls": {
+          "minimum": 0,
+          "title": "Tool Calls",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "tokens",
+        "tool_calls",
+        "candidate_versions",
+        "sim_jobs",
+        "formal_ms",
+        "repair_attempts"
+      ],
+      "title": "BudgetVector",
+      "type": "object"
+    },
+    "CandidateBinding": {
+      "additionalProperties": false,
+      "description": "The exact candidate: handle plus CandidateManifest content identity (ED4).",
+      "properties": {
+        "candidate_id": {
+          "title": "Candidate Id",
+          "type": "string"
+        },
+        "candidate_manifest_hash": {
+          "title": "Candidate Manifest Hash",
+          "type": "string"
+        }
+      },
+      "required": [
+        "candidate_id",
+        "candidate_manifest_hash"
+      ],
+      "title": "CandidateBinding",
+      "type": "object"
+    },
+    "EpisodeStatus": {
+      "description": "ADR-0006: master F3 lifecycle, the WAITING overlay of §8.8, and two terminal states.",
+      "enum": [
+        "PREPARE",
+        "PLAN",
+        "IMPLEMENT",
+        "DEV_CHECK",
+        "TRIAGE",
+        "REPAIR",
+        "SUBMIT",
+        "JUDGE",
+        "RECORD",
+        "WAITING",
+        "COMPLETED",
+        "ABORTED"
+      ],
+      "title": "EpisodeStatus",
+      "type": "string"
+    },
+    "PendingJob": {
+      "additionalProperties": false,
+      "description": "An outstanding asynchronous job bound to the exact immutable request it represents (ED9).\n\n`request_hash` is the authoritative request identity; P1.5/P1.4 resolve its typed operation and\nwhether it needs a candidate. Pending jobs are broader than correctness Observations\n(ADR-0005), so there is no ObservationAction here. `candidate` is a required key whose value\nmay be None: model, planning or diagnostic jobs may have no candidate.",
+      "properties": {
+        "candidate": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/CandidateBinding"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "job_id": {
+          "title": "Job Id",
+          "type": "string"
+        },
+        "request_hash": {
+          "title": "Request Hash",
+          "type": "string"
+        },
+        "reserved": {
+          "$ref": "#/$defs/BudgetVector"
+        }
+      },
+      "required": [
+        "job_id",
+        "request_hash",
+        "candidate",
+        "reserved"
+      ],
+      "title": "PendingJob",
+      "type": "object"
+    }
+  },
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "abort_reason": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/AbortReason"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "active_candidate": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/CandidateBinding"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "best_candidate": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/CandidateBinding"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "budget_hash": {
+      "title": "Budget Hash",
+      "type": "string"
+    },
+    "checkpoint_ref": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Checkpoint Ref"
+    },
+    "episode_id": {
+      "title": "Episode Id",
+      "type": "string"
+    },
+    "failure_repeat_count": {
+      "minimum": 0,
+      "title": "Failure Repeat Count",
+      "type": "integer"
+    },
+    "last_failure_signature": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Last Failure Signature"
+    },
+    "pending_jobs": {
+      "items": {
+        "$ref": "#/$defs/PendingJob"
+      },
+      "title": "Pending Jobs",
+      "type": "array"
+    },
+    "policy_hash": {
+      "title": "Policy Hash",
+      "type": "string"
+    },
+    "policy_id": {
+      "title": "Policy Id",
+      "type": "string"
+    },
+    "previous_state_hash": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Previous State Hash"
+    },
+    "reserved": {
+      "$ref": "#/$defs/BudgetVector"
+    },
+    "resume_state": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/EpisodeStatus"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "schema_version": {
+      "title": "Schema Version",
+      "type": "integer"
+    },
+    "sequence": {
+      "minimum": 0,
+      "title": "Sequence",
+      "type": "integer"
+    },
+    "solver_config_hash": {
+      "title": "Solver Config Hash",
+      "type": "string"
+    },
+    "spent": {
+      "$ref": "#/$defs/BudgetVector"
+    },
+    "state": {
+      "$ref": "#/$defs/EpisodeStatus"
+    },
+    "task_id": {
+      "title": "Task Id",
+      "type": "string"
+    },
+    "wall_clock_elapsed_ms": {
+      "minimum": 0,
+      "title": "Wall Clock Elapsed Ms",
+      "type": "integer"
+    }
+  },
+  "required": [
+    "schema_version",
+    "episode_id",
+    "task_id",
+    "sequence",
+    "previous_state_hash",
+    "policy_id",
+    "policy_hash",
+    "budget_hash",
+    "solver_config_hash",
+    "state",
+    "resume_state",
+    "abort_reason",
+    "active_candidate",
+    "best_candidate",
+    "pending_jobs",
+    "spent",
+    "reserved",
+    "wall_clock_elapsed_ms",
+    "last_failure_signature",
+    "failure_repeat_count",
+    "checkpoint_ref"
+  ],
+  "title": "EpisodeState",
+  "type": "object"
+}

@@ -68,6 +68,12 @@ public_interfaces:
   - name: check_records
     request: Iterable[Record] forming a deliberately assembled closed validation bundle (not a partial store query)
     response: tuple[Violation, ...] sorted by (code, subject, detail); TypeError for a non-Record or unsupported Record type
+  - name: schemas/json/v1/<Record>.schema.json (scripts/export_json_schemas.py)
+    request: the 9 top-level P1.1 records
+    response: JSON Schema 2020-12, nested models under $defs; a deterministic STRUCTURAL PROJECTION generated from the Pydantic models, drift-checked byte for byte. Not a semantically equivalent validator; the models remain the only validation authority (P1.1-G, G-JS)
+  - name: FindingProducerRole
+    request: export alias
+    response: sindri.schemas.finding.ProducerRole (its class name collides with CandidateManifest's ProducerRole) (P1.1-G B5)
 invariants:
   - id: INV-001
     text: Unknown fields are rejected at every nesting level.
@@ -167,6 +173,12 @@ failure_modes:
   - id: FM-XR-002
     symptom: A new ContentId field escapes the cross-record contract.
     guard: CT-1 inventory (test_hash_inventory.py) fails until the field is classified H1/H2/H3.
+  - id: FM-GATE-001
+    symptom: An acceptance-critical check is written as `assert` and disappears under `python -O`.
+    guard: AST guard (tests/unit/test_no_runtime_asserts.py) over src/ and tests/**/_*.py support modules; targeted `python -O` CI step (tests/contract/test_optimized_mode.py) (P1.1-G B1/B2/G-O).
+  - id: FM-GATE-002
+    symptom: A JSON Schema consumer treats the exported projection as the validator.
+    guard: Documented structural-projection status; known gaps (typed-ID patterns, schema_version pin, non-blank text, timestamp format, cross-field/model validators) are listed in docs/implementation/gates/P1.1-G.md and may be enriched later.
 required_tests:
   - unit
   - contract
@@ -174,4 +186,4 @@ observability:
   spans: []
   metrics: []
 related_adrs: [ADR-0001, ADR-0002, ADR-0004, ADR-0005, ADR-0006]
-related_docs: [docs/tasks/SIN-P1.1-002.md, docs/tasks/SIN-P1.1-003.md, docs/tasks/SIN-P1.1-004.md, docs/tasks/SIN-P1.1-005.md, docs/tasks/SIN-P1.1-006.md, docs/tasks/SIN-P1.1-007.md, docs/tasks/SIN-P1.1-008.md, docs/tasks/SIN-P1.1-009.md]
+related_docs: [docs/tasks/SIN-P1.1-002.md, docs/tasks/SIN-P1.1-003.md, docs/tasks/SIN-P1.1-004.md, docs/tasks/SIN-P1.1-005.md, docs/tasks/SIN-P1.1-006.md, docs/tasks/SIN-P1.1-007.md, docs/tasks/SIN-P1.1-008.md, docs/tasks/SIN-P1.1-009.md, docs/tasks/SIN-P1.1-010.md, docs/implementation/gates/P1.1-G.md]

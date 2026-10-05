@@ -18,6 +18,8 @@ jobs:
         run: uv run mypy
       - name: tests (unit, architecture, governance)
         run: uv run pytest -q
+      - name: optimized-mode checks (targeted; P1.1-G G-O, not a second full suite)
+        run: uv run python -O -m pytest -q tests/contract/test_optimized_mode.py tests/unit/test_no_runtime_asserts.py
       - name: scripts run without the project environment
         run: |
           python3 scripts/show_ready_tasks.py --all

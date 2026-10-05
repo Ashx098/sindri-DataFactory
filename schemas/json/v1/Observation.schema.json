@@ -1,0 +1,623 @@
+{
+  "$defs": {
+    "CheckKind": {
+      "description": "Per-candidate checks, in judge order (master §14 J1). `quality` is never correctness.",
+      "enum": [
+        "integrity_scan",
+        "parse_elaborate",
+        "lint",
+        "synthesis",
+        "directed_sim",
+        "random_sim",
+        "formal",
+        "equivalence",
+        "quality"
+      ],
+      "title": "CheckKind",
+      "type": "string"
+    },
+    "Diagnostic": {
+      "additionalProperties": false,
+      "properties": {
+        "category": {
+          "$ref": "#/$defs/DiagnosticCategory"
+        },
+        "code": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Code"
+        },
+        "line": {
+          "anyOf": [
+            {
+              "minimum": 1,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Line"
+        },
+        "message": {
+          "title": "Message",
+          "type": "string"
+        },
+        "path": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Path"
+        },
+        "severity": {
+          "$ref": "#/$defs/Severity"
+        }
+      },
+      "required": [
+        "severity",
+        "category",
+        "code",
+        "message",
+        "path",
+        "line"
+      ],
+      "title": "Diagnostic",
+      "type": "object"
+    },
+    "DiagnosticCategory": {
+      "description": "Who a diagnostic is about. Only `candidate` diagnostics attribute a failure to the RTL.",
+      "enum": [
+        "candidate",
+        "evaluator",
+        "infrastructure"
+      ],
+      "title": "DiagnosticCategory",
+      "type": "string"
+    },
+    "EquivalenceReport": {
+      "additionalProperties": false,
+      "description": "The relation is committed by policy, contract, evaluator bundle and golden (R4).",
+      "properties": {
+        "proved": {
+          "title": "Proved",
+          "type": "boolean"
+        },
+        "report_kind": {
+          "const": "equivalence",
+          "title": "Report Kind",
+          "type": "string"
+        }
+      },
+      "required": [
+        "report_kind",
+        "proved"
+      ],
+      "title": "EquivalenceReport",
+      "type": "object"
+    },
+    "EvidenceKind": {
+      "enum": [
+        "counterexample_trace",
+        "waveform",
+        "tool_report"
+      ],
+      "title": "EvidenceKind",
+      "type": "string"
+    },
+    "EvidenceRef": {
+      "additionalProperties": false,
+      "properties": {
+        "hash": {
+          "title": "Hash",
+          "type": "string"
+        },
+        "kind": {
+          "$ref": "#/$defs/EvidenceKind"
+        }
+      },
+      "required": [
+        "kind",
+        "hash"
+      ],
+      "title": "EvidenceRef",
+      "type": "object"
+    },
+    "FormalMode": {
+      "description": "Correctness modes only (E4). Covers prove reachability, not behaviour, so they are absent.",
+      "enum": [
+        "bmc",
+        "prove"
+      ],
+      "title": "FormalMode",
+      "type": "string"
+    },
+    "FormalReport": {
+      "additionalProperties": false,
+      "description": "BMC carries requested/reached depth; prove carries `proof_closed` (exactly one applies).",
+      "properties": {
+        "expected_property_ids": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Expected Property Ids",
+          "type": "array"
+        },
+        "mode": {
+          "$ref": "#/$defs/FormalMode"
+        },
+        "proof_closed": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Proof Closed"
+        },
+        "property_results": {
+          "items": {
+            "$ref": "#/$defs/PropertyResult"
+          },
+          "title": "Property Results",
+          "type": "array"
+        },
+        "reached_depth": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Reached Depth"
+        },
+        "report_kind": {
+          "const": "formal",
+          "title": "Report Kind",
+          "type": "string"
+        },
+        "requested_depth": {
+          "anyOf": [
+            {
+              "minimum": 1,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Requested Depth"
+        }
+      },
+      "required": [
+        "report_kind",
+        "mode",
+        "requested_depth",
+        "reached_depth",
+        "proof_closed",
+        "expected_property_ids",
+        "property_results"
+      ],
+      "title": "FormalReport",
+      "type": "object"
+    },
+    "ObservationAction": {
+      "description": "Check-execution tools of the Tool Gateway (master §8 F1). Query tools are not here.",
+      "enum": [
+        "integrity_scan",
+        "compile",
+        "lint",
+        "synth",
+        "run_sim",
+        "run_formal",
+        "check_equiv"
+      ],
+      "title": "ObservationAction",
+      "type": "string"
+    },
+    "PropertyResult": {
+      "additionalProperties": false,
+      "properties": {
+        "outcome": {
+          "$ref": "#/$defs/ToolStatus"
+        },
+        "property_id": {
+          "title": "Property Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "property_id",
+        "outcome"
+      ],
+      "title": "PropertyResult",
+      "type": "object"
+    },
+    "Severity": {
+      "enum": [
+        "error",
+        "warning",
+        "info"
+      ],
+      "title": "Severity",
+      "type": "string"
+    },
+    "SimulationReport": {
+      "additionalProperties": false,
+      "description": "`expected_test_ids` is the declared inventory; `test_results` what the tool reported.",
+      "properties": {
+        "expected_test_ids": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Expected Test Ids",
+          "type": "array"
+        },
+        "report_kind": {
+          "const": "simulation",
+          "title": "Report Kind",
+          "type": "string"
+        },
+        "test_results": {
+          "items": {
+            "$ref": "#/$defs/TestResult"
+          },
+          "title": "Test Results",
+          "type": "array"
+        }
+      },
+      "required": [
+        "report_kind",
+        "expected_test_ids",
+        "test_results"
+      ],
+      "title": "SimulationReport",
+      "type": "object"
+    },
+    "StructuralReport": {
+      "additionalProperties": false,
+      "description": "Lint/parse/synth/integrity counts. Latch/blackbox counts exist for synthesis only.",
+      "properties": {
+        "blackbox_count": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Blackbox Count"
+        },
+        "error_count": {
+          "minimum": 0,
+          "title": "Error Count",
+          "type": "integer"
+        },
+        "latch_count": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Latch Count"
+        },
+        "report_kind": {
+          "const": "structural",
+          "title": "Report Kind",
+          "type": "string"
+        },
+        "warning_count": {
+          "minimum": 0,
+          "title": "Warning Count",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "report_kind",
+        "error_count",
+        "warning_count",
+        "latch_count",
+        "blackbox_count"
+      ],
+      "title": "StructuralReport",
+      "type": "object"
+    },
+    "TestResult": {
+      "additionalProperties": false,
+      "properties": {
+        "outcome": {
+          "$ref": "#/$defs/ToolStatus"
+        },
+        "test_id": {
+          "title": "Test Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "test_id",
+        "outcome"
+      ],
+      "title": "TestResult",
+      "type": "object"
+    },
+    "ToolStatus": {
+      "description": "Normalised outcome of one tool run (an Observation).",
+      "enum": [
+        "PASS",
+        "FAIL",
+        "INCONCLUSIVE",
+        "TIMEOUT",
+        "TOOL_ERROR",
+        "UNSUPPORTED"
+      ],
+      "title": "ToolStatus",
+      "type": "string"
+    },
+    "Visibility": {
+      "enum": [
+        "development",
+        "hidden"
+      ],
+      "title": "Visibility",
+      "type": "string"
+    }
+  },
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "action": {
+      "$ref": "#/$defs/ObservationAction"
+    },
+    "adapter_hash": {
+      "title": "Adapter Hash",
+      "type": "string"
+    },
+    "adapter_version": {
+      "title": "Adapter Version",
+      "type": "string"
+    },
+    "candidate_id": {
+      "title": "Candidate Id",
+      "type": "string"
+    },
+    "candidate_manifest_hash": {
+      "title": "Candidate Manifest Hash",
+      "type": "string"
+    },
+    "check_id": {
+      "title": "Check Id",
+      "type": "string"
+    },
+    "check_kind": {
+      "$ref": "#/$defs/CheckKind"
+    },
+    "configuration_id": {
+      "title": "Configuration Id",
+      "type": "string"
+    },
+    "dependency_hash": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Dependency Hash"
+    },
+    "diagnostics": {
+      "items": {
+        "$ref": "#/$defs/Diagnostic"
+      },
+      "maxItems": 200,
+      "title": "Diagnostics",
+      "type": "array"
+    },
+    "diagnostics_truncated": {
+      "title": "Diagnostics Truncated",
+      "type": "boolean"
+    },
+    "duration_ms": {
+      "minimum": 0,
+      "title": "Duration Ms",
+      "type": "integer"
+    },
+    "evaluator_bundle_hash": {
+      "title": "Evaluator Bundle Hash",
+      "type": "string"
+    },
+    "evidence_refs": {
+      "items": {
+        "$ref": "#/$defs/EvidenceRef"
+      },
+      "title": "Evidence Refs",
+      "type": "array"
+    },
+    "execution_key": {
+      "title": "Execution Key",
+      "type": "string"
+    },
+    "execution_report": {
+      "anyOf": [
+        {
+          "discriminator": {
+            "mapping": {
+              "equivalence": "#/$defs/EquivalenceReport",
+              "formal": "#/$defs/FormalReport",
+              "simulation": "#/$defs/SimulationReport",
+              "structural": "#/$defs/StructuralReport"
+            },
+            "propertyName": "report_kind"
+          },
+          "oneOf": [
+            {
+              "$ref": "#/$defs/SimulationReport"
+            },
+            {
+              "$ref": "#/$defs/FormalReport"
+            },
+            {
+              "$ref": "#/$defs/EquivalenceReport"
+            },
+            {
+              "$ref": "#/$defs/StructuralReport"
+            }
+          ]
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Execution Report"
+    },
+    "formal_depth": {
+      "anyOf": [
+        {
+          "minimum": 1,
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Formal Depth"
+    },
+    "formal_mode": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/FormalMode"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "log_ref": {
+      "title": "Log Ref",
+      "type": "string"
+    },
+    "observation_id": {
+      "title": "Observation Id",
+      "type": "string"
+    },
+    "policy_hash": {
+      "title": "Policy Hash",
+      "type": "string"
+    },
+    "policy_id": {
+      "title": "Policy Id",
+      "type": "string"
+    },
+    "schema_version": {
+      "title": "Schema Version",
+      "type": "integer"
+    },
+    "seed": {
+      "anyOf": [
+        {
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Seed"
+    },
+    "source_hash": {
+      "title": "Source Hash",
+      "type": "string"
+    },
+    "started_at": {
+      "title": "Started At",
+      "type": "string"
+    },
+    "status": {
+      "$ref": "#/$defs/ToolStatus"
+    },
+    "summary": {
+      "title": "Summary",
+      "type": "string"
+    },
+    "tool_image_digest": {
+      "title": "Tool Image Digest",
+      "type": "string"
+    },
+    "tool_profile_hash": {
+      "title": "Tool Profile Hash",
+      "type": "string"
+    },
+    "tool_profile_id": {
+      "title": "Tool Profile Id",
+      "type": "string"
+    },
+    "visibility": {
+      "$ref": "#/$defs/Visibility"
+    },
+    "wall_time_limit_ms": {
+      "minimum": 1,
+      "title": "Wall Time Limit Ms",
+      "type": "integer"
+    }
+  },
+  "required": [
+    "schema_version",
+    "observation_id",
+    "candidate_id",
+    "candidate_manifest_hash",
+    "source_hash",
+    "dependency_hash",
+    "policy_id",
+    "policy_hash",
+    "check_id",
+    "configuration_id",
+    "check_kind",
+    "visibility",
+    "action",
+    "tool_profile_id",
+    "tool_profile_hash",
+    "tool_image_digest",
+    "adapter_version",
+    "adapter_hash",
+    "evaluator_bundle_hash",
+    "seed",
+    "formal_mode",
+    "formal_depth",
+    "wall_time_limit_ms",
+    "execution_key",
+    "started_at",
+    "duration_ms",
+    "status",
+    "summary",
+    "diagnostics",
+    "diagnostics_truncated",
+    "log_ref",
+    "evidence_refs",
+    "execution_report"
+  ],
+  "title": "Observation",
+  "type": "object"
+}

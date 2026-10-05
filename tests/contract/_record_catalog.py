@@ -286,5 +286,9 @@ CATALOG: tuple[Entry, ...] = FIXTURES + VARIANTS
 for _entry in CATALOG:  # fail loudly at import if any catalog entry is invalid
     _entry.build()
 
-assert {e.model for e in CATALOG} == set(TOP_LEVEL_RECORDS), "catalog must cover every record"
-assert len({e.name for e in CATALOG}) == len(CATALOG), "catalog names must be unique"
+# Explicit raises, not `assert`: support modules are not rewritten by pytest, so a plain assert
+# would vanish under `python -O` (P1.1-G B2).
+if {e.model for e in CATALOG} != set(TOP_LEVEL_RECORDS):
+    raise AssertionError("catalog must cover every record")
+if len({e.name for e in CATALOG}) != len(CATALOG):
+    raise AssertionError("catalog names must be unique")

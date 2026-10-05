@@ -9,7 +9,7 @@ sindri-DataFactory/
   PRINCIPLES.md  AGENTS.md  ARCHITECTURE_GUARDRAILS.md  README.md
   CONTRIBUTING.md  SECURITY.md  THIRD_PARTY.md  pyproject.toml  uv.lock
   .github/
-    workflows/ci.yml             PR fast gate (ruff, mypy, pytest)
+    workflows/ci.yml             PR fast gate (ruff, mypy, pytest, targeted python -O checks)
     workflows/README-ci-gates.md planned CI tiers
     PULL_REQUEST_TEMPLATE.md  CODEOWNERS
   implementation/
@@ -26,7 +26,7 @@ sindri-DataFactory/
   src/sindri/
     core/status.py               shared status taxonomy (ADR-0002)
     core/ids.py                  typed domain IDs, content IDs, canonical JSON hashing
-    schemas/                     boundary records: TaskManifest, Requirement, EvaluationPolicy, CandidateManifest, Observation, Finding, EpisodeBudget, EpisodeState (P1.1 record set complete); cross_record.py: pure closed-bundle cross-record invariants (check_records, SIN-P1.1-009)
+    schemas/                     boundary records: TaskManifest, Requirement, EvaluationPolicy, CandidateManifest, Observation, Finding, FindingTransition, EpisodeBudget, EpisodeState (P1.1 record set complete); cross_record.py: pure closed-bundle cross-record invariants (check_records, SIN-P1.1-009)
     judge/ solver/ verification_forge/ data/ tools/   local AGENTS.md only (rules bind before code)
   components/component.template.yaml  schemas.yaml
   agents/agent-card.template.yaml
@@ -37,8 +37,11 @@ sindri-DataFactory/
       cross_record/              coherent FIFO bundle built from a typed spec, isolated negative case per
                                  invariant code, rule-removal harness, CT-1..CT-3 (SIN-P1.1-009)
     architecture/                import-boundary enforcement
+  schemas/json/v1/               generated JSON Schemas of the 9 P1.1 records: structural projections of the
+                                 Pydantic models (which stay authoritative); drift-checked (P1.1-G)
   scripts/
     agent_bootstrap.py  new_task.py  new_handoff.py  show_ready_tasks.py  docx_to_md.py
+    export_json_schemas.py       regenerate / --check schemas/json/v1 (P1.1-G)
 ```
 
 | Path | Created by | Notes |

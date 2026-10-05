@@ -30,7 +30,7 @@ This gate audits and closes P1.1. It builds no adapters, store, controller or ju
   - post-gate vertical-slice strategy.
 
 ## Owner / coordinator
-- Owner: assigned by coordinator when the gate is authorized
+- Owner: coding agent (Claude Code), assigned 2026-10-05
 - Integrator / gate decision: Avinash
 - Reviewers: Avinash
 
@@ -192,14 +192,14 @@ Planning principles for that slice:
 - New generated artifacts: `schemas/json/v1/*.schema.json`. No record, identity or API change otherwise.
 
 ## Acceptance criteria (gate execution)
-- [ ] A1–A11 pass with recorded commands, results and CI runs; A12 passes after B1/B2.
-- [ ] B1: no `assert` in `src/` (AST guard). The `-O` bypass test shows an explicit fail-closed error.
-- [ ] B2: helper asserts are effective under `-O` (a planted always-false helper assertion fails).
-- [ ] B3: no stale P1.1 status/doc claims; `components/schemas.yaml` lists the export and its fidelity status.
-- [ ] B4: 9 record schemas exported; the drift guard passes; G6 gaps documented per G-JS.
-- [ ] Coordinator decisions G-B, G-JS, G-F, G-R and G-O are implemented/recorded as specified above; the exact G-B encoding ADR remains a hard pre-P1.2-write condition with an owner.
-- [ ] The evidence packet is prepared at `docs/implementation/gates/P1.1-G.md` with status `GATE_REVIEW`, decision `PENDING_HUMAN_APPROVAL`.
-- [ ] The handoff is written; the report ends with "Awaiting coordinator assignment."
+- [x] A1–A11 pass with recorded commands, results and CI runs; A12 passes after B1/B2.
+- [x] B1: no `assert` in `src/` (AST guard). The `-O` bypass test shows an explicit fail-closed error.
+- [x] B2: helper asserts are effective under `-O` (a planted always-false helper assertion fails).
+- [x] B3: no stale P1.1 status/doc claims; `components/schemas.yaml` lists the export and its fidelity status.
+- [x] B4: 9 record schemas exported; the drift guard passes; G6 gaps documented per G-JS.
+- [x] Coordinator decisions G-B, G-JS, G-F, G-R and G-O are implemented/recorded as specified above; the exact G-B encoding ADR remains a hard pre-P1.2-write condition with an owner.
+- [x] The evidence packet is prepared at `docs/implementation/gates/P1.1-G.md` with status `GATE_REVIEW`, decision `PENDING_HUMAN_APPROVAL`.
+- [x] The handoff is written; the report ends with "Awaiting coordinator assignment."
 
 ## Verification commands (gate execution)
 ```bash
@@ -222,13 +222,32 @@ git diff --stat <gate-base> -- src/sindri/core src/sindri/schemas/cross_record.p
 5. List open decisions (C) with owners; submit for coordinator decision.
 
 ## Status
-`ready` (coordinator, 2026-10-05). Planning packet approved on PR #30; gate execution is authorized only after this PR is merged to authoritative `main`. P1.2 remains unauthorized.
+`review` (authoritative status: `implementation/task_board.yaml`). Gate executed from `main` `e055d7f`; evidence `docs/implementation/gates/P1.1-G.md` (`GATE_REVIEW`, decision `PENDING_HUMAN_APPROVAL`). The coordinator alone decides APPROVED/BLOCKED and verifies `SIN-P1.1-010`.
 
-**Task ID.** The gate is registered on `implementation/task_board.yaml` as **`SIN-P1.1-010`** (title "P1.1-G — P1.1 foundation integration gate"). `tests/unit/test_governance.py` requires board IDs of the form `SIN-<phase>.<n>-<nnn>`, and requires every `docs/tasks/SIN-*.md` packet to be on the board, so `SIN-P1.1-G` cannot be a board ID. The gate's *decision* is still recorded like B0.G: a gate evidence packet (`docs/implementation/gates/P1.1-G.md`), with the coordinator updating phase state. Coordinator confirmed this naming on PR #30. `SIN-P1.1-010` is the task-board wrapper; `P1.1-G` is the gate/evidence name. Because this is a **subphase** gate, approval does not change `implementation/current.yaml`; P1 remains ACTIVE until phase gate `P1.G`. Future P1.2 tasks depend on `SIN-P1.1-010` being coordinator-verified, not on a synthetic subphase gate dependency.
+**Task ID.** The gate is registered on `implementation/task_board.yaml` as **`SIN-P1.1-010`** (title "P1.1-G — P1.1 foundation integration gate"). `tests/unit/test_governance.py` requires board IDs of the form `SIN-<phase>.<n>-<nnn>`, and requires every `docs/tasks/SIN-*.md` packet to be on the board, so `SIN-P1.1-G` cannot be a board ID. The gate's *decision* is still recorded like B0.G: a gate evidence packet (`docs/implementation/gates/P1.1-G.md`) carrying the coordinator's APPROVED/BLOCKED decision, followed by coordinator verification of `SIN-P1.1-010`. Coordinator confirmed this naming on PR #30. `SIN-P1.1-010` is the task-board wrapper; `P1.1-G` is the gate/evidence name. Because this is a **subphase** gate, approval does not change `implementation/current.yaml`; P1 remains ACTIVE until phase gate `P1.G`. Future P1.2 tasks depend on `SIN-P1.1-010` being coordinator-verified, not on a synthetic subphase gate dependency.
 
 ## Completion evidence
 - Files changed:
+  - **Product:**
+    - `src/sindri/schemas/observation.py` (B1, `bound_met` only);
+    - `src/sindri/schemas/__init__.py` (B5 additive alias `FindingProducerRole`; flagged).
+  - **Tests:**
+    - `tests/unit/test_no_runtime_asserts.py`, `tests/contract/test_optimized_mode.py`, `tests/contract/test_public_api.py`, `tests/contract/test_json_schema_export.py` and `tests/contract/test_gate_float_identity.py` (new; the last is flagged);
+    - B2 explicit raises in `tests/contract/_record_catalog.py` and `tests/contract/cross_record/_case.py`.
+  - **Export:** `scripts/export_json_schemas.py` and `schemas/json/v1/*.schema.json` (9, generated).
+  - **CI:** `.github/workflows/ci.yml` (one targeted `-O` step).
+  - **Docs:** `docs/REPO_MAP.md`, `docs/implementation/CURRENT_PHASE.md`, `docs/PROJECT_STATE.md`, `components/schemas.yaml`, this packet, `docs/implementation/gates/P1.1-G.md` (new), `docs/handoffs/SIN-P1.1-010.md`, and the task board.
 - Tests run/results:
+  - `ruff` clean; `mypy --strict` clean (19 files).
+  - `pytest`: 1908 passed, 8 skipped. Contract: 1789 passed.
+  - Full suite under `python -O`: 1908 passed, 8 skipped. Targeted `-O` step: 6 passed.
+  - `export_json_schemas.py --check`: 9 match.
 - Acceptance evidence:
+  - A1–A12 and the planted checks are recorded in `docs/implementation/gates/P1.1-G.md`.
+  - The B1 plant (old `assert` restored) is caught by the `-O` test and the AST guard.
+  - The B2 plant fires under `-O` as an explicit raise (83 failed); as a plain `assert` it passes vacuously (138 passed).
 - Known limitations:
-- Handoff/next action:
+  - The JSON Schemas are structural projections, and their fidelity gaps are documented in the evidence.
+  - G-B, G-S and G-U remain hard P1.2 entry requirements.
+  - RTL/DV reviewer roles are unassigned, which blocks P1.6 certification but not this gate.
+- Handoff/next action: `docs/handoffs/SIN-P1.1-010.md`.

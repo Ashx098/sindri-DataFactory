@@ -1,0 +1,74 @@
+{
+  "$defs": {
+    "BudgetVector": {
+      "additionalProperties": false,
+      "description": "Additive, reservable resources (ED7). Wall-clock is deliberately not here.",
+      "properties": {
+        "candidate_versions": {
+          "minimum": 0,
+          "title": "Candidate Versions",
+          "type": "integer"
+        },
+        "formal_ms": {
+          "minimum": 0,
+          "title": "Formal Ms",
+          "type": "integer"
+        },
+        "repair_attempts": {
+          "minimum": 0,
+          "title": "Repair Attempts",
+          "type": "integer"
+        },
+        "sim_jobs": {
+          "minimum": 0,
+          "title": "Sim Jobs",
+          "type": "integer"
+        },
+        "tokens": {
+          "minimum": 0,
+          "title": "Tokens",
+          "type": "integer"
+        },
+        "tool_calls": {
+          "minimum": 0,
+          "title": "Tool Calls",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "tokens",
+        "tool_calls",
+        "candidate_versions",
+        "sim_jobs",
+        "formal_ms",
+        "repair_attempts"
+      ],
+      "title": "BudgetVector",
+      "type": "object"
+    }
+  },
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "Immutable budget configuration; identified by its own `content_id()` (no budget_id, ED6).\n\nAdditive limits may be zero (a disabled resource); the wall-clock limit must be positive (ED7).",
+  "properties": {
+    "limits": {
+      "$ref": "#/$defs/BudgetVector"
+    },
+    "schema_version": {
+      "title": "Schema Version",
+      "type": "integer"
+    },
+    "wall_clock_limit_ms": {
+      "minimum": 1,
+      "title": "Wall Clock Limit Ms",
+      "type": "integer"
+    }
+  },
+  "required": [
+    "schema_version",
+    "limits",
+    "wall_clock_limit_ms"
+  ],
+  "title": "EpisodeBudget",
+  "type": "object"
+}

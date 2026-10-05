@@ -1,0 +1,167 @@
+{
+  "$defs": {
+    "CandidateFile": {
+      "additionalProperties": false,
+      "properties": {
+        "hash": {
+          "title": "Hash",
+          "type": "string"
+        },
+        "path": {
+          "title": "Path",
+          "type": "string"
+        }
+      },
+      "required": [
+        "path",
+        "hash"
+      ],
+      "title": "CandidateFile",
+      "type": "object"
+    },
+    "ModelAuthor": {
+      "additionalProperties": false,
+      "description": "Model configuration and provenance, recorded at the source (F7).\n\n`temperature_millis` is the sampling temperature scaled by 1000 (0.8 -> 800), an exact integer\nbecause records carry no binary floats (D5, F1). `provenance_ref` will resolve to the model\ngateway's call/provider/terms record; `training_allowed` is never defaulted.",
+      "properties": {
+        "model": {
+          "title": "Model",
+          "type": "string"
+        },
+        "model_version": {
+          "title": "Model Version",
+          "type": "string"
+        },
+        "provenance_ref": {
+          "title": "Provenance Ref",
+          "type": "string"
+        },
+        "seed": {
+          "title": "Seed",
+          "type": "integer"
+        },
+        "temperature_millis": {
+          "minimum": 0,
+          "title": "Temperature Millis",
+          "type": "integer"
+        },
+        "training_allowed": {
+          "title": "Training Allowed",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "model",
+        "model_version",
+        "temperature_millis",
+        "seed",
+        "provenance_ref",
+        "training_allowed"
+      ],
+      "title": "ModelAuthor",
+      "type": "object"
+    },
+    "ProducerRole": {
+      "description": "Who produced the candidate (F6). Human-written goldens are not candidates.\n\nEpisode rule (PR #11 review): `solver` always belongs to an episode; `reconstructor` never\ndoes; `architecture_explorer` runs in two places (master X4): oracle-side without an episode,\nor solver-side inside a solver trajectory, whose episode must then be recorded.",
+      "enum": [
+        "solver",
+        "reconstructor",
+        "architecture_explorer"
+      ],
+      "title": "ProducerRole",
+      "type": "string"
+    }
+  },
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "author": {
+      "$ref": "#/$defs/ModelAuthor"
+    },
+    "candidate_id": {
+      "title": "Candidate Id",
+      "type": "string"
+    },
+    "dependency_hash": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Dependency Hash"
+    },
+    "episode_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Episode Id"
+    },
+    "files": {
+      "items": {
+        "$ref": "#/$defs/CandidateFile"
+      },
+      "minItems": 1,
+      "title": "Files",
+      "type": "array"
+    },
+    "parent_candidate_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Parent Candidate Id"
+    },
+    "patch_hash": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Patch Hash"
+    },
+    "producer_role": {
+      "$ref": "#/$defs/ProducerRole"
+    },
+    "schema_version": {
+      "title": "Schema Version",
+      "type": "integer"
+    },
+    "source_hash": {
+      "title": "Source Hash",
+      "type": "string"
+    },
+    "task_id": {
+      "title": "Task Id",
+      "type": "string"
+    }
+  },
+  "required": [
+    "schema_version",
+    "candidate_id",
+    "task_id",
+    "producer_role",
+    "episode_id",
+    "parent_candidate_id",
+    "patch_hash",
+    "files",
+    "source_hash",
+    "dependency_hash",
+    "author"
+  ],
+  "title": "CandidateManifest",
+  "type": "object"
+}
