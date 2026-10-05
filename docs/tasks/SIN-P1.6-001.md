@@ -244,7 +244,7 @@ git diff --stat origin/main -- src/       # must be empty
 5. Handoff; status → `review`.
 
 ## Status
-`review` (authoritative status: `implementation/task_board.yaml`). Engineering seed implemented from `main` `20e21e3`. It is approved for development use and **uncertified**; P1.6 certification remains blocked on RTL/DV/formal review.
+`verified` (coordinator, 2026-10-05). Engineering-seed PR #35 merged to `main` as `0cfa365`; merged-main CI `37315346193` passed. The seed is verified **for development use and remains uncertified**; this task does not complete P1.6, and authority/mutant certification remains blocked on RTL/DV/formal review (authoritative status: `implementation/task_board.yaml`).
 
 ## Completion evidence
 - Files changed:
@@ -308,4 +308,5 @@ git diff --stat origin/main -- src/       # must be empty
   - CI skips the `eda` reproduction until P1.3 provides a pinned Icarus profile.
   - F7 does not authenticate the transcript (spoofing boundary above).
   - Not certified.
+- Coordinator verification: PR #35 merge `0cfa365`; merged-main CI `37315346193` passed.
 - Handoff/next action: `docs/handoffs/SIN-P1.6-001.md`.

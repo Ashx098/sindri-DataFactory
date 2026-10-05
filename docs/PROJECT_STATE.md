@@ -28,7 +28,7 @@ Roles must exist even when one person holds several. `unassigned` roles are real
 | Workstream | Status | Active task | Blocking decision |
 |---|---|---|---|
 | Governance/bootstrap | complete | — | — |
-| Foundation (P1) | active | P1.1 complete; SIN-P1.6-001 FIFO engineering seed READY on main; P1.3/P1.2 vertical-slice planning next | G-B exact ID encoding ADR before any P1.4 Observation fixture/output; pinned EDA tool provisioning in P1.3 |
+| Foundation (P1) | active | P1.1 complete; SIN-P1.6-001 FIFO engineering seed verified (uncertified); P1.3 minimal execution-substrate packet next, P1.2 entry planning may run in parallel | G-B exact ID encoding ADR before any P1.4 Observation fixture/output; pinned EDA tool provisioning in P1.3 |
 | Task Forge | planned | — | P1.G |
 | Spec Forge | planned | — | P1.G + P2 assets |
 | Verification Forge | planned | — | P1.G + P3 contracts |
@@ -46,7 +46,7 @@ Roles must exist even when one person holds several. `unassigned` roles are real
 ## Current blockers
 - P1.1-G is approved and SIN-P1.1-010 is verified. P1.2 implementation remains unauthorized until its entry packet resolves/owns G-S/G-U and the exact integer/storage semantics.
 - **G-B is now required earlier:** resolve the ID-allocation ADR before any P1.4 implementation commits/mints Observation IDs, not merely before the first P1.2 persistent write.
-- RTL / DV-formal reviewer roles remain unassigned. This does not block P1.1-G, but P1.6 authority/mutant certification cannot complete without the required review.
+- RTL / DV-formal reviewer roles remain unassigned. The FIFO engineering seed is verified for development use, but P1.6 authority/mutant certification cannot complete without the required review.
 - Recommended: enable "Do not allow bypassing the above settings" on `main` (required checks are currently enforced for non-admins only).
 
 ## Risks being watched
