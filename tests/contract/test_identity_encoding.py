@@ -2,7 +2,8 @@
 
 - S3: `content_id()` is `canonical_json_id(model_dump(mode="json"))`. Transport JSON is not the
   identity contract (it may differ today or coincide later; neither is asserted as an invariant).
-- S10: JSON object key order never affects identity.
+- S10: JSON object key order never affects identity, both in the canonical encoder itself and
+  after Pydantic parses transport JSON.
 - S11: array/tuple order DOES affect exact record identity; specialized semantic hashes
   (`source_hash`, `assignment_key`) may intentionally ignore order.
 - S17: no Unicode normalization; text is identity-bearing byte for byte.
@@ -29,6 +30,7 @@ from sindri.schemas import (
     candidate_source_hash,
 )
 from tests.contract._record_catalog import CATALOG, Entry, load, source_hash_of
+from tests.contract.test_canonical_key_order import assert_key_order_invariant
 
 ids = [e.name for e in CATALOG]
 
@@ -68,9 +70,17 @@ def _permute_keys(value: Any, rng: random.Random) -> Any:
 
 
 @pytest.mark.parametrize("entry", CATALOG, ids=ids)
+def test_canonical_encoding_ignores_mapping_key_order(entry: Entry) -> None:
+    """S10 on the encoder itself over the whole catalog, before any model normalization
+    (catalog-independent coverage: test_canonical_key_order.py)."""
+    assert_key_order_invariant(entry.build().model_dump(mode="json"), entry.name)
+
+
+@pytest.mark.parametrize("entry", CATALOG, ids=ids)
 @pytest.mark.parametrize("seed", range(5))
 def test_object_key_order_and_formatting_do_not_change_identity(entry: Entry, seed: int) -> None:
     record = entry.build()
+    """Transport-JSON key order does not alter record meaning after Pydantic parsing."""
     rng = random.Random(seed)
     permuted = _permute_keys(record.model_dump(mode="json"), rng)
     text = json.dumps(permuted, indent=rng.choice([None, 1, 4]),
