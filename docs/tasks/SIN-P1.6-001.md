@@ -45,7 +45,7 @@ critical-mutant set, and classification of every mutant) stays blocked on the RT
 |---|---|---|
 | Who | coding agent + coordinator | coding agent + **RTL/DV/formal reviewer** |
 | When | now | after a reviewer is assigned |
-| Contract | draft semantics (decisions F1–F6), revisable after real-tool contact | reviewed, signed-off contract; `approved_contract_hash` refers to the reviewed bytes |
+| Contract | **engineering-seed v1 approved for development use** (F1–F7), explicitly `uncertified`; revisioned if real-tool/DV evidence changes it | reviewed, signed-off/certified contract; `approved_contract_hash` refers to the certified revision |
 | Implementations | reference + alternate-correct, both passing the seed testbench | both reviewed; the alternate also reviewed for independence |
 | Mutants | 3–5 meaningful, different bug classes, a recorded kill matrix, labelled `seed`/`uncertified` | 15–20 critical mutants, each classified (killed/equivalent/out-of-scope) with reviewer sign-off |
 | Testbench | directed, self-checking, 4-state strict | reviewed coverage and expected-behaviour review; formal properties where applicable |
@@ -65,7 +65,8 @@ critical-mutant set, and classification of every mutant) stays blocked on the RT
 - **Parameters:** `WIDTH ≥ 1`, `DEPTH ≥ 1`, any integer. Non-power-of-two depths are allowed (F5).
 - **Language:** synthesizable Verilog-2005 subset for RTL and testbench (F6), so the seed runs on Icarus without `-g2012`.
 
-### Requirement drafts (P1.1 `Requirement`, `disposition: proposed` until reviewed)
+### Requirement semantics (P1.1 `Requirement`)
+Coordinator decision on PR #33: R01–R09 are **approved for the engineering-seed v1 development contract** once this planning PR merges, while the entire package remains **uncertified** for P1.6 completion. A later RTL/DV review may create new Requirement/TaskManifest/Policy revisions.
 | ID | Normalized semantics (draft) | Applicability |
 |---|---|---|
 | R01 | After reset: empty, not full, `out_valid=0`, `in_ready=1` | all configs |
@@ -74,7 +75,7 @@ critical-mutant set, and classification of every mutant) stays blocked on the RT
 | R04 | `full` iff occupancy == DEPTH; `empty` iff occupancy == 0 | all |
 | R05 | A push while full is not accepted, and state is unchanged | all |
 | R06 | A pop while empty is ignored, and state is unchanged | all |
-| R07 | Simultaneous push and pop keep occupancy and order | DEPTH ≥ 2 (impossible at DEPTH = 1, see P9) |
+| R07 | Simultaneous push and pop keep occupancy and order | prose rule: DEPTH ≥ 2; **record encoding for the current finite matrix:** `parameter_scope DEPTH in {2,3,4,8}`. DEPTH=1 is excluded. A later matrix expansion requires a Requirement/Policy revision. |
 | R08 | `out_data` stable while `out_valid && !out_ready` | all |
 | R09 | No fall-through: a write to empty is visible the next cycle | all |
 
@@ -145,7 +146,7 @@ The probes used scratch copies of draft RTL, testbench and mutants, outside the 
 | S1 | `TaskManifest.source` kinds are `repo_cut`/`commit_feature`/`commit_fix`/`mutation`/`generator`/`use_case`; none means "hand-authored in-house seed". | Use `use_case` with `intake_ref: "sindri:p1.6-seed/fifo"` for the base task. Mutant **debug tasks** use `mutation` (parent = base task, operator = mutant id). | yes (F9) |
 | S2 | `authority_mode`: `reference_behavior` (needs `golden_hash` = reference RTL) vs `engineering_intent` (contract-first). | `engineering_intent` for the seed, because the contract is the authority and the reference is one witness; `golden_hash` stays null. | yes (F10) |
 | S3 | A mutant has no natural `CandidateManifest.producer_role` (`solver`/`reconstructor`/`architecture_explorer`), and there is **no P1.1 record for known-bad fixtures or mutant classification**. | In the seed, mutants and the kill matrix are **plain fixture data** (`mutants/manifest.json`), not records. When the slice needs a failing Observation, the mutant RTL is the *starting repo state of a mutation debug task*, not a candidate. | yes (F11). Possible future record type: surfaced, not invented. |
-| S4 | `approved_contract_hash` / `EvaluationPolicy.contract_hash` need *contract bytes*, but there is no Contract record (009 D6). | Hash the seed contract document (`contract/contract.md`) with `core.ids.content_id`. It is labelled draft; certification re-hashes the reviewed bytes. | no (consistent with D6) |
+| S4 | `approved_contract_hash` / `EvaluationPolicy.contract_hash` need *contract bytes*, but there is no Contract record (009 D6). | Hash the exact engineering-seed-v1 contract document (`contract/contract.md`) with `core.ids.content_id`. The document says `status: engineering-seed-approved`, `certification: uncertified`. Certification may later issue a new reviewed revision/hash. | no (coordinator decision, PR #33; consistent with D6) |
 | S5 | `Observation.expected_test_ids` should come from the evaluator-bundle inventory (005 R5, 009 D4), which has no record yet. | The seed publishes its test inventory (`tb/tests.json`: the TEST names) as fixture data, so P1.4/P1.6 can anchor expected tests to it. | no; the evidence bundle stays P1.4/P1.6 |
 | S6 | `TestId` pattern `[A-Za-z][A-Za-z0-9]*(_…)*` fits the testbench's `TEST <name>` lines; per-test PASS/FAIL maps to `SimulationReport.test_results`. Run-level `RESULT PASS/FAIL` plus `$fatal` on failure gives a TOOL_ERROR vs FAIL distinction by parsing, never by exit code. | Result protocol F7. | yes (F7) |
 | S7 | Compile diagnostics without a file (P3) and errors without codes map to `Diagnostic(path=None, code=None)`. | No change. | no |
@@ -159,12 +160,12 @@ The probes used scratch copies of draft RTL, testbench and mutants, outside the 
 | F4 | Fall-through | none (registered visibility); simpler, and P9 shows its edge cases. |
 | F5 | Depth constraint | any `DEPTH ≥ 1`, including non-power-of-two (required by P8). |
 | F6 | Language | Verilog-2005 subset for the seed; SystemVerilog only once a pinned SV-capable tool exists (P5). |
-| F7 | Result protocol | Testbench prints `TEST <TestId> PASS|FAIL` per test and a final `RESULT PASS|FAIL`, then `$fatal(1, …)` on failure and `$finish` on success. The adapter derives status from the parsed protocol **and** completeness against `tb/tests.json`; it never uses the exit code alone. |
-| F8 | Tool provisioning for the requested Verilator/slang/Yosys evidence | **Coordinator approval needed.** Option (a): pin container images (e.g. a Verilator 5.x image, slang, Yosys/SBY) by digest in P1.3, and repeat P2–P10 on them before P1.4 designs its normalizer. Option (b): install via the system package manager (not reproducible). Recommend (a). The first P1.4 adapter could be Icarus (available now), with Verilator as the second. |
-| F9 | Task source for an in-house seed | `use_case` now. A dedicated `authored` source kind would be a schema change; surfaced only. |
-| F10 | Authority mode | `engineering_intent`. |
-| F11 | Mutant representation | fixture data plus mutation debug tasks in the seed; a known-bad/mutant record type is decided before certification (P1.6 later), not here. |
-| F12 | X-blind testbench as a P1.7 fixture | Keep the v1 X-blind testbench as a recorded **known-bad testbench** for P1.7 anti-fake-PASS work. |
+| F7 | Result protocol | **Accepted with strict completeness rules.** `tb/tests.json` is **configuration-scoped** and lists the exact expected `TestId`s for each configuration (R07 is absent at DEPTH=1). The transcript must contain each expected `TEST <TestId> PASS|FAIL` exactly once, no duplicates or unexpected IDs, plus exactly one terminal `RESULT PASS|FAIL`. `RESULT PASS` is valid only when every expected test is present exactly once and PASS and the final result agrees. Missing/duplicate/unexpected tests or disagreement fail closed. `$fatal(1,…)` remains a failure signal, but exit code is never the semantic oracle. |
+| F8 | Tool provisioning for the requested Verilator/slang/Yosys evidence | **Coordinator decision: pinned OCI/container tooling.** No host-package installs. P1.3 owns provisioning/isolation and pins immutable digests. First execution/simulation profile: Icarus 12.x. Before a P1.4 compile/lint normalizer is considered stable, repeat diagnostics on pinned Verilator 5.x and slang/pyslang profiles. Yosys/SBY do not block this seed; provision them when synthesis/formal first enters the vertical slice and before P1.6/P1.7 certification claims depend on them. Do not invent image digests in this packet; P1.3 records the verified images. |
+| F9 | Task source for an in-house seed | **Accepted narrowly:** use `use_case` for this exact coordinator-approved internal engineering use case, with a stable intake ref such as `sindri:p1.6/fifo-seed-v1`. This is not precedent for all authored assets; if authored seeds recur, surface a real source-kind change later. |
+| F10 | Authority mode | **Accepted:** `engineering_intent`; the contract/requirements are authority, the reference RTL is a witness, and `golden_hash=None`. |
+| F11 | Mutant representation | **Accepted:** plain, explicitly uncertified fixture data plus mutation-debug task inputs when needed. Do not invent a mutant/known-bad Record here. |
+| F12 | X-blind testbench as a P1.7 fixture | **Accepted:** keep it quarantined under `known_bad/` for P1.7 anti-fake-PASS work; the positive test path must never discover/run it by default. |
 
 ## Proposed vertical-slice dependency shape (sequencing proposal, not an architecture change)
 ```text
@@ -184,8 +185,8 @@ P1.8 repair + replay
 ```
 Dependencies that the existing phase graph requires, or that the probes make objectively necessary:
 1. **P1.6 does not need P1.3.** It can start now and may run in parallel with P1.3 (both depend only on P1.1).
-2. **G-B (the ID-encoding ADR) must land before P1.4 emits Observations, not only before P1.2.** The adapter mints `ObservationId`s. If P1.4 ships with sequential-style IDs, the pattern change for collision-resistant IDs would hit golden logs and fixtures. Recommend: the G-B ADR is the entry condition of the first P1.4 task.
-3. **P1.4 before P1.2 is sound** (P1.4 depends on P1.1 + P1.3 only), provided P1.4 hashes logs and evidence with `core.ids.content_id` and persists nothing. Durable storage of those blobs arrives with P1.2, before P1.5/P1.7 consume them. G-S and G-U remain P1.2 entry conditions.
+2. **Coordinator decision: G-B moves earlier.** The ID-allocation ADR must land before any P1.4 implementation commits or mints `ObservationId` fixtures/outputs. Do not let sequential-style Observation IDs become a new fixture contract. G-S/G-U remain P1.2 persistence-entry requirements.
+3. **Coordinator accepts this sequencing refinement.** P1.4 may exercise an ephemeral adapter path before P1.2 because its canonical dependency is P1.1 + P1.3, provided it persists nothing. Durable evidence arrives in P1.2 before controller/judge integration consumes stored evidence.
 4. **P1.7 depends on P1.2 + P1.4 + P1.6** (phase file). P1.7 can be *engineered* against the seed, but its exit claim ("rejects predefined critical defects") needs the **certified** mutant set. So P1.7 completion, and therefore P1.8/P1.G, is gated on P1.6 certification and hence on the RTL/DV reviewer.
 5. **Tool provisioning (F8) is a P1.3 entry question.** The sandbox has to run a pinned toolchain; the Icarus-only environment is not reproducible as-is (it is a host install).
 
@@ -195,11 +196,11 @@ No different ordering is objectively necessary beyond points 2 and 4.
 - In scope, under `evals/fixtures/fifo/` (proposed layout):
   - `README.md`: semantics F1–F6, an "engineering seed — uncertified" label, and the two-track table;
   - `rtl/fifo_ref.v`, `rtl/fifo_alt.v`;
-  - `tb/tb_fifo.v` (4-state strict, protocol F7) and `tb/tests.json` (test inventory);
+  - `tb/tb_fifo.v` (4-state strict, protocol F7) and `tb/tests.json` (**configuration-scoped** exact test inventories);
   - `mutants/M1…M5.v` (or patch files) and `mutants/manifest.json` (bug class, intended defect, recorded kill matrix, `status: uncertified`);
   - `known_bad/tb_fifo_xblind.v` (F12);
-  - `contract/contract.md` (draft contract text);
-  - `records/*.json`: a draft `TaskManifest` (base task + one mutation debug task), `Requirement` R01–R09 (`disposition: proposed`), and a draft `EvaluationPolicy` with the five-configuration matrix and directed-sim checks.
+  - `contract/contract.md` (engineering-seed-v1 approved development contract; explicitly uncertified);
+  - `records/*.json`: engineering-seed-v1 `TaskManifest` (base task + one mutation debug task), `Requirement` R01–R09 (`disposition: approved` for development scope), and `EvaluationPolicy` with the five-configuration matrix and directed-sim checks. All remain uncertified for P1.6 completion.
 - Tests:
   - `tests/contract/test_fifo_seed_records.py`: the record drafts validate with the P1.1 models, `check_records` over the seed bundle returns `()` (or only documented, explained codes), and the contract hash matches `contract/contract.md`.
   - `tests/eda/test_fifo_seed_icarus.py`, marked `eda` and skipped when `iverilog` is absent: both controls pass every configuration, and every mutant's kill matrix reproduces exactly.
@@ -222,8 +223,8 @@ No different ordering is objectively necessary beyond points 2 and 4.
 ## Acceptance criteria (engineering seed)
 - [ ] Reference and alternate RTL pass the 4-state strict testbench in all 5 configurations (`eda` test; reproduced locally with Icarus 12.0).
 - [ ] Each of M1–M5 compiles; its kill matrix reproduces exactly; each is killed in ≥ 1 configuration; equivalences are recorded per configuration (P8/P9).
-- [ ] The X-blind known-bad testbench is retained, and is shown to pass M4 (fake PASS) where the strict testbench kills it.
-- [ ] Record drafts validate with the P1.1 models; `check_records` over the seed bundle is clean or every code is explained.
+- [ ] The X-blind known-bad testbench is quarantined from the positive discovery path, retained, and shown to pass M4 (fake PASS) where the strict testbench kills it.
+- [ ] Record drafts validate with the P1.1 models; R01–R09 use `disposition: approved` for the engineering-seed-v1 scope; R07 encodes exact finite applicability; `check_records` over the seed bundle is clean or every code is explained.
 - [ ] Every artifact is labelled `engineering seed — uncertified`; the two-track table is in the README.
 - [ ] No `src/` change; no adapter, sandbox, store, controller or judge code.
 - [ ] Handoff written, with probe evidence and F-decisions; status → `review`.
@@ -243,7 +244,7 @@ git diff --stat origin/main -- src/       # must be empty
 5. Handoff; status → `review`.
 
 ## Status
-`planned` (authoritative status: `implementation/task_board.yaml`). Planning only; not ready. Open decisions F1–F12; F8 (tool provisioning) and dependency point 2 (G-B before P1.4) are the most consequential.
+`ready` (coordinator, 2026-10-05). PR #33 coordinator decisions F1–F12 and the record/applicability clarifications are final. Engineering-seed implementation is authorized only after this PR is merged to authoritative `main`. P1.6 certification remains blocked on RTL/DV/formal review.
 
 ## Completion evidence
 - Files changed:
