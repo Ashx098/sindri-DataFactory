@@ -51,14 +51,19 @@ None.
 - **Authoritative ingest boundary:** reject duplicate JSON object member names, NaN/Infinity and malformed bytes **before** model validation, with its own tests. Probe evidence: Pydantic's `model_validate_json` accepts duplicate keys (last wins) and admits NaN/Infinity tokens. The records reject the latter, but duplicates must be stopped at ingest.
 - **Integer storage/interop:** preserve integers exactly, or reject out-of-range values explicitly at the storage boundary (records accept integers beyond 2⁶³; PostgreSQL `bigint` and JS consumers do not). Never narrow silently.
 
-## Blocked on
-- Coordinator review and merge of this task's PR.
+## Coordinator verification
+- PR #24 merged to `main` as `23983db`.
+- Merged-main CI run `37262833634` passed.
+- Task status: `verified` on 2026-10-05.
 
-## Next ready after approval
-After 008 is merged and verified: SIN-P1.1-009, cross-record invariants (all the deferred rules listed in packets 002–007). The coordinator opens its packet.
+## Blocked on
+- None. This task is verified.
+
+## Next eligible for packet drafting
+- SIN-P1.1-009, cross-record invariants (all deferred rules accumulated across 002–007 plus the 008/009 boundary). Implementation remains unauthorized until its packet is reviewed, merged and marked READY.
 
 ## Do not start
-- 009, P1.1-G, P1.2+; no schema change, version gate, canonical-order validator, migration framework or strict loader.
+- 009 implementation, P1.1-G, P1.2+; 009 is packet-drafting only until separately authorized. No schema change, version gate, canonical-order validator, migration framework or strict loader.
 
 ## Risks / things not to change casually
 - Never make the canonical encoding order-insensitive for arrays: array order is exact-record identity (S11). Use a specialized semantic hash where a rule needs set semantics.
