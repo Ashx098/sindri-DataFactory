@@ -180,3 +180,54 @@ def test_ct3_policy_vocabulary_owner_suppresses_coverage() -> None:
     data(spec, "pol_v2")["exceptions"][0]["excludes"].append(
         {"check_id": "chk_sim", "configuration_id": "cfg_w1_d2"})  # would be a P6 gap
     assert {v.code for v in check_records(records(spec))} == {C.P8}
+
+
+# ---- CT-3 review fixes (PR #28 coordinator comment 5988729778) ---------------------------------
+
+
+def test_ct3_unknown_previous_transition_hash_is_b2_only() -> None:
+    spec = positive_spec()
+    data(spec, "tr_F1_2")["previous_transition_hash"] = H("ab")  # contiguous pair, hash broken
+    assert {v.code for v in check_records(records(spec))} == {C.B2}
+
+
+def test_ct3_unknown_previous_state_hash_is_b2_only() -> None:
+    spec = positive_spec()
+    data(spec, "e1_s12")["previous_state_hash"] = H("ab")  # contiguous pair, hash broken
+    assert {v.code for v in check_records(records(spec))} == {C.B2}
+
+
+def test_ct3_ambiguous_transition_key_does_not_drive_f5_f7() -> None:
+    """Two contents at (F2, 2); one would make the probe-proposed F2 look decided."""
+    spec = positive_spec()
+    clone(spec, "tr_F2_2", "tr_F2_2_conflict", to_status="confirmed", drop_reason=None,
+          deciding_citations=[{"observation_id": "ob_simv2", "observation_hash": Ref("ob_simv2")}])
+    assert {v.code for v in check_records(records(spec))} == {C.B1}
+
+
+def test_ct3_ambiguous_candidate_source_does_not_drive_k5() -> None:
+    """A conflicting c_fifo_0001_seed whose parent is v1 would close seed -> v1 -> seed."""
+    spec = positive_spec()
+    clone(spec, "cand_seed", "cand_seed_conflict", parent_candidate_id="c_fifo_0001_e1_v1",
+          patch_hash=H("5e"))
+    assert {v.code for v in check_records(records(spec))} == {C.B1}
+
+
+def test_ct3_ambiguous_finding_source_does_not_drive_f11() -> None:
+    """A conflicting F3 derived from F4 (F4 derives from F3) would close a derived_from cycle."""
+    spec = positive_spec()
+    clone(spec, "F3", "F3_conflict", derived_from="F4")
+    assert {v.code for v in check_records(records(spec))} == {C.B1}
+
+
+def test_ct3_broken_transition_owner_does_not_drive_f11() -> None:
+    """F4 superseded by F3 would close a superseded_by cycle, but its finding_hash is broken."""
+    from sindri.schemas import FindingTransition
+    from tests.contract.cross_record._bundle import add, transition
+
+    spec = positive_spec()
+    add(spec, "tr_F4_1", FindingTransition, transition(
+        "F4", "F4", 1, None, "hypothesis", "dropped", drop_reason="superseded",
+        superseded_by="F3"))
+    data(spec, "tr_F4_1")["finding_hash"] = H("ab")
+    assert {v.code for v in check_records(records(spec))} == {C.B2}

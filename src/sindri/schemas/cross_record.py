@@ -771,6 +771,8 @@ def _k4(b: _Bundle) -> Iterator[Violation]:
 def _k5(b: _Bundle) -> Iterator[Violation]:
     edges: dict[str, list[str]] = {}
     for cand in b.records(CandidateManifest):
+        if b.is_ambiguous(CandidateManifest, cand.candidate_id):
+            continue  # ambiguous source authority: XR-B1 owns it
         parent = _parent(b, cand)
         if parent is not None:
             edges[str(cand.candidate_id)] = [str(parent.candidate_id)]
@@ -946,7 +948,7 @@ def _f4(b: _Bundle) -> Iterator[Violation]:
 
 
 def _f5(b: _Bundle) -> Iterator[Violation]:
-    for chain in _chains(b).values():
+    for _fid, chain in _clean_chains(b):
         proposer = _proposal(chain)
         if proposer is None or _f6_problem(b, proposer) is not None:
             continue
@@ -1007,7 +1009,7 @@ def _f10(b: _Bundle) -> Iterator[Violation]:
 
 
 def _f7(b: _Bundle) -> Iterator[Violation]:
-    for fid, chain in sorted(_chains(b).items()):
+    for fid, chain in _clean_chains(b):
         probed = any(isinstance(t.proposed_check, DevelopmentProbeRequest) for t in chain)
         decided = [t for t in chain if t.to_status in DECIDED_FINDING_STATUSES]
         if probed and decided:
@@ -1047,12 +1049,19 @@ def _f8(b: _Bundle) -> Iterator[Violation]:
 def _f11(b: _Bundle) -> Iterator[Violation]:
     derived: dict[str, list[str]] = defaultdict(list)
     for f in b.records(Finding):
+        if b.is_ambiguous(Finding, f.finding_id):
+            continue  # ambiguous source authority: XR-B1 owns it
         if f.derived_from is not None and _finding_by_id(b, f.derived_from)[1] is not None:
             derived[str(f.finding_id)].append(str(f.derived_from))
     superseded: dict[str, list[str]] = defaultdict(list)
     for t in b.records(FindingTransition):
-        if t.superseded_by is not None and _finding_by_id(b, t.superseded_by)[1] is not None:
-            superseded[str(t.finding_id)].append(str(t.superseded_by))
+        if t.superseded_by is None or b.is_ambiguous(FindingTransition, (t.finding_id, t.sequence)):
+            continue
+        owner = b.ref(t, "finding_hash")
+        if owner is None or b.is_ambiguous(Finding, owner.finding_id):
+            continue  # broken (XR-B2) or ambiguous (XR-B1) owner
+        if _finding_by_id(b, t.superseded_by)[1] is not None:
+            superseded[str(owner.finding_id)].append(str(t.superseded_by))
     for graph, edges in (("derived_from", derived), ("superseded_by", superseded)):
         for members in _cycles(edges):
             yield _v(InvariantCode.F11, f"Finding:{members[0]}", f"{graph} {_cycle_text(members)}")
@@ -1092,6 +1101,8 @@ def _t2(b: _Bundle) -> Iterator[Violation]:
 def _t3(b: _Bundle) -> Iterator[Violation]:
     for _fid, chain in _clean_chains(b):
         for prev, cur in _pairs(chain):
+            if b.ref(cur, "previous_transition_hash") is None:
+                continue  # unresolved predecessor hash: XR-B2 owns it
             if cur.previous_transition_hash != b.cid[id(prev)]:
                 yield _v(InvariantCode.T3, _subject(cur),
                          f"previous_transition_hash is not {_subject(prev)}")
@@ -1136,6 +1147,8 @@ def _e1(b: _Bundle) -> Iterator[Violation]:
         if seqs != list(range(len(chain))):
             problems.append(f"sequences {seqs} are not 0..n")
         for prev, cur in _pairs(chain):
+            if b.ref(cur, "previous_state_hash") is None:
+                continue  # unresolved predecessor hash: XR-B2 owns it (E1 still owns gaps)
             if cur.previous_state_hash != b.cid[id(prev)]:
                 problems.append(f"#{cur.sequence} does not name #{prev.sequence} as predecessor")
         if problems:

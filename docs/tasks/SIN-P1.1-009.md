@@ -111,12 +111,15 @@ otherwise it skips silently, and the owning rule reports.
    - XR-P2B failing → P3, P6 and P7 for that head policy skip; currency failed, so coverage would be judged against the wrong task revision.
 5. **Findings:**
    - XR-F4 owns "deciding status ∈ {PASS, FAIL}", and XR-F5 inspects only verdict-bearing citations;
-   - XR-F6 failing for a proposal → F5 and F10 skip it.
-6. **Transitions:**
-   - XR-T2 owns gaps, and XR-T3 compares predecessor hashes only across contiguous sequence pairs;
+   - XR-F6 failing for a proposal → F5 and F10 skip it;
+   - XR-F5 and XR-F7 reason only over clean transition chains: a chain with any B1-ambiguous (`finding_id`, `sequence`) key is skipped (PR #28);
+   - XR-F11 skips a source Finding whose `finding_id` is ambiguous, and a `superseded_by` edge whose transition key is ambiguous, whose `finding_hash` owner is unresolved (B2), or whose owner id is ambiguous (PR #28).
+6. **Candidates:** XR-K5 skips an ambiguous source candidate as well as an ambiguous parent (PR #28).
+7. **Transitions:**
+   - XR-T2 owns gaps, and XR-T3 compares predecessor hashes only across contiguous sequence pairs whose `previous_transition_hash` resolves (B2 owns an unresolved one; PR #28);
    - XR-T5 owns "nothing after terminal", and XR-T4 skips a pair whose previous `to_status` is terminal.
-7. **Episodes:**
-   - XR-E1 owns gaps and predecessor hashes;
+8. **Episodes:**
+   - XR-E1 owns gaps and predecessor-hash mismatches; an unresolved `previous_state_hash` is B2's, and E1 skips only that comparison (PR #28);
    - XR-E4 owns "nothing after terminal", and XR-E2/E3 skip a pair whose previous state is terminal;
    - XR-E6 failing (budget unresolved) → E8/E11 skip that state.
 
@@ -214,7 +217,6 @@ H1 + H2 + H3 = all 37 fields at `c1025af`.
 ### T — FindingTransition chains
 | ID | Input records | Pass condition | Negative mutation | Planted bug | Report |
 |---|---|---|---|---|---|
-| XR-T1 | Transitions of a Finding | All transitions of one `finding_id` carry the same `finding_hash` (resolution itself is B2). | Transition 2 bound to a different Finding content with the same id | Only the first transition compared | 1 per transition |
 | XR-T2 | Transitions of a Finding | Sequences are exactly 1…n (no gaps; duplicates are B1). Owner of gaps. | Sequences 1, 3 | Monotonic, not contiguous | 1 per finding |
 | XR-T3 | contiguous pair | `previous_transition_hash == content_id(transition n−1)`. | Points at a non-adjacent transition | Compared with `finding_hash` | 1 per transition |
 | XR-T4 | contiguous pair, previous non-terminal | `from_status == previous.to_status`. | `confirmed` from `hypothesis` after a `hypothesis → check_proposed` | — (harness) | 1 per transition |
@@ -239,6 +241,7 @@ H1 + H2 + H3 = all 37 fields at `c1025af`.
 - **CT-1** (formerly XR-B3): every `ContentId`-typed field, including optional, nested and tuple-item fields, in every P1.1 schema is classified exactly once as H1, H2 or H3. A test-local subclass with an unclassified field fails. Planted: drop one map entry.
 - **CT-2:** the one-set-head consequence (C section).
 - **CT-3:** the dependency-ordering table above. A mutation set that breaks an owner yields only the owner's code.
+- **CT-4** (formerly XR-T1; accepted on PR #28): all transitions of one `finding_id` carry the same `finding_hash`. This is implied by XR-B1 + XR-B2: a mismatched hash either fails to resolve to a Finding with that id (B2), or resolves to a second content under the same id (B1). Like CT-2, it is a derived contract property, not an `InvariantCode`.
 
 ## Deferred and known limitations (table D)
 None of these is approximated in 009. "New record?" marks a rule impossible without a record type that does not exist; it is **surfaced, not invented**.
@@ -379,7 +382,7 @@ grep -n "from sindri.schemas import\|import sindri.schemas$" src/sindri/schemas/
 - `components/schemas.yaml`, `docs/REPO_MAP.md`, this packet, `docs/handoffs/SIN-P1.1-009.md`, and the task board.
 
 ## Status
-`review` (authoritative status: `implementation/task_board.yaml`). Implemented from `main` `a882aa2`. There is one deviation for coordinator review (XR-T1 → CT-4, below).
+`review` (authoritative status: `implementation/task_board.yaml`). Implemented from `main` `a882aa2`. XR-T1 → CT-4 accepted by the coordinator (PR #28); PR #28 review fixes applied.
 
 ## Completion evidence
 - Files changed:
@@ -393,8 +396,8 @@ grep -n "from sindri.schemas import\|import sindri.schemas$" src/sindri/schemas/
   - **No** existing schema module, `sindri.core` or §20 example file changed; the forbidden-path diff is empty, and the package-import grep is empty.
 - Tests run/results:
   - `ruff` clean; `mypy --strict` clean (19 files).
-  - `pytest`: 1802 passed, 8 skipped.
-  - Contract suite: 1686 passed. `tests/contract/cross_record`: 176 passed.
+  - `pytest`: 1808 passed, 8 skipped.
+  - Contract suite: 1692 passed. `tests/contract/cross_record`: 182 passed.
 - Acceptance evidence:
   - **API:** `check_records(Iterable[Record]) -> tuple[Violation, ...]`.
     - `InvariantCode` has 54 runtime codes (B1–B2, C1/C3–C8, P1/P2A/P2B/P3–P8, K1–K6, O1–O4, F1–F11, T2–T5, E1–E11), with no XR-B3, XR-C2 or XR-T1.
@@ -431,7 +434,15 @@ grep -n "from sindri.schemas import\|import sindri.schemas$" src/sindri/schemas/
     - T5 owns post-terminal transitions (not T4), and E4 owns post-terminal states (not E2);
     - F4 owns non-verdict statuses (not F5);
     - gaps are T2/E1 only;
-    - P8 suppresses coverage.
+    - P8 suppresses coverage;
+    - PR #28 review fixes:
+      - an unknown `previous_transition_hash` gives `{B2}` only, not T3, and an unknown `previous_state_hash` gives `{B2}` only, not E1;
+      - an ambiguous (F2, 2) transition key that would make a probe-proposed Finding look decided gives `{B1}` only, not F5/F7;
+      - an ambiguous `c_fifo_0001_seed` that would close a parent cycle gives `{B1}` only, not K5;
+      - an ambiguous F3 that would close a `derived_from` cycle gives `{B1}` only, and a superseded-by edge from a transition with a broken `finding_hash` gives `{B2}` only, not F11.
+    - Against the pre-fix validator (`b19e737`), the T3, E1, F5/F7 and broken-owner F11 cases fail.
+      - The ambiguous-source K5 and F11 cases already passed there: an edge *into* an ambiguous node is dropped by the existing target-side skip, so no cycle can pass through that node.
+      - Those two source-side skips are defensive, and their tests lock the behaviour in.
   - **Properties (hypothesis):** shuffled and duplicated input gives an identical result; input records are not mutated.
   - **Planted bugs**, each caught, with source restored byte-identically (sha256 checked; counts are failing tests in `tests/contract/cross_record`):
 
@@ -452,11 +463,8 @@ grep -n "from sindri.schemas import\|import sindri.schemas$" src/sindri/schemas/
     | E11/N3 zero-limit dimensions counted | 1 |
 
     The 160/161 counts come from false positives on the positive bundle.
-- **Deviation for review:** packet **XR-T1** ("all transitions of one `finding_id` carry the same `finding_hash`") is structurally implied by XR-B1 + XR-B2.
-  - Each `finding_hash` must resolve to a Finding carrying that `finding_id` (otherwise XR-B2), and two different contents under one id is XR-B1.
-  - A T1 code could therefore never fire alone and could not pass the isolation harness. This is the same reasoning the coordinator applied to XR-C2.
-  - Implemented as **CT-4** (`test_ct4_a_mismatched_finding_hash_always_trips_b1_or_b2`), not as a runtime code.
-- **Implementation interpretations (for review):**
+- **XR-T1 → CT-4 (accepted by the coordinator on PR #28):** see the contract-test section. `test_ct4_a_mismatched_finding_hash_always_trips_b1_or_b2` covers it.
+- **Implementation interpretations (approved by the coordinator on PR #28):**
   - **Chain heads:** a supersedes link whose predecessor has another chain key (a C3/C4/C5 identity break) makes both chain keys head-less. This stops coverage and K/F rules from reporting a second symptom.
   - **K2 owns read-only tasks:** XR-K3 skips a candidate whose head task is read-only, since that task has an empty edit scope by schema.
   - **E2 owns illegal edges:** XR-E3 judges WAITING resume only on ADR-0006-legal pairs.

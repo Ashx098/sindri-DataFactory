@@ -188,7 +188,7 @@ def test_solver_deciding_citation_of_hidden_evidence_is_f9() -> None:
     assert [v.code for v in check_records(records(spec))] == [C.F9]
 
 
-# ---- CT-4 (agent deviation for review): packet XR-T1 is implied by XR-B1 + XR-B2 ---------------
+# ---- CT-4 (formerly XR-T1; accepted on PR #28): implied by XR-B1 + XR-B2 ---------------------
 
 
 @pytest.mark.parametrize("variant", ["other content, same id", "unknown hash"])
