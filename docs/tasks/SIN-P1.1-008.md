@@ -39,7 +39,7 @@ This is not "can Pydantic dump JSON": it is a set of executable guarantees that 
 
 ## Dependencies
 - Required completed tasks: SIN-P1.1-006 and SIN-P1.1-007 (verified)
-- Required schemas/contracts: all of `sindri.schemas`, `sindri.core.ids` (`canonical_json_bytes`, `canonical_json_id`)
+- Required schemas/contracts: all of `sindri.schemas`, `sindri.core.ids` (`canonical_json_bytes`, `canonical_json_id`); read-only use
 
 ## Facts established by read-only probes on `main` `135a54b` (before drafting)
 | # | Observation | Consequence |
@@ -53,102 +53,98 @@ This is not "can Pydantic dump JSON": it is a set of executable guarantees that 
 | P7 | A v2 record with a new field yields **two** errors (version + extra field) | The version failure is loud but not isolated (S4) |
 | P8 | Integers beyond 2⁵³ (and 2⁶³) are accepted | An interop/storage range question (S16) |
 
-## Open decisions (coordinator decides; the agent recommends)
-
-| ID | Question | Agent recommendation |
-|---|---|---|
-| S1 | **Round-trip guarantee.** | For every record and every variant of every discriminated union, three paths must each return an **equal** record with an **equal `content_id()`**: (a) `model_validate_json(model_dump_json(r))`; (b) `model_validate(model_dump(mode="json"))`; (c) `model_validate_json(canonical_json_bytes(model_dump(mode="json")))`. A second round trip must be byte-identical to the first (no drift). |
-| S2 | **Must the round trip preserve `content_id()`?** | **Yes, always.** This is the core guarantee: identity survives storage and transport. |
-| S3 | **Canonical vs transport encoding.** | The repository *already* defines the identity encoding as `canonical_json_bytes(record.model_dump(mode="json"))` (`Record.content_id()`, `core/ids.py`). It is **not** Pydantic's emitted JSON. Transport JSON is *any* JSON that parses to an equal record. Tests assert P1 explicitly, so nobody later assumes `model_dump_json()` bytes are identity. **No new public API** (e.g. `Record.canonical_bytes()`) until a consumer exists (P1.2). |
-| S4 | **`schema_version` strictness and loud failure.** | v1 is already strict (P6). Proposal: add a small **version gate** to `Record` (a `mode="before"` check) that rejects any `schema_version` other than strict integer 1 *before* structural validation, with one specific error naming the record type and version (for example "unsupported TaskManifest schema_version 2; this code reads 1"). This makes a v2 record fail with one clear reason instead of version + extra-field noise (P7). **This edits the verified `_base.py`**, hence a decision. *Alternative:* no product change; tests only assert that the version error is present among the errors. |
-| S5 | **Historical versions / dispatch boundary.** | **v1 only.** 008 proves that unknown versions (0, 2, 99, negative, absent) are rejected; it introduces **no version-dispatch registry** and no parsing of older or newer shapes. |
-| S6 | **Versioned vs non-versioned records.** | Lock the inventory with a test: **versioned** (`*_version` + `supersedes`): TaskManifest, Requirement, EvaluationPolicy. **Non-versioned immutable**: CandidateManifest, Observation, Finding, FindingTransition, EpisodeBudget, EpisodeState (snapshots chain by `previous_state_hash` / `previous_transition_hash`, which is not supersession). Round-trip tests cover version > 1 with `supersedes` for each versioned record, and assert that non-versioned records have no `supersedes`/`*_version` field. |
-| S7 | **Exact preservation after JSON.** | After parsing, assert: typed IDs come back as their typed classes (not bare `str`); enums as enum members; nullable required keys are present as `null` in every dump (no `exclude_none` anywhere); empty tuples stay empty tuples (e.g. zero-parameter `assignments: []`); each discriminated union yields the same variant class. |
-| S8 | **Floats after deserialization.** | JSON numbers with a fraction or exponent (`1.0`, `1e3`, `-0.0`), and the non-standard tokens `NaN`, `Infinity` and `-Infinity` if the parser admits them, are rejected **at every nesting level** of every record, with the records' float message. Driven by a generic walker over each fixture. |
-| S9 | **Strict scalars after JSON.** | For every authoritative integer: JSON `true`, `1.0` and `"1"` are rejected. For every authoritative boolean: `1`, `0` and `"true"` are rejected. For `ExactScalar` positions: `true`, `1` and `"1"` round-trip as three distinct values. Driven by a field inventory, not hand-picked samples. |
-| S10 | **`content_id()` vs input key order.** | A property test permutes the keys of every mapping at every depth of every fixture; the content_id is unchanged. |
-| S11 | **Collection ordering and identity.** The probes show that every tuple's order currently changes `content_id()` (P3, P4); 31 tuple fields exist (inventory below). | Classify each tuple field as **ordered** (order is meaning) or **set-like** (order is accidental). Proposed ordered fields: `Observation.diagnostics` (emission order; truncation keeps the first 200), `SimulationReport.test_results` and `FormalReport.property_results` (execution order matters for partial FAILs). Every other field is set-like. Options for set-like fields:<br>(a) leave as is, document that identity reflects producer order, and live with duplicate identities for equal content;<br>(b) **require canonical order**: validators *reject* (never silently sort) set-like tuples that are not in their declared canonical order, giving one identity per content;<br>(c) silently sort, rejected because it mutates input and breaks round-trip byte stability.<br>**Recommend (b)**, recorded as **ADR-0007 (canonical collection order)**. Now is the cheapest moment (no stored data yet). It edits verified schemas and fixtures, so **either** widen 008's allowed paths **or** split it into a separate task before 008. The coordinator chooses. |
-| S12 | **Fixture coverage.** | Every existing fixture round-trips under S1–S10. The fixtures are task manifest, requirement, evaluation policy, candidate manifest, observation, finding, both finding transitions, episode budget and episode state. Generated variants also cover: the zero-parameter policy (`cfg_default`, `[]`); each source kind; each producer kind; both proposal kinds; each execution-report variant; WAITING with a candidate-less job; ABORTED. The three **hash vectors**, already pinned byte-for-byte by their own tests (`candidate_file_set_v1`, `observation_execution_key_v1`, record `content_id`), are re-checked after a round trip: the stored hash still equals the recomputation. |
-| S13 | **JSON Schema in 008 vs P1.1-G.** | 008 only asserts that `model_json_schema()` **generates** for every record without error. Exporting, committing and checking exported schemas against models stays in **P1.1-G**. |
-| S14 | **Migration framework.** | **None.** No speculative migration subsystem; the first real v2 change defines its migration with its consumer. |
-| S15 | **Duplicate JSON keys** (derived from P5). | Pydantic accepts duplicate keys with last-wins, so the same bytes could mean different records to different parsers. Options:<br>(a) a strict loader `parse_json_strict(bytes)` in `core/ids.py`, rejecting duplicate keys, NaN and Infinity, used by tests and later by P1.2 ingest;<br>(b) defer to P1.2 as an explicit evidence-store ingest requirement, with 008 adding an `xfail(strict=True)` test "duplicate keys are rejected at authoritative ingest" that flips when P1.2 lands.<br>**Recommend (b)**: no consumer exists in P1.1. |
-| S16 | **Integer range** (derived from P8). | Python and canonical JSON are exact for any integer, but JavaScript consumers lose precision above 2⁵³, and PostgreSQL `bigint` stops at 2⁶³−1 (P1.2). **Recommend:** record this as a P1.2 storage/interop requirement and constrain nothing in P1.1. *Alternative:* bound every authoritative integer to signed 64-bit now. |
-| S17 | **Unicode normalization** (derived). | No normalization: text fields stay verbatim (`Requirement.original_text` must). Identity is byte-exact, so visually identical NFC and NFD strings have different content_ids. Record this as a documented property with a test, not a bug. |
-
-### Tuple-field inventory (for S11)
-| Record | Tuple fields (proposed class) |
+## Coordinator decisions (PR #22, 2026-10-05; recorded, not made, by the agent)
+| ID | Decision |
 |---|---|
-| TaskManifest | `allowed_edit_paths` (set), `requirement_ids` (set) |
-| Requirement | `legal_environment` (set), `assumptions` (set), `ParameterScope.parameters` (set by name), `ParameterValues.values` (set) |
-| EvaluationPolicy | `configurations`, `Configuration.assignments`, `checks`, `Check.configuration_ids`, `environment_assumptions`, `obligations`, `Obligation.check_ids`, `exceptions`, `PolicyException.excludes` (all set) |
-| CandidateManifest | `files` (set by path; already canonicalized inside `source_hash`, not inside `content_id`) |
-| Observation | `diagnostics` (**ordered**), `evidence_refs` (set), `SimulationReport.expected_test_ids` (set), `SimulationReport.test_results` (**ordered**), `FormalReport.expected_property_ids` (set), `FormalReport.property_results` (**ordered**) |
-| Finding | `correctness_citations` (set), `supporting_evidence` (set) |
-| FindingTransition | `deciding_citations` (set), `DevelopmentProbeRequest.test_ids` / `property_ids` (set) |
-| EpisodeState | `pending_jobs` (set by `job_id`) |
+| S1 | **Accepted, with byte-scope clarification.** For every top-level record and every nested discriminated-union variant, three paths each return an equal record with the same `content_id()`: `model_validate_json(model_dump_json(r))`, `model_validate(model_dump(mode="json"))`, `model_validate_json(canonical_json_bytes(model_dump(mode="json")))`. "Byte-identical on the second pass" applies to bytes **re-emitted by the same serializer from the parsed model** (transport → transport, canonical → canonical). Arbitrary incoming bytes, whitespace, key order or `-0` need not be reproduced. |
+| S2 | **Accepted.** A round trip must preserve `content_id()`. |
+| S3 | **Contract accepted; test amended.** `Record.content_id()` is defined as `canonical_json_id(record.model_dump(mode="json"))`; `model_dump_json()` is transport serialization, not the identity contract. Tests assert, for every catalog record:<br>• `record.content_id() == canonical_json_id(record.model_dump(mode="json"))`;<br>• canonical bytes are stable under mapping-key permutation and formatting changes;<br>• a transport round trip preserves the record and its content_id.<br>`model_dump_json() != canonical_json_bytes(…)` is **not** a permanent invariant: they differ today, but a future serializer could coincide without changing the contract. A representative fixture may *document* today's difference, but must not define correctness. |
+| S4 | **Product change rejected.** No `mode="before"` version gate in verified `_base.py`. The current StrictInt + `schema_version == 1` rejection is sound; a v2-shaped record raising both `schema_version` and `extra_forbidden` errors is just multiple validation failures. Tests assert that unsupported/malformed `schema_version` is rejected and that the error set **includes** the schema-version failure, not that it is the only error. |
+| S5 | **Accepted.** A v1 reader only; unknown schema versions are rejected; no dispatch registry. |
+| S6 | **Accepted, with terminology fix.** Every P1.1 top-level record has `schema_version = 1`. TaskManifest, Requirement and EvaluationPolicy additionally have **domain revision chains** (`manifest_version`, `requirement_version`, `policy_version` + `supersedes`); the others do not. "Version > 1" tests keep `schema_version = 1` and increment the **domain revision version**. They are never called schema version 2. The catalog locks this inventory. |
+| S7 | **Accepted.** Typed IDs, enum members, required-null keys, empty tuples and configurations, and discriminated-union classes survive the round trip. |
+| S8 | **Accepted.** Nested floats, and NaN/Infinity tokens where the parser admits them, are rejected by the authoritative model before becoming record state. |
+| S9 | **Accepted.** Driven by a typed field inventory. `ExactScalar` positions are the intentional exception: bool, int and string are three distinct valid JSON scalar choices there. |
+| S10 | **Accepted.** `content_id()` is invariant to JSON **object key** order at every depth. This applies to mapping keys only, never to arrays or tuples. |
+| S11 | **Option (a); no ADR-0007.** No global canonical-order validators and no silent sorting. `ContentId` identifies the **exact authoritative record**, not a semantic-equivalence class. Object key order and whitespace are presentation noise and are canonicalized; **array order is part of the JSON value and stays identity-bearing**, unless a specific record defines a separate semantic hash. The architecture already shows the split: `CandidateManifest.source_hash` gives the file set an order-independent identity while the manifest's `content_id()` identifies the exact record, and `Configuration.assignment_key()` compares assignment sets while the policy's `content_id()` identifies the exact representation. 008 does **not** classify the 31 tuple fields; it pins the rule:<br>• mapping order does not affect `content_id`;<br>• sequence order **does** affect exact record identity by default;<br>• specialized semantic identities (`source_hash`, `assignment_key`) may intentionally ignore order.<br>009 and P1.2 may compare membership or specialized hashes where a rule needs it. |
+| S12 | **Accepted.** The complete fixture and generated-variant catalog, with existing hash constructions re-checked after the round trip. |
+| S13 | **Accepted.** 008 only proves that `model_json_schema()` generates; exported/checked-in schema equivalence stays in P1.1-G. |
+| S14 | **Accepted.** No migration framework. |
+| S15 | **Deferred to P1.2; no xfail in 008.** Duplicate member names are an *ingest-byte parsing* concern, not a property of a built record. **Hard P1.2 requirement:** the authoritative evidence-store ingest boundary (which owns any strict JSON loader) rejects duplicate object member names, NaN/Infinity and malformed bytes **before** model validation, and proves it with its own tests. 008's `model_validate_json()` tests cover repository-generated, known-good transport round trips only. They do not authorize using Pydantic's parser directly on arbitrary evidence-store bytes. |
+| S16 | **Deferred to P1.2.** No global integer constraint in P1.1. P1.2 chooses storage/interop representations that preserve integers exactly, or rejects out-of-range values explicitly at that boundary; authoritative records are never silently narrowed. |
+| S17 | **Accepted.** No Unicode normalization; text is preserved verbatim, and NFC/NFD-different strings may have different content_ids. Pinned by a property test. |
 
-## Scope (written for the recommended options; finalized after decisions)
+**Resulting scope:** with S4 rejected and S11 = (a), **008 is tests and docs only**. No edits to verified schema modules or `_base.py`, no ADR-0007, no migration framework, no strict ingest loader.
+
+## Scope (final; tests and docs only)
 - In scope, tests:
-  - `tests/contract/test_round_trip.py`: S1, S2, S7 and S12 over every record and union variant (fixture-driven plus generated variants).
-  - `tests/contract/test_identity_encoding.py`: S3 (transport ≠ canonical), S10 (key-order property), S11 (ordered vs set-like behaviour per the decision), S17, and re-checking the hash vectors after a round trip.
-  - `tests/contract/test_schema_versioning.py`: S4, S5, S6, plus `model_json_schema()` generation (S13).
-  - `tests/contract/test_strict_deserialization.py`: S8 and S9, driven by a field-type inventory walker; the S15 `xfail(strict=True)` test.
-  - `tests/contract/_record_catalog.py` (test helper): one entry per record with fixture, model, version-chain fields, ordered/set-like tuple map.
-- In scope, product (**only if approved**):
-  - S4: version gate in `src/sindri/schemas/_base.py`.
-  - S11(b): canonical-order validators in the affected schema modules, regenerated fixtures and recomputed hash vectors in their tests, and `docs/adr/0007-canonical-collection-order.md`.
-- Allowed paths (default, tests only): `tests/contract/`, `tests/unit/`, `components/schemas.yaml` (invariant additions), `docs/REPO_MAP.md`, this packet, `docs/handoffs/SIN-P1.1-008.md`, `implementation/task_board.yaml` (status-only governance state).
-- Additional allowed paths **only if** S4 / S11(b) are approved: `src/sindri/schemas/*.py`, `tests/contract/examples/*.json`, `docs/adr/0007-*.md`.
+  - `tests/contract/_record_catalog.py` (helper): one entry per top-level record giving its fixture, model, generated union variants and domain-revision fields (S6).
+  - `tests/contract/test_round_trip.py`: S1, S2, S7 and S12 over every record and union variant.
+  - `tests/contract/test_identity_encoding.py`:
+    - S3: the canonical identity contract per record;
+    - S10: the mapping-key permutation property;
+    - S11: exact-record sequence order, with representatives: `CandidateManifest.files` reordered changes `content_id` but not `source_hash`; `TaskManifest.requirement_ids` reordered changes `content_id`; `Configuration.assignment_key()` is order-independent;
+    - S17: Unicode NFC/NFD property;
+    - hash constructions re-checked after the round trip.
+  - `tests/contract/test_schema_versioning.py`: S4 (schema-version error *present*), S5, S6 domain-revision chains, S13 schema generation.
+  - `tests/contract/test_strict_deserialization.py`: S8 and S9 via the typed field inventory, with the `ExactScalar` exception.
+- Allowed paths: `tests/contract/`, `tests/unit/`, `components/schemas.yaml` (invariant/doc additions only), `docs/REPO_MAP.md`, this packet, `docs/handoffs/SIN-P1.1-008.md`, `implementation/task_board.yaml` (status-only governance state).
 
 ## Forbidden paths / authority boundaries
+- `src/sindri/schemas/*.py`, including `_base.py`: no product edits (S4, S11).
 - `src/sindri/core/ids.py`: no strict loader (S15 → P1.2) and no identity-encoding change.
-- No change to any hash construction (`candidate_file_set_v1`, `observation_execution_key_v1`, canonical JSON).
+- No change to any hash construction (`candidate_file_set_v1`, `observation_execution_key_v1`, canonical JSON). No ADR-0007.
 - Hidden evaluator/final-eval paths: none.
 
 ## Non-goals
-- No cross-record semantics (that is SIN-P1.1-009; list below).
-- No version-dispatch registry and no migration framework (S5, S14).
-- No exported JSON Schemas (P1.1-G). No evidence-store ingest or strict JSON loader (P1.2). No integer bounds (S16 → P1.2).
+- No cross-record semantics (that is SIN-P1.1-009; table below).
+- No version-dispatch registry, migration framework, version gate or canonical-order validators (S4, S5, S11, S14).
+- No exported JSON Schemas (P1.1-G).
+- No evidence-store ingest, strict JSON loader, duplicate-key test or integer bounds (S15, S16 → P1.2).
+
+## Follow-ups owned by P1.2 (recorded here)
+- **Authoritative ingest boundary (S15):** reject duplicate object member names, NaN/Infinity and malformed bytes before model validation, with its own tests.
+- **Integer storage/interop (S16):** preserve integers exactly, or reject out-of-range values explicitly at the storage boundary. Never narrow silently.
 
 ## Single-record (008) vs cross-record (009)
 | 008: one record at a time | 009: needs two or more records |
 |---|---|
 | round trip, identity, key-order independence | hashes matching the records they name (`candidate_manifest_hash`, `policy_hash`, `observation_hash`, `budget_hash`, `finding_hash`) |
-| version strictness, version-chain shape (v1 ⇔ no `supersedes`) | supersession chains resolve and keep identity (C5: task/family/lineage/split constant) |
+| `schema_version` strictness; domain-revision chain shape (revision 1 ⇔ no `supersedes`) | supersession chains resolve and keep identity (C5: task/family/lineage/split constant) |
 | strict scalars, float rejection after JSON | Observation ↔ policy check/configuration/exception consistency; Finding citations bound to the exact candidate; probe→terminal prohibition; verdict mapping vs `confirming_status` |
-| ordered vs set-like collection behaviour | EpisodeState chains (edges, resume-to-recorded-state, monotonic accounting, constant budget/policy/solver hashes) |
+| mapping-order independence and exact-record sequence order | EpisodeState chains (edges, resume-to-recorded-state, monotonic accounting, constant budget/policy/solver hashes) |
 | hash vectors re-checked after round trip | approved mandatory requirements enforced per configuration after exceptions (PR #9) |
 
 ## Interfaces touched
-- Default: none (tests only). Conditional: `Record` version gate (S4); canonical-order validators (S11).
+- None. Tests and docs only.
 
 ## Acceptance criteria
 Positive:
-- [ ] S1: three round-trip paths per record and per union variant return equal records with equal content_ids; a second round trip is byte-identical.
-- [ ] S7: typed IDs, enum members, `null` required keys, empty tuples and union variant classes survive.
-- [ ] S10: content_id is invariant under key permutation at every depth (property test).
-- [ ] S6: versioned records round-trip version > 1 with `supersedes`; the inventory of versioned vs non-versioned records is locked.
-- [ ] S12: every fixture and generated variant passes; hash vectors are re-verified after a round trip.
+- [ ] S1/S2: three round-trip paths per record and per union variant return equal records with equal content_ids. Re-emitting with the same serializer from the parsed model is byte-identical (transport → transport, canonical → canonical).
+- [ ] S3: for every catalog record, `content_id() == canonical_json_id(model_dump(mode="json"))`; canonical bytes are stable under key permutation and formatting changes.
+- [ ] S7: typed IDs, enum members, `null` required keys, empty tuples (incl. zero-parameter `assignments: []`) and union variant classes survive.
+- [ ] S10: content_id is invariant under object-key permutation at every depth (property test).
+- [ ] S11: `CandidateManifest.files` reordered changes `content_id` but not `source_hash`; `TaskManifest.requirement_ids` reordered changes `content_id`; `Configuration.assignment_key()` is order-independent.
+- [ ] S6: every record has `schema_version = 1`; TaskManifest, Requirement and EvaluationPolicy round-trip domain revision > 1 with `supersedes`; the inventory of domain-revision vs non-revision records is locked.
+- [ ] S12: every fixture and generated variant passes; hash constructions re-verified after the round trip.
 - [ ] S13: `model_json_schema()` generates for all nine records.
+- [ ] S17: NFC- and NFD-encoded versions of the same text survive verbatim and yield different content_ids.
 
 Negative:
-- [ ] S4/S5: `schema_version` 0, 2, 99, −1, absent, `true`, `1.0` and `"1"` are rejected for every record (and with one isolated version error if S4 is approved).
-- [ ] S8: a float at any depth of any record is rejected after JSON parsing.
-- [ ] S9: `true`, `1.0` and `"1"` are rejected for every authoritative int; `1` and `"true"` for every authoritative bool.
-- [ ] S11: per the decision, either set-like reorders are *rejected* (b) or their identity effect is documented by tests (a); ordered fields keep order and identity.
-- [ ] S3: `model_dump_json()` bytes are asserted to differ from the canonical bytes for at least one record (guarding against a false "this is the identity encoding" assumption).
-- [ ] S15: the duplicate-key test is present as `xfail(strict=True)` referencing P1.2.
+- [ ] S4/S5: `schema_version` 0, 2, 99, −1, absent, `true`, `1.0` and `"1"` are rejected for every record, and the error set includes the schema-version failure (other errors may also be present).
+- [ ] S8: a float (and NaN/Infinity where admitted) at any depth of any record is rejected after JSON parsing.
+- [ ] S9: `true`, `1.0` and `"1"` are rejected for every authoritative int; `1` and `"true"` for every authoritative bool; `ExactScalar` positions keep `true`, `1` and `"1"` distinct.
 
 Planted-bug checks (run, record in handoff, revert):
 - [ ] Dumping with `exclude_none=True` in the round-trip helper makes the suite fail (nullable required keys).
-- [ ] Making `Record.content_id()` hash `model_dump_json()` bytes instead of canonical bytes makes the key-order property fail.
+- [ ] Changing `Record.content_id()` to hash `model_dump_json()` bytes is caught by the **canonical-identity equality/vector tests**.
 - [ ] Accepting `schema_version` 2 as 1 makes the suite fail.
 - [ ] Removing the float walker (`_reject_floats`) makes the suite fail.
-- [ ] If S11(b): removing one canonical-order validator makes the suite fail.
+- [ ] Making the canonical encoding sort array elements (order-insensitive identity) makes the S11 sequence-order tests fail.
 
 General:
 - [ ] `ruff`, `mypy --strict`, full `pytest` green; contract tests green.
-- [ ] Handoff written; report ends with "Awaiting coordinator assignment."
+- [ ] Handoff written (including the P1.2 follow-ups); report ends with "Awaiting coordinator assignment."
 
 ## Verification commands
 ```bash
@@ -159,10 +155,10 @@ uv run pytest -q tests/contract
 ```
 
 ## Plan of record
-`tests/contract/_record_catalog.py`, `tests/contract/test_round_trip.py`, `tests/contract/test_identity_encoding.py`, `tests/contract/test_schema_versioning.py`, `tests/contract/test_strict_deserialization.py`; plus the conditional product files under S4/S11.
+`tests/contract/_record_catalog.py`, `tests/contract/test_round_trip.py`, `tests/contract/test_identity_encoding.py`, `tests/contract/test_schema_versioning.py`, `tests/contract/test_strict_deserialization.py`, plus doc updates (`components/schemas.yaml`, `docs/REPO_MAP.md`). No product files.
 
 ## Status
-`planned`. Draft for coordinator review; decisions S1–S17 open, notably S4 and S11 (both would edit verified schemas) and S15/S16 (deferrals to P1.2) (authoritative status: `implementation/task_board.yaml`).
+`planned`. PR #22 coordinator decisions S1–S17 applied: tests and docs only; awaiting merge and readiness (authoritative status: `implementation/task_board.yaml`).
 
 ## Completion evidence
 - Files changed:
