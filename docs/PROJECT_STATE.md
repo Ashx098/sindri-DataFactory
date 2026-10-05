@@ -28,7 +28,7 @@ Roles must exist even when one person holds several. `unassigned` roles are real
 | Workstream | Status | Active task | Blocking decision |
 |---|---|---|---|
 | Governance/bootstrap | complete | — | — |
-| Foundation (P1) | active | SIN-P1.1-001…008 verified; SIN-P1.1-009 cross-record invariants ready for implementation | — |
+| Foundation (P1) | active | SIN-P1.1-001…009 verified; P1.1-G integration-gate packet drafting next | — |
 | Task Forge | planned | — | P1.G |
 | Spec Forge | planned | — | P1.G + P2 assets |
 | Verification Forge | planned | — | P1.G + P3 contracts |
@@ -44,7 +44,7 @@ Roles must exist even when one person holds several. `unassigned` roles are real
 | Second reviewer for code-owner-required reviews | before enabling "require code owner review" | open |
 
 ## Current blockers
-- None for SIN-P1.1-009 implementation once the readiness transition is merged to `main`.
+- None for P1.1 tasks 001–009. P1.1-G is eligible for packet drafting only; gate execution is not yet authorized.
 - Recommended: enable "Do not allow bypassing the above settings" on `main` (required checks are currently enforced for non-admins only).
 
 ## Risks being watched
