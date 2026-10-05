@@ -1,4 +1,4 @@
-# SIN-P1.1-G — P1.1 Foundation Integration Gate
+# SIN-P1.1-010 — P1.1-G: P1.1 Foundation Integration Gate
 
 ## Phase identity
 - Phase: `P1`
@@ -37,7 +37,7 @@ This gate audits and closes P1.1. It builds no adapters, store, controller or ju
 ## Base
 - Base branch: `main`
 - Base commit: `main` after this packet is merged and gate execution is authorized (drafted against `efe9ccb`)
-- Worktree: `../worktrees/SIN-P1.1-G`
+- Worktree: `../worktrees/SIN-P1.1-010`
 
 ## Dependencies
 - SIN-P1.1-001…009 `verified` on `main`, confirmed at `efe9ccb` (task board).
@@ -171,7 +171,7 @@ Planning principles for that slice:
   - `tests/contract/_record_catalog.py` and `tests/contract/cross_record/_case.py` (B2 explicit raises only);
   - `docs/REPO_MAP.md`, `docs/implementation/CURRENT_PHASE.md`, `components/schemas.yaml`;
   - `docs/implementation/gates/P1.1-G.md` (new evidence packet);
-  - this packet, and `docs/handoffs/SIN-P1.1-G.md`.
+  - this packet, `docs/handoffs/SIN-P1.1-010.md`, and the task-board status.
 
 ## Forbidden paths / authority boundaries
 - Hidden evaluator/final-eval paths: none touched.
@@ -221,7 +221,7 @@ git diff --stat <gate-base> -- src/sindri/core src/sindri/schemas/cross_record.p
 ## Status
 `planned`; planning only, and the gate is not executed.
 
-The gate is **not** an entry on `implementation/task_board.yaml`. `tests/unit/test_governance.py` requires task IDs of the form `SIN-<phase>.<n>-<nnn>`, and gates are tracked like B0.G: through `implementation/current.yaml` and a gate evidence packet under `docs/implementation/gates/`. If the coordinator wants board tracking for gate execution, the agent suggests registering it as `SIN-P1.1-010 — P1.1 foundation integration gate`. Open coordinator decisions: B1 placement (fix in gate vs blocker), B2 approach, G-B, G-JS, G-F, G-R, G-O.
+**Task ID.** The gate is registered on `implementation/task_board.yaml` as **`SIN-P1.1-010`** (title "P1.1-G — P1.1 foundation integration gate"). `tests/unit/test_governance.py` requires board IDs of the form `SIN-<phase>.<n>-<nnn>`, and requires every `docs/tasks/SIN-*.md` packet to be on the board, so `SIN-P1.1-G` cannot be a board ID. The gate's *decision* is still recorded like B0.G: a gate evidence packet (`docs/implementation/gates/P1.1-G.md`), with the coordinator updating phase state. This naming is for coordinator confirmation.
 
 ## Completion evidence
 - Files changed:
