@@ -5,7 +5,7 @@
 > (ADR-0003). This file holds workstreams, decisions and blockers. Update it in the same PR as
 > milestone or workstream changes.
 
-_Last updated: 2026-10-04_
+_Last updated: 2026-10-05_
 
 ## Versions
 See `docs/implementation/VERSION.md`.
@@ -28,7 +28,7 @@ Roles must exist even when one person holds several. `unassigned` roles are real
 | Workstream | Status | Active task | Blocking decision |
 |---|---|---|---|
 | Governance/bootstrap | complete | — | — |
-| Foundation (P1) | active | SIN-P1.1-001…005 verified; 006 + 007 implementation PRs under correction | Final PR #17 coordinator decisions were omitted before readiness; PRs #18/#19 must conform before merge |
+| Foundation (P1) | active | SIN-P1.1-001…007 verified; 008 serialization/versioning packet drafting next | — |
 | Task Forge | planned | — | P1.G |
 | Spec Forge | planned | — | P1.G + P2 assets |
 | Verification Forge | planned | — | P1.G + P3 contracts |
@@ -44,7 +44,7 @@ Roles must exist even when one person holds several. `unassigned` roles are real
 | Second reviewer for code-owner-required reviews | before enabling "require code owner review" | open |
 
 ## Current blockers
-- SIN-P1.1-006/007: readiness was recorded on PR #17 before the final coordinator review was applied. PRs #18/#19 must implement the missing review decisions before either can merge.
+- None for P1.1 record implementation. SIN-P1.1-008 is eligible for packet drafting only.
 - Recommended: enable "Do not allow bypassing the above settings" on `main` (required checks are currently enforced for non-admins only).
 
 ## Risks being watched
