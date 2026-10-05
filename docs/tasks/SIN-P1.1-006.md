@@ -163,7 +163,7 @@ uv run pytest -q tests/contract
 - `src/sindri/core/ids.py` is edited only by SIN-P1.1-007.
 
 ## Status
-`blocked` (coordinator correction, 2026-10-05). PR #17 commit `1f50e904` recorded readiness even though final coordinator comment `5981249383` explicitly required additional fixes before merge/READY. Existing implementation work is accepted for review only; PR #18 must implement the final corrections above before merge (authoritative status: `implementation/task_board.yaml`).
+`verified` (coordinator, 2026-10-05). PR #18 merged as `0d19b0f`; merged-main CI `37244343777` passed. The later deliberately integrated 006+007 main at `b6ced72` also passed merged-main CI `37256889064` (authoritative status: `implementation/task_board.yaml`).
 
 ## Completion evidence
 - Files changed: `src/sindri/schemas/finding.py` (new), `src/sindri/schemas/__init__.py` (exports), `tests/contract/test_finding.py` and three fixtures (new), `components/schemas.yaml`, `docs/REPO_MAP.md`, this packet, handoff. `core/ids.py` untouched (owned by 007).
@@ -193,5 +193,5 @@ uv run pytest -q tests/contract
   - promotion creates a new `derived_from` Finding proposing an `ExistingPolicyCheck`, and only that Finding may be decided;
   - confirmed citations all match `confirming_status`, refuted ones the opposite, and mixed PASS/FAIL deciding citations are invalid.
 - Implementation interpretations (unchanged, for review): a first transition starts from `hypothesis` (in-record); duplicate citations rejected; deciding citations only on confirm/refute; `superseded_by` cannot equal the Finding itself.
-- Status: kept **`blocked`** on the board per the coordinator correction (PR #20); this PR is review-only until the coordinator clears it.
+- Coordinator verification: PR #18 merge `0d19b0f`, CI `37244343777`; integrated 006+007 main `b6ced72`, CI `37256889064`. Task is **verified**.
 - Handoff/next action: `docs/handoffs/SIN-P1.1-006.md`.
