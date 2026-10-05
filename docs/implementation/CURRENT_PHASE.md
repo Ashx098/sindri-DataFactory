@@ -22,7 +22,7 @@ python scripts/show_ready_tasks.py --all
 - The PR #17 readiness deviation is resolved: PRs #18/#19 applied the omitted final coordinator rules before verification.
 - `SIN-P1.1-008 — Serialization and schema-versioning tests` verified (coordinator, 2026-10-05). PR #24 merged as `23983db`; merged-main CI `37262833634` passed. Scope remained tests/docs only.
 - `SIN-P1.1-009 — Cross-record invariant tests` verified (coordinator, 2026-10-05). PR #28 merged as `a8b38c5`; merged-main CI `37269979595` passed. XR-T1 is a derived CT-4 property; the runtime validator carries 54 independently load-bearing codes with no-cascade ownership.
-- No task is currently READY. **P1.1-G** is now eligible for **packet drafting only**. Gate execution and P1.2 remain unauthorized until the gate packet is reviewed and explicitly authorized.
+- **`SIN-P1.1-010 — P1.1-G foundation integration gate` is the only READY task** (coordinator, 2026-10-05), pending merge of PR #30 to authoritative `main`. The task-board ID is `SIN-P1.1-010`; the subphase gate/evidence name remains `P1.1-G`. The gate may fix the acceptance-critical assert, optimized-mode helper safety, stale docs and deterministic JSON Schema export; it may not change ID patterns or start P1.2. P1.1-G approval does **not** change `implementation/current.yaml`; P1 remains ACTIVE until phase gate P1.G.
 - Process deviation (recorded at the coordinator's request, not precedent): implementation of 003 and 004 began from the **unmerged** readiness commit `62a7834`, under delegation. The coordinator accepted that work for review, but READY was not yet authoritative on `main`. Future implementation waits until readiness is merged.
 
 ## P1.1 order (coordinator sequencing refinement, 2026-10-04; not an ADR change)
