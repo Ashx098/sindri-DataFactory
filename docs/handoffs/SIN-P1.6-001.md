@@ -62,10 +62,17 @@ None new. F1–F12 and the PR #33 record clarifications are implemented as decid
 ## Open questions
 None.
 
-## Blocked on
-- Coordinator review and merge.
+## Coordinator verification
+- PR #35 merged to `main` as `0cfa365`.
+- Merged-main CI run `37315346193` passed.
+- `SIN-P1.6-001` status: `verified` on 2026-10-05.
+- Verification scope: **engineering seed for development use only**. P1.6 certification remains explicitly outstanding.
 
-## Next after approval
+## Blocked on
+- Engineering seed: none.
+- P1.6 certification: RTL/DV/formal reviewer plus the later 15–20 critical-mutant authority package.
+
+## Next after verification
 - **P1.3:** pinned Icarus 12.x profile; Verilator 5.x and slang re-probe before P1.4 normalizers are considered stable.
 - **G-B ADR:** must merge before any P1.4 code mints `ObservationId`s.
 - **P1.4:** the adapter must implement at least `tests/eda/_protocol.py`'s rules.
