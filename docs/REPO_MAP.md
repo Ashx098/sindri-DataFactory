@@ -32,7 +32,8 @@ sindri-DataFactory/
   agents/agent-card.template.yaml
   tests/
     unit/                        IDs/hashing, status taxonomy, governance consistency
-    contract/                    record contracts + adapted master-example fixtures
+    contract/                    record contracts + adapted master-example fixtures; serialization/identity/versioning
+                                 contract over the full record catalog (_record_catalog.py, SIN-P1.1-008)
     architecture/                import-boundary enforcement
   scripts/
     agent_bootstrap.py  new_task.py  new_handoff.py  show_ready_tasks.py  docx_to_md.py
