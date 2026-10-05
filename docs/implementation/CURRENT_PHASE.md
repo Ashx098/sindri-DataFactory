@@ -11,9 +11,7 @@ python scripts/show_ready_tasks.py --all
 ```
 
 ## Notes for the active phase
-- `SIN-P1.1-001` verified (coordinator, 2026-10-04). Kept at `verified`, not `closed`, until the
-  float/identity follow-up is carried forward (SIN-P1.1-002 decision D5). P1.1-G check A5 provides
-  that evidence (`docs/implementation/gates/P1.1-G.md`), which is under coordinator gate review.
+- `SIN-P1.1-001` verified (coordinator, 2026-10-04). Its deferred float/identity follow-up was satisfied by approved P1.1-G check A5 (`docs/implementation/gates/P1.1-G.md`).
 - `SIN-P1.1-002` verified (coordinator, 2026-10-04). PR #6 merged as `4377df5`; merged-main CI `37154049449` passed.
 - `SIN-P1.1-003` verified (coordinator, 2026-10-04). PR #10 merged as `3a51766`; merged-main CI `37183976957` passed.
 - `SIN-P1.1-004` verified (coordinator, 2026-10-04). PR #11 merged as `d465850`; merged-main CI `37184201021` passed after the deliberate 003+004 integration.
@@ -23,7 +21,8 @@ python scripts/show_ready_tasks.py --all
 - The PR #17 readiness deviation is resolved: PRs #18/#19 applied the omitted final coordinator rules before verification.
 - `SIN-P1.1-008 — Serialization and schema-versioning tests` verified (coordinator, 2026-10-05). PR #24 merged as `23983db`; merged-main CI `37262833634` passed. Scope remained tests/docs only.
 - `SIN-P1.1-009 — Cross-record invariant tests` verified (coordinator, 2026-10-05). PR #28 merged as `a8b38c5`; merged-main CI `37269979595` passed. XR-T1 is a derived CT-4 property; the runtime validator carries 54 independently load-bearing codes with no-cascade ownership.
-- **`SIN-P1.1-010 — P1.1-G foundation integration gate` was coordinator-APPROVED on PR #31** (comment `5990730575`) after A1–A12 passed. The evidence is `docs/implementation/gates/P1.1-G.md` (`APPROVED`). The task remains `review` until PR #31 merges and merged-main CI passes. The task-board ID is `SIN-P1.1-010`; the gate/evidence name remains `P1.1-G`. Approval does **not** change `implementation/current.yaml`; P1 remains ACTIVE until phase gate P1.G. P1.2 remains unauthorized until `SIN-P1.1-010` is coordinator-verified and its entry decisions are opened.
+- **`SIN-P1.1-010 — P1.1-G foundation integration gate` is VERIFIED.** P1.1-G was coordinator-APPROVED on PR #31 (comment `5990730575`); PR #31 merged as `6bbdad2`; merged-main CI `37283109668` passed. The task-board ID is `SIN-P1.1-010`; the gate/evidence name remains `P1.1-G`. Approval does **not** change `implementation/current.yaml`; P1 remains ACTIVE until phase gate P1.G.
+- No task is currently READY. **P1.2 entry/vertical-slice planning is now eligible for packet drafting only.** Before the first persistent write, G-B (ID allocation), G-S (strict ingest/integer range) and G-U (store authority/closed-bundle assembly) must be resolved in the P1.2 plan/ADR.
 - Process deviation (recorded at the coordinator's request, not precedent): implementation of 003 and 004 began from the **unmerged** readiness commit `62a7834`, under delegation. The coordinator accepted that work for review, but READY was not yet authoritative on `main`. Future implementation waits until readiness is merged.
 
 ## P1.1 order (coordinator sequencing refinement, 2026-10-04; not an ADR change)
