@@ -379,7 +379,7 @@ grep -n "from sindri.schemas import\|import sindri.schemas$" src/sindri/schemas/
 - `components/schemas.yaml`, `docs/REPO_MAP.md`, this packet, `docs/handoffs/SIN-P1.1-009.md`, and the task board.
 
 ## Status
-`planned` (authoritative status: `implementation/task_board.yaml`). Coordinator decisions X1–X13 and OQ1–OQ4 recorded from PR #26. N3 and N4 are raised for final packet review.
+`ready` (coordinator, 2026-10-05). PR #26 merged to `main` as `d48d6ad`; merged-main CI run `37265160756` passed. Coordinator decisions X1–X13, OQ1–OQ4, N3 and N4 are final. Implementation is authorized only after this governance readiness PR itself is merged to `main` (authoritative status: `implementation/task_board.yaml`).
 
 ## Completion evidence
 - Files changed:
