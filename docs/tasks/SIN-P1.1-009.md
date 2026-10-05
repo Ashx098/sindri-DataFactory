@@ -382,7 +382,7 @@ grep -n "from sindri.schemas import\|import sindri.schemas$" src/sindri/schemas/
 - `components/schemas.yaml`, `docs/REPO_MAP.md`, this packet, `docs/handoffs/SIN-P1.1-009.md`, and the task board.
 
 ## Status
-`review` (authoritative status: `implementation/task_board.yaml`). Implemented from `main` `a882aa2`. XR-T1 → CT-4 accepted by the coordinator (PR #28); PR #28 review fixes applied.
+`verified` (coordinator, 2026-10-05). PR #28 merged to `main` as `a8b38c5`; merged-main CI run `37269979595` passed. XR-T1 → CT-4 is accepted as a derived contract property; all PR #28 no-cascade review fixes are verified on main (authoritative status: `implementation/task_board.yaml`).
 
 ## Completion evidence
 - Files changed:
@@ -478,4 +478,5 @@ grep -n "from sindri.schemas import\|import sindri.schemas$" src/sindri/schemas/
   - L1–L3: K2/K3/F2/P-coverage validate against current set heads, not historical revisions.
   - Table D (D1–D19) remains with its owners.
   - The validator checks a closed bundle only (X4).
+- Coordinator verification: PR #28 merge `a8b38c5`; merged-main CI `37269979595` passed.
 - Handoff/next action: `docs/handoffs/SIN-P1.1-009.md`.
