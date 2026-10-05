@@ -26,7 +26,7 @@ sindri-DataFactory/
   src/sindri/
     core/status.py               shared status taxonomy (ADR-0002)
     core/ids.py                  typed domain IDs, content IDs, canonical JSON hashing
-    schemas/                     boundary records: TaskManifest, Requirement, EvaluationPolicy, CandidateManifest, Observation, Finding, EpisodeBudget, EpisodeState (P1.1 record set complete)
+    schemas/                     boundary records: TaskManifest, Requirement, EvaluationPolicy, CandidateManifest, Observation, Finding, EpisodeBudget, EpisodeState (P1.1 record set complete); cross_record.py: pure closed-bundle cross-record invariants (check_records, SIN-P1.1-009)
     judge/ solver/ verification_forge/ data/ tools/   local AGENTS.md only (rules bind before code)
   components/component.template.yaml  schemas.yaml
   agents/agent-card.template.yaml
@@ -34,6 +34,8 @@ sindri-DataFactory/
     unit/                        IDs/hashing, status taxonomy, governance consistency
     contract/                    record contracts + adapted master-example fixtures; serialization/identity/versioning
                                  contract over the full record catalog (_record_catalog.py, SIN-P1.1-008)
+      cross_record/              coherent FIFO bundle built from a typed spec, isolated negative case per
+                                 invariant code, rule-removal harness, CT-1..CT-3 (SIN-P1.1-009)
     architecture/                import-boundary enforcement
   scripts/
     agent_bootstrap.py  new_task.py  new_handoff.py  show_ready_tasks.py  docx_to_md.py
