@@ -8,6 +8,7 @@ from sindri.schemas.candidate import (
     ProducerRole,
     candidate_source_hash,
 )
+from sindri.schemas.cross_record import InvariantCode, Violation, check_records
 from sindri.schemas.episode import (
     ACTIVE_EPISODE_STATES,
     ALLOWED_EPISODE_TRANSITIONS,
@@ -131,6 +132,7 @@ __all__ = [
     "FormalReport",
     "GeneratorSource",
     "HumanProducer",
+    "InvariantCode",
     "ModelAuthor",
     "ModelProducer",
     "MutationSource",
@@ -162,7 +164,9 @@ __all__ = [
     "TestResult",
     "Uncertainty",
     "UseCaseSource",
+    "Violation",
     "Visibility",
     "candidate_source_hash",
+    "check_records",
     "observation_execution_key",
 ]

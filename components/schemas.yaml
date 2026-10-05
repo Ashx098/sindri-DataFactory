@@ -20,6 +20,7 @@ outputs:
   - FindingTransition
   - EpisodeBudget
   - EpisodeState
+  - Violation (cross-record check result value; not a Record, never persisted here)
 may_read:
   - sindri.core
 may_write: []
@@ -64,6 +65,9 @@ public_interfaces:
   - name: Record.content_id
     request: record
     response: ContentId
+  - name: check_records
+    request: Iterable[Record] forming a deliberately assembled closed validation bundle (not a partial store query)
+    response: tuple[Violation, ...] sorted by (code, subject, detail); TypeError for a non-Record or unsupported Record type
 invariants:
   - id: INV-001
     text: Unknown fields are rejected at every nesting level.
@@ -137,6 +141,19 @@ invariants:
     text: schema_version is 1 for every P1.1 record and anything else is rejected (v1 reader only; no dispatch, no migration). Domain revisions (manifest/requirement/policy_version + supersedes) are separate from schema_version.
   - id: INV-SER-004
     text: After JSON parsing, floats (incl. NaN/Infinity tokens) are rejected at every depth with their JSON path; authoritative ints/bools are never coerced; ExactScalar positions keep true, 1 and "1" distinct. Text is not Unicode-normalized.
+  # SIN-P1.1-009 cross-record contract (src/sindri/schemas/cross_record.py; packet tables B-E)
+  - id: INV-XR-001
+    text: check_records is pure (no I/O, store, clock or input mutation), order-independent and idempotent (exact duplicates collapse by type + content_id); it aggregates every violation and never raises for an inconsistent bundle.
+  - id: INV-XR-002
+    text: Closed world. Every H1 hash reference (supersedes, candidate/policy/observation/finding/budget/state hashes, candidate bindings) resolves to exactly one record of its type, with a matching carried ID; one XR-B2 per broken reference occurrence. A conflicting logical key is XR-B1 (ambiguous authority). Rules that depend on a broken or ambiguous authority skip it (no cascades).
+  - id: INV-XR-003
+    text: Revision chains link to v-1 of the same type; task identity (X5 fields), requirement (task_id, requirement_id) and policy (policy_id, task_id) are stable; family heads share one split; mutation children keep the parent's family and lineage, and mutation ancestry is acyclic.
+  - id: INV-XR-004
+    text: Each head policy matches the head task contract, and every approved mandatory head requirement applies to >= 1 configuration and is enforced in each applicable configuration (exact-type applicability over a common policy vocabulary) by a mandatory, non-quality, targeted, non-excluded obligation check.
+  - id: INV-XR-005
+    text: Observations, Findings and transitions bind to the exact candidate manifest, policy, check, configuration and settings; deciding citations are PASS/FAIL and match an ExistingPolicyCheck proposal and its verdict mapping; probe-proposed Findings are never decided; solver Findings cite no hidden Observation; transition chains and EpisodeState chains are contiguous, hash-linked, legal (ADR-0006, WAITING resume), constant in policy/budget/solver config, monotonic, within budget except truthful per-dimension aborts, and keep pending jobs immutable.
+  - id: INV-XR-006
+    text: Exact historical revision bindings (candidate -> task revision, policy -> task revision, Finding -> requirement version) are not representable and are validated against current set heads only (L1-L3); store-global completeness, uniqueness and current head belong to P1.2 (packet table D).
 failure_modes:
   - id: FM-001
     symptom: A field gains a default and silently fills authority/split/rights.
@@ -144,6 +161,12 @@ failure_modes:
   - id: FM-002
     symptom: Pydantic coerces True/1.0 into an int or Literal.
     guard: StrictInt/StrictBool/StrictStr scalars; schema_version is a StrictInt pinned to 1.
+  - id: FM-XR-001
+    symptom: A cross-record rule silently stops firing, or two rules report one root cause.
+    guard: Isolated exact-set negative fixture per runtime code, plus the rule-removal harness (tests/contract/cross_record/test_rule_harness.py).
+  - id: FM-XR-002
+    symptom: A new ContentId field escapes the cross-record contract.
+    guard: CT-1 inventory (test_hash_inventory.py) fails until the field is classified H1/H2/H3.
 required_tests:
   - unit
   - contract
@@ -151,4 +174,4 @@ observability:
   spans: []
   metrics: []
 related_adrs: [ADR-0001, ADR-0002, ADR-0004, ADR-0005, ADR-0006]
-related_docs: [docs/tasks/SIN-P1.1-002.md, docs/tasks/SIN-P1.1-003.md, docs/tasks/SIN-P1.1-004.md, docs/tasks/SIN-P1.1-005.md, docs/tasks/SIN-P1.1-006.md, docs/tasks/SIN-P1.1-007.md, docs/tasks/SIN-P1.1-008.md]
+related_docs: [docs/tasks/SIN-P1.1-002.md, docs/tasks/SIN-P1.1-003.md, docs/tasks/SIN-P1.1-004.md, docs/tasks/SIN-P1.1-005.md, docs/tasks/SIN-P1.1-006.md, docs/tasks/SIN-P1.1-007.md, docs/tasks/SIN-P1.1-008.md, docs/tasks/SIN-P1.1-009.md]

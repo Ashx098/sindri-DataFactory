@@ -45,7 +45,7 @@ with their owner rather than approximated.
 - Phase/subphase: P1.1; order: 008 → **009** → P1.1-G.
 
 ## Owner / coordinator
-- Owner: assigned by coordinator when marked ready
+- Owner: coding agent (Claude Code), assigned 2026-10-05
 - Integrator: Avinash
 - Reviewers: Avinash
 
@@ -328,28 +328,28 @@ None of these is approximated in 009. "New record?" marks a rule impossible with
 
 ## Acceptance criteria
 Positive:
-- [ ] The coherent bundle (all positive scenarios) yields `()`.
-- [ ] The result is independent of input order and of duplicate identical records (property test).
+- [x] The coherent bundle (all positive scenarios) yields `()`.
+- [x] The result is independent of input order and of duplicate identical records (property test).
 
 Negative:
-- [ ] Every negative mutation yields exactly `{its code}` with the documented cardinality.
-- [ ] An unresolved reference yields one XR-B2 per occurrence and no cascade. Dependency ordering is tested (CT-3).
-- [ ] XR-P6 fails for each of: exception exclusion, an optional-only check, a quality-only check, an untargeted configuration, and `1` vs `true` applicability.
-- [ ] A non-`Record` value and an unsupported `Record` subclass each raise `TypeError`.
+- [x] Every negative mutation yields exactly `{its code}` with the documented cardinality.
+- [x] An unresolved reference yields one XR-B2 per occurrence and no cascade. Dependency ordering is tested (CT-3).
+- [x] XR-P6 fails for each of: exception exclusion, an optional-only check, a quality-only check, an untargeted configuration, and `1` vs `true` applicability.
+- [x] A non-`Record` value and an unsupported `Record` subclass each raise `TypeError`.
 
 Tests:
-- [ ] The rule-removal harness covers every runtime `InvariantCode`; `InvariantCode` contains runtime codes only (no XR-B3/C2).
-- [ ] CT-1: all `ContentId` fields are classified exactly once; an unclassified field fails.
-- [ ] Manual planted bugs recorded with counts; source restored byte-identically.
+- [x] The rule-removal harness covers every runtime `InvariantCode`; `InvariantCode` contains runtime codes only (no XR-B3/C2).
+- [x] CT-1: all `ContentId` fields are classified exactly once; an unclassified field fails.
+- [x] Manual planted bugs recorded with counts; source restored byte-identically.
 
 Documentation:
-- [ ] `components/schemas.yaml`: cross-record invariants, closed-bundle semantics (X4) and the public API.
-- [ ] `docs/REPO_MAP.md` updated.
-- [ ] Packet completion evidence and handoff written, with table D owners and L1–L3, N1–N4 decisions/limitations.
+- [x] `components/schemas.yaml`: cross-record invariants, closed-bundle semantics (X4) and the public API.
+- [x] `docs/REPO_MAP.md` updated.
+- [x] Packet completion evidence and handoff written, with table D owners and L1–L3, N1–N4 decisions/limitations.
 
 Boundaries:
-- [ ] `cross_record.py` imports concrete schema modules, not `sindri.schemas`; no I/O, clock or input mutation.
-- [ ] No existing schema module, `sindri.core` or example file changed; no store, controller or judge code.
+- [x] `cross_record.py` imports concrete schema modules, not `sindri.schemas`; no I/O, clock or input mutation.
+- [x] No existing schema module, `sindri.core` or example file changed; no store, controller or judge code.
 
 ## Verification commands
 ```bash
@@ -379,11 +379,95 @@ grep -n "from sindri.schemas import\|import sindri.schemas$" src/sindri/schemas/
 - `components/schemas.yaml`, `docs/REPO_MAP.md`, this packet, `docs/handoffs/SIN-P1.1-009.md`, and the task board.
 
 ## Status
-`ready` (coordinator, 2026-10-05). PR #26 merged to `main` as `d48d6ad`; merged-main CI run `37265160756` passed. Coordinator decisions X1–X13, OQ1–OQ4, N3 and N4 are final. Implementation is authorized only after this governance readiness PR itself is merged to `main` (authoritative status: `implementation/task_board.yaml`).
+`review` (authoritative status: `implementation/task_board.yaml`). Implemented from `main` `a882aa2`. There is one deviation for coordinator review (XR-T1 → CT-4, below).
 
 ## Completion evidence
 - Files changed:
+  - **Product:** `src/sindri/schemas/cross_record.py` (new) and `src/sindri/schemas/__init__.py` (three exports).
+  - **Tests:** `tests/contract/cross_record/`, all new:
+    - `_bundle.py`, `_case.py`;
+    - `test_bundle_integrity.py`, `test_revision_chains.py`, `test_policy_coverage.py`;
+    - `test_candidate_bindings.py`, `test_observation_bindings.py`, `test_finding_bindings.py`, `test_episode_chains.py`;
+    - `test_rule_harness.py`, `test_hash_inventory.py`.
+  - **Docs:** `components/schemas.yaml` (INV-XR-001…006, FM-XR-001/002, `check_records`, `Violation`), `docs/REPO_MAP.md`, the task board, this packet, and the handoff.
+  - **No** existing schema module, `sindri.core` or §20 example file changed; the forbidden-path diff is empty, and the package-import grep is empty.
 - Tests run/results:
+  - `ruff` clean; `mypy --strict` clean (19 files).
+  - `pytest`: 1802 passed, 8 skipped.
+  - Contract suite: 1686 passed. `tests/contract/cross_record`: 176 passed.
 - Acceptance evidence:
+  - **API:** `check_records(Iterable[Record]) -> tuple[Violation, ...]`.
+    - `InvariantCode` has 54 runtime codes (B1–B2, C1/C3–C8, P1/P2A/P2B/P3–P8, K1–K6, O1–O4, F1–F11, T2–T5, E1–E11), with no XR-B3, XR-C2 or XR-T1.
+    - `Violation` is a frozen `StrictModel`, not a `Record`.
+    - A non-`Record` value and an unsupported `Record` subclass each raise `TypeError`.
+    - The module imports concrete schema modules only.
+  - **Positive bundle:** 46 records from a typed spec yield `()`. They are:
+    - task revisions 1→2 plus a mutation sibling;
+    - R03, R17 v1→v2, and the sibling's R03;
+    - policy revisions 1→2, with an exception, a quality check and a `parameter_scope` requirement;
+    - 5 candidates: reconstructor seed, two solver candidates, and oracle-side and solver-side explorers;
+    - 4 Observations: PASS, FAIL and TIMEOUT;
+    - Findings F1–F4 with transitions: confirmed via an existing check; probe → dropped; superseded/derived;
+    - 2 budgets: normal and mixed-zero;
+    - episode e1 (13 states, including WAITING, a pending job and exact-limit spending);
+    - episode e2 (ABORTED with a truthful, exempt overspend).
+  - **Variant positives (clean):**
+    - an all-zero budget aborting `budget_exhausted` at zero usage (N3);
+    - exact-type applicability: scope `1` does not select `WIDTH=true`;
+    - a zero-parameter `cfg_default` policy;
+    - segment-prefix and exact-entry edit paths;
+    - all-`None` dependency hashes;
+    - a refuted Finding citing the refuting status, and an inverted `confirming_status = FAIL`;
+    - a reviewer citing hidden evidence;
+    - a reconstructor seed as the active candidate;
+    - WAITING → ABORTED.
+  - **Negatives:** 83 isolated cases, each asserting the exact code set **and** cardinality, with at least one per runtime code. XR-P6 covers exception exclusion, an optional-only check, a quality-only check, an untargeted configuration, and `true` vs `1`.
+  - **Rule-removal harness:** for all 54 codes, removing exactly that rule silences at least one of its negative cases, and the positive bundle stays clean.
+  - **CT-1:** all 37 `ContentId` fields are classified exactly once (H1 15, H2 18 with D-owners, H3 4). A new unclassified field fails.
+  - **CT-2:** every valid chain has one set head, and a fork trips only B1/C1.
+  - **CT-3:** dependency ordering is tested:
+    - a broken reference gives one B2 and no F3 cascade;
+    - an ambiguous task key gives only B1;
+    - T5 owns post-terminal transitions (not T4), and E4 owns post-terminal states (not E2);
+    - F4 owns non-verdict statuses (not F5);
+    - gaps are T2/E1 only;
+    - P8 suppresses coverage.
+  - **Properties (hypothesis):** shuffled and duplicated input gives an identical result; input records are not mutated.
+  - **Planted bugs**, each caught, with source restored byte-identically (sha256 checked; counts are failing tests in `tests/contract/cross_record`):
+
+    | Planted bug | Failing tests |
+    |---|---|
+    | P6(i) exceptions ignored | 3 |
+    | P6(ii) mandatory test dropped | 1 |
+    | P6(iii) applicability compared with `==` | 1 |
+    | K3 raw `startswith` | 1 |
+    | C1 v − 1 unchecked | 2 |
+    | E1 chain starts at 1 | 160 |
+    | E3 ABORTED out of WAITING rejected | 1 |
+    | E8 `>=` instead of `>` | 161 |
+    | E9 episode required on every candidate | 161 |
+    | B2 resolves by ID, ignoring the hash | 4 |
+    | F5 refuted compared with `confirming_status` | 1 |
+    | T2 monotonic, not contiguous | 2 |
+    | E11/N3 zero-limit dimensions counted | 1 |
+
+    The 160/161 counts come from false positives on the positive bundle.
+- **Deviation for review:** packet **XR-T1** ("all transitions of one `finding_id` carry the same `finding_hash`") is structurally implied by XR-B1 + XR-B2.
+  - Each `finding_hash` must resolve to a Finding carrying that `finding_id` (otherwise XR-B2), and two different contents under one id is XR-B1.
+  - A T1 code could therefore never fire alone and could not pass the isolation harness. This is the same reasoning the coordinator applied to XR-C2.
+  - Implemented as **CT-4** (`test_ct4_a_mismatched_finding_hash_always_trips_b1_or_b2`), not as a runtime code.
+- **Implementation interpretations (for review):**
+  - **Chain heads:** a supersedes link whose predecessor has another chain key (a C3/C4/C5 identity break) makes both chain keys head-less. This stops coverage and K/F rules from reporting a second symptom.
+  - **K2 owns read-only tasks:** XR-K3 skips a candidate whose head task is read-only, since that task has an empty edit scope by schema.
+  - **E2 owns illegal edges:** XR-E3 judges WAITING resume only on ADR-0006-legal pairs.
+  - **Cited Observations:** XR-F3 and XR-F5 skip a cited Observation whose *own* candidate or policy binding is broken; XR-B2 owns that.
+  - **P8:** skips a policy whose task is absent (XR-P1 owns it).
+  - **Fixture choices:**
+    - the C3 split negative removes the family sibling, so C6 does not also fire;
+    - the C5 negative uses a separate, otherwise valid policy chain;
+    - the T4 negative uses `hypothesis → dropped` after `check_proposed`, because `hypothesis → confirmed` is rejected in-record.
 - Known limitations:
-- Handoff/next action:
+  - L1–L3: K2/K3/F2/P-coverage validate against current set heads, not historical revisions.
+  - Table D (D1–D19) remains with its owners.
+  - The validator checks a closed bundle only (X4).
+- Handoff/next action: `docs/handoffs/SIN-P1.1-009.md`.
