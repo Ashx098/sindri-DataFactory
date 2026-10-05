@@ -1,0 +1,77 @@
+{
+  "status": "quarantined known-bad testbench (F12); never part of the positive testbench path",
+  "testbench": "known_bad/tb_fifo_xblind.v",
+  "derived_from": "tb/tb_fifo.v",
+  "transformation": "every '===' replaced by '==', and the check failure condition 'cond !== 1'b1' replaced by '!cond'",
+  "why_bad": "an X comparison is neither pass nor failure, so X-valued outputs go undetected (probe P7)",
+  "configurations": [
+    "cfg_w8_d4",
+    "cfg_w8_d3",
+    "cfg_w32_d8",
+    "cfg_w1_d2",
+    "cfg_w8_d1"
+  ],
+  "expected_verdicts": {
+    "rtl/fifo_ref.v": {
+      "cfg_w8_d4": "PASS",
+      "cfg_w8_d3": "PASS",
+      "cfg_w32_d8": "PASS",
+      "cfg_w1_d2": "PASS",
+      "cfg_w8_d1": "PASS"
+    },
+    "rtl/fifo_alt.v": {
+      "cfg_w8_d4": "PASS",
+      "cfg_w8_d3": "PASS",
+      "cfg_w32_d8": "PASS",
+      "cfg_w1_d2": "PASS",
+      "cfg_w8_d1": "PASS"
+    },
+    "mutants/m1_full_off_by_one.v": {
+      "cfg_w8_d4": "FAIL",
+      "cfg_w8_d3": "FAIL",
+      "cfg_w32_d8": "FAIL",
+      "cfg_w1_d2": "FAIL",
+      "cfg_w8_d1": "FAIL"
+    },
+    "mutants/m2_rdptr_no_wrap.v": {
+      "cfg_w8_d4": "PASS",
+      "cfg_w8_d3": "FAIL",
+      "cfg_w32_d8": "PASS",
+      "cfg_w1_d2": "PASS",
+      "cfg_w8_d1": "PASS"
+    },
+    "mutants/m3_simultaneous_count.v": {
+      "cfg_w8_d4": "FAIL",
+      "cfg_w8_d3": "FAIL",
+      "cfg_w32_d8": "FAIL",
+      "cfg_w1_d2": "FAIL",
+      "cfg_w8_d1": "PASS"
+    },
+    "mutants/m4_rdptr_not_reset.v": {
+      "cfg_w8_d4": "PASS",
+      "cfg_w8_d3": "PASS",
+      "cfg_w32_d8": "PASS",
+      "cfg_w1_d2": "PASS",
+      "cfg_w8_d1": "PASS"
+    },
+    "mutants/m5_stale_read.v": {
+      "cfg_w8_d4": "FAIL",
+      "cfg_w8_d3": "FAIL",
+      "cfg_w32_d8": "FAIL",
+      "cfg_w1_d2": "FAIL",
+      "cfg_w8_d1": "PASS"
+    }
+  },
+  "fake_pass": {
+    "mutants/m4_rdptr_not_reset.v": [
+      "cfg_w8_d4",
+      "cfg_w8_d3",
+      "cfg_w32_d8",
+      "cfg_w1_d2",
+      "cfg_w8_d1"
+    ],
+    "mutants/m2_rdptr_no_wrap.v": [
+      "cfg_w8_d1"
+    ]
+  }
+}

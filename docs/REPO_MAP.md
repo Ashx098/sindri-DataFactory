@@ -37,6 +37,11 @@ sindri-DataFactory/
       cross_record/              coherent FIFO bundle built from a typed spec, isolated negative case per
                                  invariant code, rule-removal harness, CT-1..CT-3 (SIN-P1.1-009)
     architecture/                import-boundary enforcement
+    eda/                         `eda`-marked tool reproductions (skipped without the tool): FIFO seed Icarus
+                                 kill matrix; F7 result-protocol verdict (_protocol.py, pure tests run everywhere)
+  evals/fixtures/fifo/           FIFO engineering seed v1 (SIN-P1.6-001): contract, two correct RTLs, strict TB +
+                                 configuration-scoped inventory, M1-M5 + kill matrix, quarantined known_bad/,
+                                 P1.1 records. Approved for development use; UNCERTIFIED for P1.6 completion
   schemas/json/v1/               generated JSON Schemas of the 9 P1.1 records: structural projections of the
                                  Pydantic models (which stay authoritative); drift-checked (P1.1-G)
   scripts/
@@ -49,7 +54,7 @@ sindri-DataFactory/
 | `src/sindri/evidence/` | P1.2 | |
 | sandbox / `src/sindri/tools/` | P1.3 / P1.4 | `tool_profiles/` arrives with P1.4 |
 | `src/sindri/controller/` | P1.5 | |
-| `evals/fixtures/fifo/` | P1.6 | FIFO authority package |
+| `evals/fixtures/fifo/` certification | P1.6 (later task) | engineering seed exists; certified contract and 15-20 critical mutants need RTL/DV review |
 | `src/sindri/judge/` | P1.7 | |
 
 A directory added to `src/sindri/` must have a clear owner, public interface, dependency direction

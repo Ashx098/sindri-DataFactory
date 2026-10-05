@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "task_id": "fifo_seed",
+  "family_id": "fifo",
+  "lineage_id": "fifo-seed",
+  "variant_id": "v1",
+  "manifest_version": 1,
+  "supersedes": null,
+  "authority_mode": "engineering_intent",
+  "split": "dev",
+  "task_type": "spec_to_rtl",
+  "source": {
+    "kind": "use_case",
+    "intake_ref": "sindri:p1.6/fifo-seed-v1"
+  },
+  "rights": {
+    "licence": "LicenseRef-Chipforge-Internal",
+    "written_agreement_ref": null,
+    "training_allowed": false,
+    "evaluation_allowed": true,
+    "redistribution_allowed": false,
+    "customer_restricted": false
+  },
+  "golden_hash": null,
+  "contract_id": "ct_fifo_seed_v1",
+  "approved_contract_hash": "sha256:25c47bf2b68af6ad0473c414c87f596ca50a286249d64ddcdb406717b0f79ba7",
+  "allowed_edit_paths": [
+    "rtl/fifo.v"
+  ],
+  "requirement_ids": [
+    "R01",
+    "R02",
+    "R03",
+    "R04",
+    "R05",
+    "R06",
+    "R07",
+    "R08",
+    "R09"
+  ]
+}

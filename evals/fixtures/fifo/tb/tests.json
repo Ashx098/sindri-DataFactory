@@ -1,0 +1,143 @@
+{
+  "status": "engineering-seed-approved",
+  "certification": "uncertified",
+  "contract_id": "ct_fifo_seed_v1",
+  "testbench": "tb/tb_fifo.v",
+  "protocol": "F7: each expected 'TEST <id> PASS|FAIL' exactly once, no unexpected or duplicate ids, exactly one terminal 'RESULT PASS|FAIL' that agrees with the per-test results; anything else fails closed; exit code is never the oracle",
+  "test_requirements": {
+    "reset_state": [
+      "R01"
+    ],
+    "fill_to_full": [
+      "R02",
+      "R03",
+      "R04"
+    ],
+    "overflow_ignored": [
+      "R05"
+    ],
+    "stable_while_stalled": [
+      "R08"
+    ],
+    "full_push_with_pop": [
+      "R05"
+    ],
+    "drain_to_empty": [
+      "R03",
+      "R04"
+    ],
+    "underflow_ignored": [
+      "R06"
+    ],
+    "simultaneous_push_pop": [
+      "R07"
+    ],
+    "no_fall_through": [
+      "R09"
+    ],
+    "mid_reset": [
+      "R01"
+    ],
+    "lfsr_stream": [
+      "R02",
+      "R03",
+      "R04"
+    ]
+  },
+  "configurations": {
+    "cfg_w8_d4": {
+      "assignments": {
+        "WIDTH": 8,
+        "DEPTH": 4
+      },
+      "expected_tests": [
+        "reset_state",
+        "fill_to_full",
+        "overflow_ignored",
+        "stable_while_stalled",
+        "full_push_with_pop",
+        "drain_to_empty",
+        "underflow_ignored",
+        "simultaneous_push_pop",
+        "no_fall_through",
+        "mid_reset",
+        "lfsr_stream"
+      ]
+    },
+    "cfg_w8_d3": {
+      "assignments": {
+        "WIDTH": 8,
+        "DEPTH": 3
+      },
+      "expected_tests": [
+        "reset_state",
+        "fill_to_full",
+        "overflow_ignored",
+        "stable_while_stalled",
+        "full_push_with_pop",
+        "drain_to_empty",
+        "underflow_ignored",
+        "simultaneous_push_pop",
+        "no_fall_through",
+        "mid_reset",
+        "lfsr_stream"
+      ]
+    },
+    "cfg_w32_d8": {
+      "assignments": {
+        "WIDTH": 32,
+        "DEPTH": 8
+      },
+      "expected_tests": [
+        "reset_state",
+        "fill_to_full",
+        "overflow_ignored",
+        "stable_while_stalled",
+        "full_push_with_pop",
+        "drain_to_empty",
+        "underflow_ignored",
+        "simultaneous_push_pop",
+        "no_fall_through",
+        "mid_reset",
+        "lfsr_stream"
+      ]
+    },
+    "cfg_w1_d2": {
+      "assignments": {
+        "WIDTH": 1,
+        "DEPTH": 2
+      },
+      "expected_tests": [
+        "reset_state",
+        "fill_to_full",
+        "overflow_ignored",
+        "stable_while_stalled",
+        "full_push_with_pop",
+        "drain_to_empty",
+        "underflow_ignored",
+        "simultaneous_push_pop",
+        "no_fall_through",
+        "mid_reset",
+        "lfsr_stream"
+      ]
+    },
+    "cfg_w8_d1": {
+      "assignments": {
+        "WIDTH": 8,
+        "DEPTH": 1
+      },
+      "expected_tests": [
+        "reset_state",
+        "fill_to_full",
+        "overflow_ignored",
+        "stable_while_stalled",
+        "full_push_with_pop",
+        "drain_to_empty",
+        "underflow_ignored",
+        "no_fall_through",
+        "mid_reset",
+        "lfsr_stream"
+      ]
+    }
+  }
+}

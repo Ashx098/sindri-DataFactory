@@ -1,0 +1,176 @@
+[
+  {
+    "schema_version": 1,
+    "task_id": "fifo_seed",
+    "requirement_id": "R01",
+    "requirement_version": 1,
+    "supersedes": null,
+    "source_ref": "evals/fixtures/fifo/contract/contract.md#r01",
+    "original_text": "After reset the FIFO is empty and not full, with out_valid = 0 and in_ready = 1.",
+    "normalized_semantics": "At the first rising edge after rst is deasserted (rst held across >= 1 rising edge): empty=1, full=0, out_valid=0, in_ready=1.",
+    "legal_environment": [
+      {
+        "text": "rst is held high across at least one rising edge of clk before use",
+        "source_ref": "evals/fixtures/fifo/contract/contract.md#semantics"
+      }
+    ],
+    "assumptions": [],
+    "applicability": {
+      "kind": "all_supported_configs"
+    },
+    "mandatory": true,
+    "disposition": "approved"
+  },
+  {
+    "schema_version": 1,
+    "task_id": "fifo_seed",
+    "requirement_id": "R02",
+    "requirement_version": 1,
+    "supersedes": null,
+    "source_ref": "evals/fixtures/fifo/contract/contract.md#r02",
+    "original_text": "in_ready == !full and out_valid == !empty at all times after reset.",
+    "normalized_semantics": "For every cycle after reset: in_ready equals the negation of full, and out_valid equals the negation of empty.",
+    "legal_environment": [
+      {
+        "text": "rst is held high across at least one rising edge of clk before use",
+        "source_ref": "evals/fixtures/fifo/contract/contract.md#semantics"
+      }
+    ],
+    "assumptions": [],
+    "applicability": {
+      "kind": "all_supported_configs"
+    },
+    "mandatory": true,
+    "disposition": "approved"
+  },
+  {
+    "schema_version": 1,
+    "task_id": "fifo_seed",
+    "requirement_id": "R03",
+    "requirement_version": 1,
+    "supersedes": null,
+    "source_ref": "evals/fixtures/fifo/contract/contract.md#r03",
+    "original_text": "Accepted words are popped in exactly the order they were accepted.",
+    "normalized_semantics": "The sequence of out_data values at pop handshakes equals the sequence of in_data values at push handshakes.",
+    "legal_environment": [],
+    "assumptions": [],
+    "applicability": {
+      "kind": "all_supported_configs"
+    },
+    "mandatory": true,
+    "disposition": "approved"
+  },
+  {
+    "schema_version": 1,
+    "task_id": "fifo_seed",
+    "requirement_id": "R04",
+    "requirement_version": 1,
+    "supersedes": null,
+    "source_ref": "evals/fixtures/fifo/contract/contract.md#r04",
+    "original_text": "full holds iff occupancy equals DEPTH; empty holds iff occupancy is 0.",
+    "normalized_semantics": "Occupancy = accepted pushes - accepted pops since reset; full <-> occupancy == DEPTH; empty <-> occupancy == 0.",
+    "legal_environment": [],
+    "assumptions": [],
+    "applicability": {
+      "kind": "all_supported_configs"
+    },
+    "mandatory": true,
+    "disposition": "approved"
+  },
+  {
+    "schema_version": 1,
+    "task_id": "fifo_seed",
+    "requirement_id": "R05",
+    "requirement_version": 1,
+    "supersedes": null,
+    "source_ref": "evals/fixtures/fifo/contract/contract.md#r05",
+    "original_text": "A push attempted while full is not accepted and leaves the state unchanged.",
+    "normalized_semantics": "When full, in_ready = 0, so no push happens, even if a pop occurs in the same cycle (F3).",
+    "legal_environment": [],
+    "assumptions": [],
+    "applicability": {
+      "kind": "all_supported_configs"
+    },
+    "mandatory": true,
+    "disposition": "approved"
+  },
+  {
+    "schema_version": 1,
+    "task_id": "fifo_seed",
+    "requirement_id": "R06",
+    "requirement_version": 1,
+    "supersedes": null,
+    "source_ref": "evals/fixtures/fifo/contract/contract.md#r06",
+    "original_text": "A pop attempted while empty is ignored and leaves the state unchanged.",
+    "normalized_semantics": "When empty, out_valid = 0, so out_ready has no effect and occupancy, order and pointers are unchanged.",
+    "legal_environment": [],
+    "assumptions": [],
+    "applicability": {
+      "kind": "all_supported_configs"
+    },
+    "mandatory": true,
+    "disposition": "approved"
+  },
+  {
+    "schema_version": 1,
+    "task_id": "fifo_seed",
+    "requirement_id": "R07",
+    "requirement_version": 1,
+    "supersedes": null,
+    "source_ref": "evals/fixtures/fifo/contract/contract.md#r07",
+    "original_text": "A simultaneous push and pop, when neither full nor empty, keeps occupancy and order.",
+    "normalized_semantics": "In a cycle with both handshakes and 0 < occupancy < DEPTH, occupancy is unchanged and FIFO order is preserved. Rule: DEPTH >= 2; encoded over the finite seed matrix as DEPTH in {2,3,4,8}.",
+    "legal_environment": [],
+    "assumptions": [],
+    "applicability": {
+      "kind": "parameter_scope",
+      "parameters": [
+        {
+          "name": "DEPTH",
+          "values": [
+            2,
+            3,
+            4,
+            8
+          ]
+        }
+      ]
+    },
+    "mandatory": true,
+    "disposition": "approved"
+  },
+  {
+    "schema_version": 1,
+    "task_id": "fifo_seed",
+    "requirement_id": "R08",
+    "requirement_version": 1,
+    "supersedes": null,
+    "source_ref": "evals/fixtures/fifo/contract/contract.md#r08",
+    "original_text": "While out_valid && !out_ready, out_data holds its value.",
+    "normalized_semantics": "If out_valid = 1 and out_ready = 0 in a cycle, out_data in the next cycle equals out_data in this cycle.",
+    "legal_environment": [],
+    "assumptions": [],
+    "applicability": {
+      "kind": "all_supported_configs"
+    },
+    "mandatory": true,
+    "disposition": "approved"
+  },
+  {
+    "schema_version": 1,
+    "task_id": "fifo_seed",
+    "requirement_id": "R09",
+    "requirement_version": 1,
+    "supersedes": null,
+    "source_ref": "evals/fixtures/fifo/contract/contract.md#r09",
+    "original_text": "No fall-through: a push into an empty FIFO becomes visible on the next cycle.",
+    "normalized_semantics": "If the FIFO is empty in a cycle with a push, out_valid stays 0 in that cycle and becomes 1 in the next cycle with that word on out_data.",
+    "legal_environment": [],
+    "assumptions": [],
+    "applicability": {
+      "kind": "all_supported_configs"
+    },
+    "mandatory": true,
+    "disposition": "approved"
+  }
+]
