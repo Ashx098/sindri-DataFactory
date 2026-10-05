@@ -128,6 +128,15 @@ invariants:
     text: WAITING has a resume_state among the active states and at least one pending job; terminal states have none; abort_reason exactly on ABORTED; active_candidate required from DEV_CHECK onwards (and in WAITING when resume_state requires it).
   - id: INV-EP7-003
     text: EpisodeBudget is identified by its content_id; additive limits may be zero, wall_clock_limit_ms > 0; wall-clock is not additive; remaining is derived (remaining() rejects a snapshot of another budget); reserved equals the sum of pending-job reservations; every pending job binds its request_hash and carries a required-but-nullable candidate, with no ObservationAction (jobs are broader than Observations, ADR-0005).
+  # SIN-P1.1-008 serialization contract (tests only; no schema change)
+  - id: INV-SER-001
+    text: Every record and union variant round-trips through transport JSON, JSON-native dicts and canonical bytes to an equal record with the same content_id; same-serializer re-emission is byte-stable.
+  - id: INV-SER-002
+    text: content_id == canonical_json_id(model_dump(mode="json")); transport JSON (model_dump_json) is not the identity contract. Object-key order and formatting never affect identity; array/tuple order does (exact-record identity; no canonical sorting). Specialized hashes (source_hash, assignment_key) may ignore order.
+  - id: INV-SER-003
+    text: schema_version is 1 for every P1.1 record and anything else is rejected (v1 reader only; no dispatch, no migration). Domain revisions (manifest/requirement/policy_version + supersedes) are separate from schema_version.
+  - id: INV-SER-004
+    text: After JSON parsing, floats (incl. NaN/Infinity tokens) are rejected at every depth with their JSON path; authoritative ints/bools are never coerced; ExactScalar positions keep true, 1 and "1" distinct. Text is not Unicode-normalized.
 failure_modes:
   - id: FM-001
     symptom: A field gains a default and silently fills authority/split/rights.
@@ -142,4 +151,4 @@ observability:
   spans: []
   metrics: []
 related_adrs: [ADR-0001, ADR-0002, ADR-0004, ADR-0005, ADR-0006]
-related_docs: [docs/tasks/SIN-P1.1-002.md, docs/tasks/SIN-P1.1-003.md, docs/tasks/SIN-P1.1-004.md, docs/tasks/SIN-P1.1-005.md, docs/tasks/SIN-P1.1-006.md, docs/tasks/SIN-P1.1-007.md]
+related_docs: [docs/tasks/SIN-P1.1-002.md, docs/tasks/SIN-P1.1-003.md, docs/tasks/SIN-P1.1-004.md, docs/tasks/SIN-P1.1-005.md, docs/tasks/SIN-P1.1-006.md, docs/tasks/SIN-P1.1-007.md, docs/tasks/SIN-P1.1-008.md]
