@@ -3,7 +3,7 @@
   "certification": "uncertified",
   "contract_id": "ct_fifo_seed_v1",
   "testbench": "tb/tb_fifo.v",
-  "protocol": "F7: each expected 'TEST <id> PASS|FAIL' exactly once, no unexpected or duplicate ids, exactly one terminal 'RESULT PASS|FAIL' that agrees with the per-test results; anything else fails closed; exit code is never the oracle",
+  "protocol": "F7: each expected 'TEST <id> PASS|FAIL' exactly once, no unexpected or duplicate ids, every protocol-looking line (first token TEST or RESULT) exactly well-formed, exactly one terminal 'RESULT PASS|FAIL' that agrees with the per-test results; anything else fails closed; the testbench always ends with $finish and the exit code is never the oracle. F7 gives completeness/consistency, not provenance (spoofing is closed later in P1.4/P1.7).",
   "test_requirements": {
     "reset_state": [
       "R01"

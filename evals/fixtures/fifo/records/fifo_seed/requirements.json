@@ -84,8 +84,8 @@
     "requirement_version": 1,
     "supersedes": null,
     "source_ref": "evals/fixtures/fifo/contract/contract.md#r05",
-    "original_text": "A push attempted while full is not accepted and leaves the state unchanged.",
-    "normalized_semantics": "When full, in_ready = 0, so no push happens, even if a pop occurs in the same cycle (F3).",
+    "original_text": "A push attempted while full is rejected and has no effect of its own (F3); an independently accepted pop in the same cycle still performs its normal state transition.",
+    "normalized_semantics": "When full, in_ready = 0, so no push is accepted, even if a pop occurs in the same cycle (F3). The rejected push contributes nothing; a same-cycle accepted pop still updates occupancy and order as usual.",
     "legal_environment": [],
     "assumptions": [],
     "applicability": {
@@ -101,8 +101,8 @@
     "requirement_version": 1,
     "supersedes": null,
     "source_ref": "evals/fixtures/fifo/contract/contract.md#r06",
-    "original_text": "A pop attempted while empty is ignored and leaves the state unchanged.",
-    "normalized_semantics": "When empty, out_valid = 0, so out_ready has no effect and occupancy, order and pointers are unchanged.",
+    "original_text": "A pop attempted while empty is rejected and has no effect of its own; an independently accepted push in the same cycle still performs its normal state transition.",
+    "normalized_semantics": "When empty, out_valid = 0, so out_ready accepts no pop. The rejected pop contributes nothing; a same-cycle accepted push still updates occupancy and contents as usual.",
     "legal_environment": [],
     "assumptions": [],
     "applicability": {

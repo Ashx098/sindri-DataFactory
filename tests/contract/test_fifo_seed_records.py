@@ -164,6 +164,64 @@ def test_xblind_is_the_documented_mechanical_transform_of_the_strict_testbench()
     assert body(bad) == expected.replace("===", "==")
 
 
+def test_r05_r06_reject_only_their_own_operation() -> None:
+    """PR #35: a rejected push/pop has no effect of its own; the opposite handshake still acts."""
+    text = (SEED / "contract" / "contract.md").read_text()
+    for rid in ("r05", "r06"):
+        section = text[text.index(f'<a id="{rid}"></a>'):]
+        section = section[:section.index("<a id=", 5)]
+        assert "no effect of its own" in section and "independently" in section, rid
+    assert "leaves the state unchanged" not in text
+    for task in TASKS:
+        _, rs, _ = _records(task)
+        for r in rs:
+            if r.requirement_id in ("R05", "R06"):
+                assert "no effect of its own" in r.original_text
+                assert "independently accepted" in r.original_text
+                assert "state unchanged" not in r.original_text + r.normalized_semantics
+
+
+def _slug(heading: str) -> str:
+    """GitHub-style heading anchor."""
+    kept = "".join(ch for ch in heading.strip().lower() if ch.isalnum() or ch in " -_")
+    return kept.replace(" ", "-")
+
+
+def _anchors(markdown: str) -> set[str]:
+    explicit = set(re.findall(r'<a id="([^"]+)"></a>', markdown))
+    headings = {_slug(m) for m in re.findall(r"^#{1,6} (.+)$", markdown, flags=re.M)}
+    return explicit | headings
+
+
+def test_every_local_source_ref_resolves_to_a_file_and_anchor() -> None:
+    refs = []
+    for task in TASKS:
+        _, rs, p = _records(task)
+        refs += [r.source_ref for r in rs]
+        refs += [e.source_ref for r in rs for e in r.legal_environment]
+        refs += [e.source_ref for e in p.environment_assumptions]
+    assert len(refs) == 2 * (9 + 2 + 1)
+    for ref in refs:
+        path, _, fragment = ref.partition("#")
+        target = ROOT / path
+        assert target.is_file(), ref
+        assert fragment and fragment in _anchors(target.read_text()), ref
+
+
+def test_family_is_seed_specific_and_lineage_shared() -> None:
+    base, _, _ = _records("fifo_seed")
+    debug, _, _ = _records("fifo_seed_m4")
+    assert base.family_id == debug.family_id == "fifo-seed-v1"
+    assert base.lineage_id == debug.lineage_id
+
+
+def test_testbenches_finish_without_fatal() -> None:
+    """The seed is Verilog-2005 and the exit code is never the oracle (PR #35)."""
+    for rel in ("tb/tb_fifo.v", "known_bad/tb_fifo_xblind.v"):
+        code = "\n".join(line.split("//")[0] for line in (SEED / rel).read_text().splitlines())
+        assert "$fatal" not in code and "$finish" in code, rel
+
+
 def test_every_artifact_is_labelled_uncertified() -> None:
     for path in sorted(SEED.rglob("*")):
         if path.suffix in {".v", ".md"}:

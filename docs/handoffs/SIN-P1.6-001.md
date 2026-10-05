@@ -20,18 +20,18 @@
   - the quarantined X-blind known-bad testbench and its manifest;
   - 22 P1.1 records: base `use_case` task and M4 mutation-debug task, each with R01–R09 and a policy.
 - Tests:
-  - `tests/contract/test_fifo_seed_records.py`: 12 pure checks;
+  - `tests/contract/test_fifo_seed_records.py`: 16 pure checks;
   - `tests/eda/_protocol.py`: the F7 verdict;
-  - `tests/eda/test_protocol.py`: 12 pure checks;
+  - `tests/eda/test_protocol.py`: 24 pure checks;
   - `tests/eda/test_fifo_seed_icarus.py`: 71 `eda` checks that reproduce the kill matrix and the known-bad verdicts.
 
 ## Verified
 | Command / check | Result |
 |---|---|
 | `uv run ruff check .`, `uv run mypy` | pass |
-| `uv run pytest -q` (local, Icarus 12.0) | 2003 passed, 8 skipped |
+| `uv run pytest -q` (local, Icarus 12.0) | 2019 passed, 8 skipped |
 | `uv run pytest -q -m eda tests/eda` | 71 passed |
-| `tests/eda` without `iverilog` on PATH | 12 passed, 71 skipped (the CI situation) |
+| `tests/eda` + record tests without `iverilog` on PATH | 40 passed, 71 skipped (the CI situation) |
 | `check_records` over the 22 seed records | `()` |
 | `git diff --stat origin/main -- src/` | empty |
 
@@ -42,13 +42,20 @@ The kill matrix reproduces exactly:
 
 The X-blind testbench fake-PASSes M4 in all 5 configurations.
 
+## Review fixes (PR #35 coordinator comment `5992170210`)
+- **R05/R06:** the rejected operation has no effect of its own; the opposite handshake still acts. Fixed in the contract and both requirement sets, and pinned by a test.
+- **Anchors:** R01–R09 have explicit anchors, and a test resolves every local `source_ref` path and fragment.
+- **F7:** malformed protocol-looking lines make the transcript INVALID. The spoofing boundary (completeness/consistency, not provenance) is documented and pinned. It is a hard P1.4/P1.7 follow-up.
+- **No `$fatal`:** both testbenches end with `$finish`; the kill matrix and known-bad verdicts are unchanged.
+- **Family and hash:** `family_id: fifo-seed-v1`. The contract hash is recomputed everywhere.
+
 ## Decisions
 None new. F1–F12 and the PR #33 record clarifications are implemented as decided: approved-but-uncertified, R07 exact `DEPTH ∈ {2,3,4,8}`, configuration-scoped inventory, quarantine.
 
 ## Implementation notes for review
 - **X-blind testbench:** it must turn *every* `===` into `==`. Only two X-blind lines did not reproduce the fake PASS, because the strict testbench's other checks use `===`. A test pins the exact mechanical transform.
-- **Rights and split:** `split: dev`, internal licence ref, `training_allowed: false`. Revisable by the coordinator.
-- **Placeholder profile IDs:** `tp_icarus12_compile` / `tp_icarus12_sim`; there are no profile records yet.
+- **Rights and split:** accepted on PR #35. `split: dev`; rights are provisional until P2.1 resolves `LicenseRef-Chipforge-Internal`.
+- **Placeholder profile IDs:** accepted as unresolved placeholders. No Observation may rely on them until P1.3/P1.4 pins the profiles.
 
 ## Open questions
 None.
@@ -60,6 +67,7 @@ None.
 - **P1.3:** pinned Icarus 12.x profile; Verilator 5.x and slang re-probe before P1.4 normalizers are considered stable.
 - **G-B ADR:** must merge before any P1.4 code mints `ObservationId`s.
 - **P1.4:** the adapter must implement at least `tests/eda/_protocol.py`'s rules.
+- **P1.4/P1.7:** close the F7 spoofing boundary (candidate integrity and/or an out-of-band authenticated result channel).
 - **Certification (later P1.6 task):** blocked on the RTL/DV/formal reviewer.
 
 ## Do not start

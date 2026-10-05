@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "task_id": "fifo_seed",
-  "family_id": "fifo",
+  "family_id": "fifo-seed-v1",
   "lineage_id": "fifo-seed",
   "variant_id": "v1",
   "manifest_version": 1,
@@ -23,7 +23,7 @@
   },
   "golden_hash": null,
   "contract_id": "ct_fifo_seed_v1",
-  "approved_contract_hash": "sha256:25c47bf2b68af6ad0473c414c87f596ca50a286249d64ddcdb406717b0f79ba7",
+  "approved_contract_hash": "sha256:66e76bb4b85e1a32c047c9a6d66aba862a04b794341b5c7175de0b2e99d89b98",
   "allowed_edit_paths": [
     "rtl/fifo.v"
   ],

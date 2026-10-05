@@ -4,7 +4,10 @@
 // Result protocol (F7; consumed by tests/eda/_protocol.py, later by the P1.4 adapter):
 //   * one line "TEST <TestId> PASS|FAIL" per test in this configuration's inventory (tests.json),
 //   * exactly one terminal line "RESULT PASS|FAIL",
-//   * $fatal(1, ...) after RESULT FAIL. The process exit code is never the semantic oracle.
+//   * $finish after RESULT PASS and after RESULT FAIL alike: the process exit code is never the
+//     semantic oracle (no $fatal, which is SystemVerilog; the seed is Verilog-2005).
+// F7 gives completeness/consistency, NOT provenance: a candidate that prints the expected
+// transcript itself would spoof a stdout-only parser (closed later in P1.4/P1.7).
 // Every check is 4-state strict: a condition that is X/Z counts as a failure (probe P7).
 `timescale 1ns/1ps
 module tb;
@@ -120,12 +123,8 @@ module tb;
     end
     end_test("lfsr_stream");
 
-    if (errors == 0) begin
-      $display("RESULT PASS");
-      $finish;
-    end else begin
-      $display("RESULT FAIL");
-      $fatal(1, "fifo seed testbench: %0d failed checks", errors);
-    end
+    $display("SUMMARY failed_checks=%0d", errors);
+    $display("RESULT %0s", (errors == 0) ? "PASS" : "FAIL");
+    $finish;
   end
 endmodule

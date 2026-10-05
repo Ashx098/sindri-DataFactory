@@ -22,6 +22,12 @@ This seed drives the P1 vertical slice (SIN-P1.6-001). It does **not** complete 
   - `fifo_seed/`: base task (`use_case`), R01–R09 and the policy;
   - `fifo_seed_m4/`: a mutation-debug task for M4, with its requirements and policy.
 
+## F7 boundary (read before trusting a PASS)
+The F7 protocol gives **completeness and consistency, not provenance**. A candidate that prints the
+whole expected `TEST … PASS` set plus `RESULT PASS` and stops the simulation would spoof a
+stdout-only parser. P1.4/P1.7 must add candidate-integrity restrictions and/or an out-of-band,
+authenticated harness result channel before the judge claims anti-spoof security.
+
 ## Reproduce (Icarus Verilog 12.0; no other tool is required)
 ```bash
 uv run pytest -q tests/eda          # skipped automatically when iverilog is not installed
