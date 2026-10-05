@@ -28,7 +28,7 @@ Roles must exist even when one person holds several. `unassigned` roles are real
 | Workstream | Status | Active task | Blocking decision |
 |---|---|---|---|
 | Governance/bootstrap | complete | — | — |
-| Foundation (P1) | active | P1.1 complete (SIN-P1.1-001…010 verified, P1.1-G approved); SIN-P1.6-001 FIFO seed packet drafted (planned); P1.2 entry/vertical-slice planning | G-B exact ID encoding ADR (recommended before the first P1.4 Observation, not only before P1.2); F8 EDA tool provisioning |
+| Foundation (P1) | active | P1.1 complete; SIN-P1.6-001 FIFO engineering seed ready after PR #33 merge; P1.3/P1.2 vertical-slice planning next | G-B exact ID encoding ADR before any P1.4 Observation fixture/output; pinned EDA tool provisioning in P1.3 |
 | Task Forge | planned | — | P1.G |
 | Spec Forge | planned | — | P1.G + P2 assets |
 | Verification Forge | planned | — | P1.G + P3 contracts |
@@ -44,8 +44,8 @@ Roles must exist even when one person holds several. `unassigned` roles are real
 | Second reviewer for code-owner-required reviews | before enabling "require code owner review" | open |
 
 ## Current blockers
-- P1.1-G is approved and SIN-P1.1-010 is verified. P1.2 implementation remains unauthorized until its entry packet resolves/owns G-B, G-S and G-U before the first persistent write.
-- Before the first P1.2 persistent write: resolve G-B by ADR (hybrid readable authored IDs + coordination-free collision-resistant system-minted IDs; exact encoding/scope still to choose).
+- P1.1-G is approved and SIN-P1.1-010 is verified. P1.2 implementation remains unauthorized until its entry packet resolves/owns G-S/G-U and the exact integer/storage semantics.
+- **G-B is now required earlier:** resolve the ID-allocation ADR before any P1.4 implementation commits/mints Observation IDs, not merely before the first P1.2 persistent write.
 - RTL / DV-formal reviewer roles remain unassigned. This does not block P1.1-G, but P1.6 authority/mutant certification cannot complete without the required review.
 - Recommended: enable "Do not allow bypassing the above settings" on `main` (required checks are currently enforced for non-admins only).
 
