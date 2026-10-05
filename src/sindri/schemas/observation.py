@@ -186,7 +186,11 @@ class FormalReport(StrictModel):
 
     def bound_met(self) -> bool:
         if self.mode is FormalMode.BMC:
-            assert self.reached_depth is not None and self.requested_depth is not None
+            if self.reached_depth is None or self.requested_depth is None:
+                # Unreachable for a validated report (`_consistent`); only a validation-bypassed
+                # one (e.g. `model_construct`) gets here. Fail closed explicitly, never via an
+                # `assert` that `python -O` would strip (P1.1-G B1).
+                raise RuntimeError("invalid FormalReport: BMC report missing depths")
             return self.reached_depth >= self.requested_depth
         return self.proof_closed is True
 

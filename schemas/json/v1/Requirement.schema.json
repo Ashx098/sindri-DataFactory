@@ -1,0 +1,230 @@
+{
+  "$defs": {
+    "AllSupportedConfigs": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "const": "all_supported_configs",
+          "title": "Kind",
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind"
+      ],
+      "title": "AllSupportedConfigs",
+      "type": "object"
+    },
+    "Assumption": {
+      "additionalProperties": false,
+      "description": "An assumption is only admissible with a source (master §11.10: never source-less).",
+      "properties": {
+        "source_ref": {
+          "title": "Source Ref",
+          "type": "string"
+        },
+        "text": {
+          "title": "Text",
+          "type": "string"
+        }
+      },
+      "required": [
+        "text",
+        "source_ref"
+      ],
+      "title": "Assumption",
+      "type": "object"
+    },
+    "EnvironmentRule": {
+      "additionalProperties": false,
+      "description": "One rule of the legal input environment, with where it came from.",
+      "properties": {
+        "source_ref": {
+          "title": "Source Ref",
+          "type": "string"
+        },
+        "text": {
+          "title": "Text",
+          "type": "string"
+        }
+      },
+      "required": [
+        "text",
+        "source_ref"
+      ],
+      "title": "EnvironmentRule",
+      "type": "object"
+    },
+    "ParameterScope": {
+      "additionalProperties": false,
+      "description": "Explicit parameter configurations a requirement applies to (C4: typed, no Any, no floats).\n\nA tuple of named value lists rather than a dict, so the record stays fully immutable.",
+      "properties": {
+        "kind": {
+          "const": "parameter_scope",
+          "title": "Kind",
+          "type": "string"
+        },
+        "parameters": {
+          "items": {
+            "$ref": "#/$defs/ParameterValues"
+          },
+          "minItems": 1,
+          "title": "Parameters",
+          "type": "array"
+        }
+      },
+      "required": [
+        "kind",
+        "parameters"
+      ],
+      "title": "ParameterScope",
+      "type": "object"
+    },
+    "ParameterValues": {
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "values": {
+          "items": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "boolean"
+              }
+            ]
+          },
+          "minItems": 1,
+          "title": "Values",
+          "type": "array"
+        }
+      },
+      "required": [
+        "name",
+        "values"
+      ],
+      "title": "ParameterValues",
+      "type": "object"
+    },
+    "RequirementDisposition": {
+      "description": "Decision D4. `ambiguous` blocks qualification; only `approved` may be verified against.",
+      "enum": [
+        "proposed",
+        "approved",
+        "ambiguous",
+        "not_applicable",
+        "unsupported",
+        "rejected"
+      ],
+      "title": "RequirementDisposition",
+      "type": "string"
+    }
+  },
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "applicability": {
+      "discriminator": {
+        "mapping": {
+          "all_supported_configs": "#/$defs/AllSupportedConfigs",
+          "parameter_scope": "#/$defs/ParameterScope"
+        },
+        "propertyName": "kind"
+      },
+      "oneOf": [
+        {
+          "$ref": "#/$defs/AllSupportedConfigs"
+        },
+        {
+          "$ref": "#/$defs/ParameterScope"
+        }
+      ],
+      "title": "Applicability"
+    },
+    "assumptions": {
+      "items": {
+        "$ref": "#/$defs/Assumption"
+      },
+      "title": "Assumptions",
+      "type": "array"
+    },
+    "disposition": {
+      "$ref": "#/$defs/RequirementDisposition"
+    },
+    "legal_environment": {
+      "items": {
+        "$ref": "#/$defs/EnvironmentRule"
+      },
+      "title": "Legal Environment",
+      "type": "array"
+    },
+    "mandatory": {
+      "title": "Mandatory",
+      "type": "boolean"
+    },
+    "normalized_semantics": {
+      "title": "Normalized Semantics",
+      "type": "string"
+    },
+    "original_text": {
+      "title": "Original Text",
+      "type": "string"
+    },
+    "requirement_id": {
+      "title": "Requirement Id",
+      "type": "string"
+    },
+    "requirement_version": {
+      "minimum": 1,
+      "title": "Requirement Version",
+      "type": "integer"
+    },
+    "schema_version": {
+      "title": "Schema Version",
+      "type": "integer"
+    },
+    "source_ref": {
+      "title": "Source Ref",
+      "type": "string"
+    },
+    "supersedes": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Supersedes"
+    },
+    "task_id": {
+      "title": "Task Id",
+      "type": "string"
+    }
+  },
+  "required": [
+    "schema_version",
+    "task_id",
+    "requirement_id",
+    "requirement_version",
+    "supersedes",
+    "source_ref",
+    "original_text",
+    "normalized_semantics",
+    "legal_environment",
+    "assumptions",
+    "applicability",
+    "mandatory",
+    "disposition"
+  ],
+  "title": "Requirement",
+  "type": "object"
+}

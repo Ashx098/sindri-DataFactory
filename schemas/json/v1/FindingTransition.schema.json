@@ -1,0 +1,265 @@
+{
+  "$defs": {
+    "DevelopmentProbeRequest": {
+      "additionalProperties": false,
+      "description": "A triage probe. Never executable correctness evidence: its result only supports (FD8).\n\nPinned to an exact policy namespace by `policy_hash`. v1 payloads are strict: `run_sim` names\ntests only, `run_formal` names properties only; every other action is rejected.\n\nA Finding proposed with a probe can never be confirmed or refuted (a cross-transition rule\nenforced in SIN-P1.1-009 / P1.5): it is dropped or superseded. If the probe is promoted into a\ndeclared policy check, a new `derived_from` Finding proposes an `ExistingPolicyCheck`, and only\nthat Finding may be decided. 006 defines no promotion relation.",
+      "properties": {
+        "action": {
+          "$ref": "#/$defs/ObservationAction"
+        },
+        "configuration_id": {
+          "title": "Configuration Id",
+          "type": "string"
+        },
+        "policy_hash": {
+          "title": "Policy Hash",
+          "type": "string"
+        },
+        "property_ids": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Property Ids",
+          "type": "array"
+        },
+        "proposal_kind": {
+          "const": "development_probe",
+          "title": "Proposal Kind",
+          "type": "string"
+        },
+        "rationale": {
+          "title": "Rationale",
+          "type": "string"
+        },
+        "test_ids": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Test Ids",
+          "type": "array"
+        }
+      },
+      "required": [
+        "proposal_kind",
+        "policy_hash",
+        "action",
+        "configuration_id",
+        "test_ids",
+        "property_ids",
+        "rationale"
+      ],
+      "title": "DevelopmentProbeRequest",
+      "type": "object"
+    },
+    "DropReason": {
+      "enum": [
+        "no_executable_check",
+        "superseded",
+        "duplicate",
+        "candidate_invalidated",
+        "budget_exhausted"
+      ],
+      "title": "DropReason",
+      "type": "string"
+    },
+    "ExistingPolicyCheck": {
+      "additionalProperties": false,
+      "description": "A declared policy check; once executed, its Observation can decide the Finding.\n\n`confirming_status` makes the verdict mapping deterministic: claim prose cannot tell a\ncontroller whether PASS confirms or refutes. The opposite verdict-bearing status refutes.\nIn SIN-P1.1-009, confirmed citations must all carry `confirming_status`, refuted citations\nall carry `refuting_status`, and mixed PASS/FAIL deciding citations are invalid.",
+      "properties": {
+        "check_id": {
+          "title": "Check Id",
+          "type": "string"
+        },
+        "configuration_id": {
+          "title": "Configuration Id",
+          "type": "string"
+        },
+        "confirming_status": {
+          "$ref": "#/$defs/ToolStatus"
+        },
+        "policy_hash": {
+          "title": "Policy Hash",
+          "type": "string"
+        },
+        "proposal_kind": {
+          "const": "existing_policy_check",
+          "title": "Proposal Kind",
+          "type": "string"
+        }
+      },
+      "required": [
+        "proposal_kind",
+        "policy_hash",
+        "check_id",
+        "configuration_id",
+        "confirming_status"
+      ],
+      "title": "ExistingPolicyCheck",
+      "type": "object"
+    },
+    "FindingStatus": {
+      "enum": [
+        "hypothesis",
+        "check_proposed",
+        "confirmed",
+        "refuted",
+        "dropped"
+      ],
+      "title": "FindingStatus",
+      "type": "string"
+    },
+    "ObservationAction": {
+      "description": "Check-execution tools of the Tool Gateway (master §8 F1). Query tools are not here.",
+      "enum": [
+        "integrity_scan",
+        "compile",
+        "lint",
+        "synth",
+        "run_sim",
+        "run_formal",
+        "check_equiv"
+      ],
+      "title": "ObservationAction",
+      "type": "string"
+    },
+    "ObservationCitation": {
+      "additionalProperties": false,
+      "description": "Correctness evidence: the Observation's handle and its exact content identity (FD4).",
+      "properties": {
+        "observation_hash": {
+          "title": "Observation Hash",
+          "type": "string"
+        },
+        "observation_id": {
+          "title": "Observation Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "observation_id",
+        "observation_hash"
+      ],
+      "title": "ObservationCitation",
+      "type": "object"
+    },
+    "ToolStatus": {
+      "description": "Normalised outcome of one tool run (an Observation).",
+      "enum": [
+        "PASS",
+        "FAIL",
+        "INCONCLUSIVE",
+        "TIMEOUT",
+        "TOOL_ERROR",
+        "UNSUPPORTED"
+      ],
+      "title": "ToolStatus",
+      "type": "string"
+    }
+  },
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "deciding_citations": {
+      "items": {
+        "$ref": "#/$defs/ObservationCitation"
+      },
+      "title": "Deciding Citations",
+      "type": "array"
+    },
+    "drop_reason": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/DropReason"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "finding_hash": {
+      "title": "Finding Hash",
+      "type": "string"
+    },
+    "finding_id": {
+      "title": "Finding Id",
+      "type": "string"
+    },
+    "from_status": {
+      "$ref": "#/$defs/FindingStatus"
+    },
+    "previous_transition_hash": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Previous Transition Hash"
+    },
+    "proposed_check": {
+      "anyOf": [
+        {
+          "discriminator": {
+            "mapping": {
+              "development_probe": "#/$defs/DevelopmentProbeRequest",
+              "existing_policy_check": "#/$defs/ExistingPolicyCheck"
+            },
+            "propertyName": "proposal_kind"
+          },
+          "oneOf": [
+            {
+              "$ref": "#/$defs/ExistingPolicyCheck"
+            },
+            {
+              "$ref": "#/$defs/DevelopmentProbeRequest"
+            }
+          ]
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Proposed Check"
+    },
+    "schema_version": {
+      "title": "Schema Version",
+      "type": "integer"
+    },
+    "sequence": {
+      "minimum": 1,
+      "title": "Sequence",
+      "type": "integer"
+    },
+    "superseded_by": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Superseded By"
+    },
+    "to_status": {
+      "$ref": "#/$defs/FindingStatus"
+    }
+  },
+  "required": [
+    "schema_version",
+    "finding_id",
+    "finding_hash",
+    "sequence",
+    "previous_transition_hash",
+    "from_status",
+    "to_status",
+    "proposed_check",
+    "deciding_citations",
+    "drop_reason",
+    "superseded_by"
+  ],
+  "title": "FindingTransition",
+  "type": "object"
+}

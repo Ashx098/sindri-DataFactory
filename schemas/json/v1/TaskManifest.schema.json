@@ -1,0 +1,331 @@
+{
+  "$defs": {
+    "AuthorityMode": {
+      "description": "What counts as truth for a task (ADR-0002).",
+      "enum": [
+        "reference_behavior",
+        "engineering_intent",
+        "correct_by_construction"
+      ],
+      "title": "AuthorityMode",
+      "type": "string"
+    },
+    "GeneratorSource": {
+      "additionalProperties": false,
+      "description": "Produced by a human-reviewed generator family (§9 T3).",
+      "properties": {
+        "generator_id": {
+          "title": "Generator Id",
+          "type": "string"
+        },
+        "generator_version": {
+          "title": "Generator Version",
+          "type": "string"
+        },
+        "kind": {
+          "const": "generator",
+          "title": "Kind",
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind",
+        "generator_id",
+        "generator_version"
+      ],
+      "title": "GeneratorSource",
+      "type": "object"
+    },
+    "MutationSource": {
+      "additionalProperties": false,
+      "description": "Derived by mutating another task's golden design (§9 T2).",
+      "properties": {
+        "kind": {
+          "const": "mutation",
+          "title": "Kind",
+          "type": "string"
+        },
+        "operator": {
+          "title": "Operator",
+          "type": "string"
+        },
+        "parent_task_id": {
+          "title": "Parent Task Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind",
+        "parent_task_id",
+        "operator"
+      ],
+      "title": "MutationSource",
+      "type": "object"
+    },
+    "RepoSource": {
+      "additionalProperties": false,
+      "description": "Cut from real RTL or derived from a real commit (master §9 T1).",
+      "properties": {
+        "commit": {
+          "title": "Commit",
+          "type": "string"
+        },
+        "kind": {
+          "enum": [
+            "repo_cut",
+            "commit_feature",
+            "commit_fix"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
+        "repo": {
+          "title": "Repo",
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind",
+        "repo",
+        "commit"
+      ],
+      "title": "RepoSource",
+      "type": "object"
+    },
+    "SourceRights": {
+      "additionalProperties": false,
+      "description": "Explicit usage rights (C2). Every field is required; nothing defaults to allowed.\n\n`licence` is a declared licence identifier or expression (non-blank text). SPDX syntax and\nlicence-policy validation belong to the source-rights registry (P2.1), not this record. It may\nbe null only when a written agreement covers the use.",
+      "properties": {
+        "customer_restricted": {
+          "title": "Customer Restricted",
+          "type": "boolean"
+        },
+        "evaluation_allowed": {
+          "title": "Evaluation Allowed",
+          "type": "boolean"
+        },
+        "licence": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Licence"
+        },
+        "redistribution_allowed": {
+          "title": "Redistribution Allowed",
+          "type": "boolean"
+        },
+        "training_allowed": {
+          "title": "Training Allowed",
+          "type": "boolean"
+        },
+        "written_agreement_ref": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Written Agreement Ref"
+        }
+      },
+      "required": [
+        "licence",
+        "written_agreement_ref",
+        "training_allowed",
+        "evaluation_allowed",
+        "redistribution_allowed",
+        "customer_restricted"
+      ],
+      "title": "SourceRights",
+      "type": "object"
+    },
+    "Split": {
+      "description": "Assigned at family level before any variant exists (master §4 principle 8, §9 T5).",
+      "enum": [
+        "train",
+        "dev",
+        "final"
+      ],
+      "title": "Split",
+      "type": "string"
+    },
+    "TaskType": {
+      "description": "Master §20.1 task types plus `comprehension` (§9 T1; decision D7).",
+      "enum": [
+        "spec_to_rtl",
+        "completion",
+        "modification",
+        "debug",
+        "testbench",
+        "assertion",
+        "spec_task",
+        "comprehension"
+      ],
+      "title": "TaskType",
+      "type": "string"
+    },
+    "UseCaseSource": {
+      "additionalProperties": false,
+      "description": "From an approved use case (§9 T4).",
+      "properties": {
+        "intake_ref": {
+          "title": "Intake Ref",
+          "type": "string"
+        },
+        "kind": {
+          "const": "use_case",
+          "title": "Kind",
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind",
+        "intake_ref"
+      ],
+      "title": "UseCaseSource",
+      "type": "object"
+    }
+  },
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "allowed_edit_paths": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Allowed Edit Paths",
+      "type": "array"
+    },
+    "approved_contract_hash": {
+      "title": "Approved Contract Hash",
+      "type": "string"
+    },
+    "authority_mode": {
+      "$ref": "#/$defs/AuthorityMode"
+    },
+    "contract_id": {
+      "title": "Contract Id",
+      "type": "string"
+    },
+    "family_id": {
+      "title": "Family Id",
+      "type": "string"
+    },
+    "golden_hash": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Golden Hash"
+    },
+    "lineage_id": {
+      "title": "Lineage Id",
+      "type": "string"
+    },
+    "manifest_version": {
+      "minimum": 1,
+      "title": "Manifest Version",
+      "type": "integer"
+    },
+    "requirement_ids": {
+      "items": {
+        "type": "string"
+      },
+      "minItems": 1,
+      "title": "Requirement Ids",
+      "type": "array"
+    },
+    "rights": {
+      "$ref": "#/$defs/SourceRights"
+    },
+    "schema_version": {
+      "title": "Schema Version",
+      "type": "integer"
+    },
+    "source": {
+      "discriminator": {
+        "mapping": {
+          "commit_feature": "#/$defs/RepoSource",
+          "commit_fix": "#/$defs/RepoSource",
+          "generator": "#/$defs/GeneratorSource",
+          "mutation": "#/$defs/MutationSource",
+          "repo_cut": "#/$defs/RepoSource",
+          "use_case": "#/$defs/UseCaseSource"
+        },
+        "propertyName": "kind"
+      },
+      "oneOf": [
+        {
+          "$ref": "#/$defs/RepoSource"
+        },
+        {
+          "$ref": "#/$defs/MutationSource"
+        },
+        {
+          "$ref": "#/$defs/GeneratorSource"
+        },
+        {
+          "$ref": "#/$defs/UseCaseSource"
+        }
+      ],
+      "title": "Source"
+    },
+    "split": {
+      "$ref": "#/$defs/Split"
+    },
+    "supersedes": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Supersedes"
+    },
+    "task_id": {
+      "title": "Task Id",
+      "type": "string"
+    },
+    "task_type": {
+      "$ref": "#/$defs/TaskType"
+    },
+    "variant_id": {
+      "title": "Variant Id",
+      "type": "string"
+    }
+  },
+  "required": [
+    "schema_version",
+    "task_id",
+    "family_id",
+    "lineage_id",
+    "variant_id",
+    "manifest_version",
+    "supersedes",
+    "authority_mode",
+    "split",
+    "task_type",
+    "source",
+    "rights",
+    "golden_hash",
+    "contract_id",
+    "approved_contract_hash",
+    "allowed_edit_paths",
+    "requirement_ids"
+  ],
+  "title": "TaskManifest",
+  "type": "object"
+}

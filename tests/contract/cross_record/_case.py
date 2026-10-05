@@ -29,8 +29,12 @@ def violations(case: Case) -> tuple[Violation, ...]:
 def assert_isolated(case: Case) -> None:
     found = violations(case)
     detail = [f"{v.code.value} {v.subject}: {v.detail}" for v in found]
-    assert {v.code for v in found} == {case.code}, detail
-    assert len(found) == case.count, detail
+    # Explicit raises, not `assert`: this support module is not rewritten by pytest, so a plain
+    # assert would vanish under `python -O` (P1.1-G B2).
+    if {v.code for v in found} != {case.code}:
+        raise AssertionError(f"expected only {case.code.value}: {detail}")
+    if len(found) != case.count:
+        raise AssertionError(f"expected {case.count} x {case.code.value}: {detail}")
 
 
 def ids(cases: list[Case]) -> list[str]:

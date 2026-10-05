@@ -1,0 +1,320 @@
+{
+  "$defs": {
+    "ComponentProducer": {
+      "additionalProperties": false,
+      "properties": {
+        "component": {
+          "title": "Component",
+          "type": "string"
+        },
+        "component_hash": {
+          "title": "Component Hash",
+          "type": "string"
+        },
+        "component_version": {
+          "title": "Component Version",
+          "type": "string"
+        },
+        "kind": {
+          "const": "component",
+          "title": "Kind",
+          "type": "string"
+        },
+        "provenance_ref": {
+          "title": "Provenance Ref",
+          "type": "string"
+        },
+        "role": {
+          "$ref": "#/$defs/ProducerRole"
+        },
+        "training_allowed": {
+          "title": "Training Allowed",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "kind",
+        "role",
+        "component",
+        "component_version",
+        "component_hash",
+        "provenance_ref",
+        "training_allowed"
+      ],
+      "title": "ComponentProducer",
+      "type": "object"
+    },
+    "CycleWindow": {
+      "additionalProperties": false,
+      "properties": {
+        "end": {
+          "minimum": 0,
+          "title": "End",
+          "type": "integer"
+        },
+        "start": {
+          "minimum": 0,
+          "title": "Start",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "start",
+        "end"
+      ],
+      "title": "CycleWindow",
+      "type": "object"
+    },
+    "HumanProducer": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "const": "human",
+          "title": "Kind",
+          "type": "string"
+        },
+        "provenance_ref": {
+          "title": "Provenance Ref",
+          "type": "string"
+        },
+        "reviewer_ref": {
+          "title": "Reviewer Ref",
+          "type": "string"
+        },
+        "role": {
+          "$ref": "#/$defs/ProducerRole"
+        },
+        "training_allowed": {
+          "title": "Training Allowed",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "kind",
+        "role",
+        "reviewer_ref",
+        "provenance_ref",
+        "training_allowed"
+      ],
+      "title": "HumanProducer",
+      "type": "object"
+    },
+    "ModelProducer": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "const": "model",
+          "title": "Kind",
+          "type": "string"
+        },
+        "model": {
+          "title": "Model",
+          "type": "string"
+        },
+        "model_version": {
+          "title": "Model Version",
+          "type": "string"
+        },
+        "provenance_ref": {
+          "title": "Provenance Ref",
+          "type": "string"
+        },
+        "role": {
+          "$ref": "#/$defs/ProducerRole"
+        },
+        "training_allowed": {
+          "title": "Training Allowed",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "kind",
+        "role",
+        "model",
+        "model_version",
+        "provenance_ref",
+        "training_allowed"
+      ],
+      "title": "ModelProducer",
+      "type": "object"
+    },
+    "ObservationCitation": {
+      "additionalProperties": false,
+      "description": "Correctness evidence: the Observation's handle and its exact content identity (FD4).",
+      "properties": {
+        "observation_hash": {
+          "title": "Observation Hash",
+          "type": "string"
+        },
+        "observation_id": {
+          "title": "Observation Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "observation_id",
+        "observation_hash"
+      ],
+      "title": "ObservationCitation",
+      "type": "object"
+    },
+    "ProducerRole": {
+      "enum": [
+        "solver",
+        "critic",
+        "triage",
+        "reviewer"
+      ],
+      "title": "ProducerRole",
+      "type": "string"
+    },
+    "SupportingArtifact": {
+      "additionalProperties": false,
+      "description": "Supporting evidence only: never decides a Finding (FD5, ADR-0005).",
+      "properties": {
+        "cycle_window": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/CycleWindow"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "hash": {
+          "title": "Hash",
+          "type": "string"
+        },
+        "kind": {
+          "$ref": "#/$defs/SupportingArtifactKind"
+        }
+      },
+      "required": [
+        "kind",
+        "hash",
+        "cycle_window"
+      ],
+      "title": "SupportingArtifact",
+      "type": "object"
+    },
+    "SupportingArtifactKind": {
+      "enum": [
+        "trace",
+        "waveform_window",
+        "log_excerpt",
+        "reproducer"
+      ],
+      "title": "SupportingArtifactKind",
+      "type": "string"
+    },
+    "Uncertainty": {
+      "description": "The author's initial uncertainty (FD7). No probabilities: model confidence is uncalibrated.\n    ",
+      "enum": [
+        "low",
+        "medium",
+        "high"
+      ],
+      "title": "Uncertainty",
+      "type": "string"
+    }
+  },
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "candidate_id": {
+      "title": "Candidate Id",
+      "type": "string"
+    },
+    "candidate_manifest_hash": {
+      "title": "Candidate Manifest Hash",
+      "type": "string"
+    },
+    "claim": {
+      "title": "Claim",
+      "type": "string"
+    },
+    "correctness_citations": {
+      "items": {
+        "$ref": "#/$defs/ObservationCitation"
+      },
+      "title": "Correctness Citations",
+      "type": "array"
+    },
+    "derived_from": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Derived From"
+    },
+    "finding_id": {
+      "title": "Finding Id",
+      "type": "string"
+    },
+    "producer": {
+      "discriminator": {
+        "mapping": {
+          "component": "#/$defs/ComponentProducer",
+          "human": "#/$defs/HumanProducer",
+          "model": "#/$defs/ModelProducer"
+        },
+        "propertyName": "kind"
+      },
+      "oneOf": [
+        {
+          "$ref": "#/$defs/ModelProducer"
+        },
+        {
+          "$ref": "#/$defs/ComponentProducer"
+        },
+        {
+          "$ref": "#/$defs/HumanProducer"
+        }
+      ],
+      "title": "Producer"
+    },
+    "requirement_id": {
+      "title": "Requirement Id",
+      "type": "string"
+    },
+    "schema_version": {
+      "title": "Schema Version",
+      "type": "integer"
+    },
+    "supporting_evidence": {
+      "items": {
+        "$ref": "#/$defs/SupportingArtifact"
+      },
+      "title": "Supporting Evidence",
+      "type": "array"
+    },
+    "task_id": {
+      "title": "Task Id",
+      "type": "string"
+    },
+    "uncertainty": {
+      "$ref": "#/$defs/Uncertainty"
+    }
+  },
+  "required": [
+    "schema_version",
+    "finding_id",
+    "task_id",
+    "candidate_id",
+    "candidate_manifest_hash",
+    "requirement_id",
+    "claim",
+    "uncertainty",
+    "producer",
+    "correctness_citations",
+    "supporting_evidence",
+    "derived_from"
+  ],
+  "title": "Finding",
+  "type": "object"
+}

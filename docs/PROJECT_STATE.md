@@ -28,7 +28,7 @@ Roles must exist even when one person holds several. `unassigned` roles are real
 | Workstream | Status | Active task | Blocking decision |
 |---|---|---|---|
 | Governance/bootstrap | complete | — | — |
-| Foundation (P1) | active | SIN-P1.1-001…009 verified; SIN-P1.1-010 / P1.1-G ready for gate execution after PR #30 merges | G-B exact ID encoding ADR before first P1.2 persistent write |
+| Foundation (P1) | active | SIN-P1.1-001…009 verified; P1.1-G coordinator-approved on PR #31, SIN-P1.1-010 awaiting merge/main-CI verification | G-B exact ID encoding ADR before first P1.2 persistent write |
 | Task Forge | planned | — | P1.G |
 | Spec Forge | planned | — | P1.G + P2 assets |
 | Verification Forge | planned | — | P1.G + P3 contracts |
@@ -44,7 +44,7 @@ Roles must exist even when one person holds several. `unassigned` roles are real
 | Second reviewer for code-owner-required reviews | before enabling "require code owner review" | open |
 
 ## Current blockers
-- P1.1-G execution is authorized only after PR #30 merges to `main`; P1.2 remains blocked on coordinator-approved P1.1-G evidence.
+- P1.1-G evidence is coordinator-APPROVED; P1.2 remains blocked until PR #31 is merged, SIN-P1.1-010 is coordinator-verified on merged main, and the pre-persistence G-B/G-S/G-U entry work is opened.
 - Before the first P1.2 persistent write: resolve G-B by ADR (hybrid readable authored IDs + coordination-free collision-resistant system-minted IDs; exact encoding/scope still to choose).
 - RTL / DV-formal reviewer roles remain unassigned. This does not block P1.1-G, but P1.6 authority/mutant certification cannot complete without the required review.
 - Recommended: enable "Do not allow bypassing the above settings" on `main` (required checks are currently enforced for non-admins only).
