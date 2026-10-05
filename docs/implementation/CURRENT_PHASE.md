@@ -20,7 +20,7 @@ python scripts/show_ready_tasks.py --all
 - `SIN-P1.1-006 — Finding` verified (coordinator, 2026-10-05). PR #18 merged as `0d19b0f`; merged-main CI `37244343777` passed.
 - `SIN-P1.1-007 — EpisodeState` verified (coordinator, 2026-10-05). PR #19 merged as `b6ced72`; merged-main CI `37256889064` passed on the deliberately integrated 006+007 state.
 - The PR #17 readiness deviation is resolved: PRs #18/#19 applied the omitted final coordinator rules before verification.
-- No task is currently READY. `SIN-P1.1-008 — Serialization and schema-versioning tests` is now eligible for **packet drafting only**. Implementation remains unauthorized until its packet is reviewed, merged and marked READY.
+- No task is currently READY. `SIN-P1.1-008 — Serialization and schema-versioning tests` packet is **drafted for coordinator review** (`planned`; open decisions S1–S17). Probes on `main` `135a54b` found that set-like tuple order changes `content_id()` (e.g. `CandidateManifest.files`; proposed ADR-0007 canonical collection order, S11) and that duplicate JSON keys are accepted last-wins (S15, proposed P1.2 ingest requirement). Implementation remains unauthorized until the packet is reviewed, merged and marked READY on `main`.
 - Process deviation (recorded at the coordinator's request, not precedent): implementation of 003 and 004 began from the **unmerged** readiness commit `62a7834`, under delegation. The coordinator accepted that work for review, but READY was not yet authoritative on `main`. Future implementation waits until readiness is merged.
 
 ## P1.1 order (coordinator sequencing refinement, 2026-10-04; not an ADR change)
