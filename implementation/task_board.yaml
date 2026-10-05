@@ -111,6 +111,6 @@ tasks:
     title: Minimal FIFO authority seed for the first vertical slice
     phase: P1
     subphase: P1.6
-    status: planned
+    status: ready
     depends_on: [SIN-P1.1-010]
     packet: docs/tasks/SIN-P1.6-001.md
