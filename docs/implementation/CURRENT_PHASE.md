@@ -21,7 +21,7 @@ python scripts/show_ready_tasks.py --all
 - `SIN-P1.1-007 — EpisodeState` verified (coordinator, 2026-10-05). PR #19 merged as `b6ced72`; merged-main CI `37256889064` passed on the deliberately integrated 006+007 state.
 - The PR #17 readiness deviation is resolved: PRs #18/#19 applied the omitted final coordinator rules before verification.
 - `SIN-P1.1-008 — Serialization and schema-versioning tests` verified (coordinator, 2026-10-05). PR #24 merged as `23983db`; merged-main CI `37262833634` passed. Scope remained tests/docs only.
-- No task is currently READY. `SIN-P1.1-009 — Cross-record invariant tests` is now eligible for **packet drafting only**. Implementation remains unauthorized until its packet is reviewed, merged and marked READY.
+- No task is currently READY. `SIN-P1.1-009 — Cross-record invariant tests` packet is **drafted for coordinator review** (`planned`; open decisions X1–X13, N1, N2). Probes on `main` `c1025af` found that the adapted §20 examples are not mutually consistent (9 of 17 cross-links fail), so 009 builds a coherent bundle by construction. Store-authority rules and rules needing record types that do not exist yet are listed with owners (table D), not approximated. Implementation remains unauthorized until the packet is reviewed, merged and marked READY on `main`.
 - Process deviation (recorded at the coordinator's request, not precedent): implementation of 003 and 004 began from the **unmerged** readiness commit `62a7834`, under delegation. The coordinator accepted that work for review, but READY was not yet authoritative on `main`. Future implementation waits until readiness is merged.
 
 ## P1.1 order (coordinator sequencing refinement, 2026-10-04; not an ADR change)
