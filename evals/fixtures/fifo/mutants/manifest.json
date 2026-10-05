@@ -1,0 +1,116 @@
+{
+  "status": "uncertified",
+  "purpose": "engineering seed: drives the P1 vertical slice; NOT the P1.6 critical-mutant certification set",
+  "base": "rtl/fifo_ref.v",
+  "testbench": "tb/tb_fifo.v",
+  "inventory": "tb/tests.json",
+  "tool_evidence": "Icarus Verilog 12.0 (stable), iverilog -g2005 -Wall; vvp -n; verdict by the F7 protocol (tests/eda/_protocol.py)",
+  "kill_definition": "killed = protocol verdict FAIL in that configuration; survived = protocol verdict PASS",
+  "configurations": [
+    "cfg_w8_d4",
+    "cfg_w8_d3",
+    "cfg_w32_d8",
+    "cfg_w1_d2",
+    "cfg_w8_d1"
+  ],
+  "mutants": [
+    {
+      "id": "M1",
+      "file": "mutants/m1_full_off_by_one.v",
+      "bug_class": "off-by-one full/empty",
+      "defect": "full = (count == DEPTH-1): full asserts one entry early",
+      "violates": [
+        "R02",
+        "R04",
+        "R05"
+      ],
+      "kill_matrix": {
+        "cfg_w8_d4": "killed",
+        "cfg_w8_d3": "killed",
+        "cfg_w32_d8": "killed",
+        "cfg_w1_d2": "killed",
+        "cfg_w8_d1": "killed"
+      },
+      "seed_analysis": {}
+    },
+    {
+      "id": "M2",
+      "file": "mutants/m2_rdptr_no_wrap.v",
+      "bug_class": "broken pointer update",
+      "defect": "rd_ptr <= rd_ptr + 1: the read pointer skips the DEPTH-1 wrap",
+      "violates": [
+        "R03"
+      ],
+      "kill_matrix": {
+        "cfg_w8_d4": "survived",
+        "cfg_w8_d3": "killed",
+        "cfg_w32_d8": "survived",
+        "cfg_w1_d2": "survived",
+        "cfg_w8_d1": "killed"
+      },
+      "seed_analysis": {
+        "cfg_w8_d4": "believed equivalent: at a power-of-two DEPTH the AW-bit pointer overflows exactly at DEPTH (uncertified)",
+        "cfg_w32_d8": "believed equivalent: at a power-of-two DEPTH the AW-bit pointer overflows exactly at DEPTH (uncertified)",
+        "cfg_w1_d2": "believed equivalent: at a power-of-two DEPTH the AW-bit pointer overflows exactly at DEPTH (uncertified)"
+      }
+    },
+    {
+      "id": "M3",
+      "file": "mutants/m3_simultaneous_count.v",
+      "bug_class": "incorrect simultaneous push/pop",
+      "defect": "if (push) count++: occupancy increments even when a pop happens in the same cycle",
+      "violates": [
+        "R04",
+        "R07"
+      ],
+      "kill_matrix": {
+        "cfg_w8_d4": "killed",
+        "cfg_w8_d3": "killed",
+        "cfg_w32_d8": "killed",
+        "cfg_w1_d2": "killed",
+        "cfg_w8_d1": "survived"
+      },
+      "seed_analysis": {
+        "cfg_w8_d1": "believed equivalent: at DEPTH=1 a push and a pop are never both enabled (uncertified)"
+      }
+    },
+    {
+      "id": "M4",
+      "file": "mutants/m4_rdptr_not_reset.v",
+      "bug_class": "reset-state defect",
+      "defect": "rd_ptr is not reset (stays X after power-up; keeps a stale value after a mid-run reset)",
+      "violates": [
+        "R01",
+        "R03"
+      ],
+      "kill_matrix": {
+        "cfg_w8_d4": "killed",
+        "cfg_w8_d3": "killed",
+        "cfg_w32_d8": "killed",
+        "cfg_w1_d2": "killed",
+        "cfg_w8_d1": "killed"
+      },
+      "seed_analysis": {}
+    },
+    {
+      "id": "M5",
+      "file": "mutants/m5_stale_read.v",
+      "bug_class": "stale read data",
+      "defect": "out_data = mem[rd_prev]: reads the previous cycle's read pointer",
+      "violates": [
+        "R03",
+        "R08"
+      ],
+      "kill_matrix": {
+        "cfg_w8_d4": "killed",
+        "cfg_w8_d3": "killed",
+        "cfg_w32_d8": "killed",
+        "cfg_w1_d2": "killed",
+        "cfg_w8_d1": "survived"
+      },
+      "seed_analysis": {
+        "cfg_w8_d1": "believed equivalent: at DEPTH=1 the read pointer is always 0 (uncertified)"
+      }
+    }
+  ]
+}

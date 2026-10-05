@@ -1,0 +1,181 @@
+{
+  "schema_version": 1,
+  "policy_id": "ep_fifo_seed_v1",
+  "policy_version": 1,
+  "supersedes": null,
+  "task_id": "fifo_seed",
+  "contract_hash": "sha256:43152c8ef18ab18e795e8d60091dd3d8583c9b1414385603b14e3de478845650",
+  "configurations": [
+    {
+      "configuration_id": "cfg_w8_d4",
+      "assignments": [
+        {
+          "name": "WIDTH",
+          "value": 8
+        },
+        {
+          "name": "DEPTH",
+          "value": 4
+        }
+      ]
+    },
+    {
+      "configuration_id": "cfg_w8_d3",
+      "assignments": [
+        {
+          "name": "WIDTH",
+          "value": 8
+        },
+        {
+          "name": "DEPTH",
+          "value": 3
+        }
+      ]
+    },
+    {
+      "configuration_id": "cfg_w32_d8",
+      "assignments": [
+        {
+          "name": "WIDTH",
+          "value": 32
+        },
+        {
+          "name": "DEPTH",
+          "value": 8
+        }
+      ]
+    },
+    {
+      "configuration_id": "cfg_w1_d2",
+      "assignments": [
+        {
+          "name": "WIDTH",
+          "value": 1
+        },
+        {
+          "name": "DEPTH",
+          "value": 2
+        }
+      ]
+    },
+    {
+      "configuration_id": "cfg_w8_d1",
+      "assignments": [
+        {
+          "name": "WIDTH",
+          "value": 8
+        },
+        {
+          "name": "DEPTH",
+          "value": 1
+        }
+      ]
+    }
+  ],
+  "checks": [
+    {
+      "check_id": "chk_compile",
+      "kind": "parse_elaborate",
+      "mandatory": true,
+      "visibility": "development",
+      "tool_profile_id": "tp_icarus12_compile",
+      "configuration_ids": [
+        "cfg_w8_d4",
+        "cfg_w8_d3",
+        "cfg_w32_d8",
+        "cfg_w1_d2",
+        "cfg_w8_d1"
+      ],
+      "formal_mode": null,
+      "depth": null
+    },
+    {
+      "check_id": "chk_directed",
+      "kind": "directed_sim",
+      "mandatory": true,
+      "visibility": "development",
+      "tool_profile_id": "tp_icarus12_sim",
+      "configuration_ids": [
+        "cfg_w8_d4",
+        "cfg_w8_d3",
+        "cfg_w32_d8",
+        "cfg_w1_d2",
+        "cfg_w8_d1"
+      ],
+      "formal_mode": null,
+      "depth": null
+    }
+  ],
+  "environment_assumptions": [
+    {
+      "text": "rst is held high across at least one rising edge of clk before use",
+      "source_ref": "evals/fixtures/fifo/contract/contract.md#semantics"
+    }
+  ],
+  "obligations": [
+    {
+      "obligation_id": "ob_r01",
+      "requirement_id": "R01",
+      "check_ids": [
+        "chk_directed"
+      ]
+    },
+    {
+      "obligation_id": "ob_r02",
+      "requirement_id": "R02",
+      "check_ids": [
+        "chk_directed"
+      ]
+    },
+    {
+      "obligation_id": "ob_r03",
+      "requirement_id": "R03",
+      "check_ids": [
+        "chk_directed"
+      ]
+    },
+    {
+      "obligation_id": "ob_r04",
+      "requirement_id": "R04",
+      "check_ids": [
+        "chk_directed"
+      ]
+    },
+    {
+      "obligation_id": "ob_r05",
+      "requirement_id": "R05",
+      "check_ids": [
+        "chk_directed"
+      ]
+    },
+    {
+      "obligation_id": "ob_r06",
+      "requirement_id": "R06",
+      "check_ids": [
+        "chk_directed"
+      ]
+    },
+    {
+      "obligation_id": "ob_r07",
+      "requirement_id": "R07",
+      "check_ids": [
+        "chk_directed"
+      ]
+    },
+    {
+      "obligation_id": "ob_r08",
+      "requirement_id": "R08",
+      "check_ids": [
+        "chk_directed"
+      ]
+    },
+    {
+      "obligation_id": "ob_r09",
+      "requirement_id": "R09",
+      "check_ids": [
+        "chk_directed"
+      ]
+    }
+  ],
+  "exceptions": []
+}
