@@ -15,7 +15,7 @@ This seed drives the P1 vertical slice (SIN-P1.6-001). It does **not** complete 
 ## Layout
 - `contract/contract.md` — semantics F1–F7, requirements R01–R09, parameter matrix and result protocol. Its bytes are the contract hash.
 - `rtl/` — the two correct implementations (module `fifo`, Verilog-2005).
-- `tb/tb_fifo.v` — the strict testbench. `tb/tests.json` gives the configuration-scoped expected test inventory.
+- `tb/tb_fifo.v` — the strict testbench (Verilog-2005 simulation constructs; not synthesizable). `tb/tests.json` gives the configuration-scoped expected test inventory.
 - `mutants/` — M1–M5 and `manifest.json` (bug class, defect, violated requirements, kill matrix, uncertified equivalence notes).
 - `known_bad/` — **quarantined**. `tb_fifo_xblind.v` is an X-blind testbench that fake-PASSes M4; `manifest.json` gives its expected verdicts. It is never part of the positive path. P1.7 uses it as an anti-fake-PASS fixture.
 - `records/` — P1.1 records:

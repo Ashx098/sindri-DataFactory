@@ -63,7 +63,7 @@ critical-mutant set, and classification of every mutant) stays blocked on the RT
 - **Visibility:** there is no fall-through. A word written into an empty FIFO is first visible on `out_*` in the next cycle (F4). `out_data` is the oldest word whenever `out_valid=1`, and it is **unspecified** when `out_valid=0`.
 - **Stall stability:** while `out_valid && !out_ready`, `out_data` holds its value.
 - **Parameters:** `WIDTH ≥ 1`, `DEPTH ≥ 1`, any integer. Non-power-of-two depths are allowed (F5).
-- **Language:** synthesizable Verilog-2005 subset for RTL and testbench (F6), so the seed runs on Icarus without `-g2012`.
+- **Language (F6):** the RTL is a synthesizable Verilog-2005 subset. The testbench uses Verilog-2005 simulation constructs and is not synthesizable. Both run on Icarus without `-g2012`.
 
 ### Requirement semantics (P1.1 `Requirement`)
 Coordinator decision on PR #33: R01–R09 are **approved for the engineering-seed v1 development contract** once this planning PR merges, while the entire package remains **uncertified** for P1.6 completion. A later RTL/DV review may create new Requirement/TaskManifest/Policy revisions.
@@ -148,7 +148,7 @@ The probes used scratch copies of draft RTL, testbench and mutants, outside the 
 | S3 | A mutant has no natural `CandidateManifest.producer_role` (`solver`/`reconstructor`/`architecture_explorer`), and there is **no P1.1 record for known-bad fixtures or mutant classification**. | In the seed, mutants and the kill matrix are **plain fixture data** (`mutants/manifest.json`), not records. When the slice needs a failing Observation, the mutant RTL is the *starting repo state of a mutation debug task*, not a candidate. | yes (F11). Possible future record type: surfaced, not invented. |
 | S4 | `approved_contract_hash` / `EvaluationPolicy.contract_hash` need *contract bytes*, but there is no Contract record (009 D6). | Hash the exact engineering-seed-v1 contract document (`contract/contract.md`) with `core.ids.content_id`. The document says `status: engineering-seed-approved`, `certification: uncertified`. Certification may later issue a new reviewed revision/hash. | no (coordinator decision, PR #33; consistent with D6) |
 | S5 | `Observation.expected_test_ids` should come from the evaluator-bundle inventory (005 R5, 009 D4), which has no record yet. | The seed publishes its test inventory (`tb/tests.json`: the TEST names) as fixture data, so P1.4/P1.6 can anchor expected tests to it. | no; the evidence bundle stays P1.4/P1.6 |
-| S6 | `TestId` pattern `[A-Za-z][A-Za-z0-9]*(_…)*` fits the testbench's `TEST <name>` lines; per-test PASS/FAIL maps to `SimulationReport.test_results`. Run-level `RESULT PASS/FAIL` plus `$fatal` on failure gives a TOOL_ERROR vs FAIL distinction by parsing, never by exit code. | Result protocol F7. | yes (F7) |
+| S6 | `TestId` pattern `[A-Za-z][A-Za-z0-9]*(_…)*` fits the testbench's `TEST <name>` lines; per-test PASS/FAIL maps to `SimulationReport.test_results`. The run-level `RESULT PASS/FAIL` (the testbench then ends with `$finish`) gives the TOOL_ERROR vs FAIL distinction by parsing, never by exit code. | Result protocol F7. | yes (F7) |
 | S7 | Compile diagnostics without a file (P3) and errors without codes map to `Diagnostic(path=None, code=None)`. | No change. | no |
 
 ## Decisions requested (agent recommendations)
@@ -159,8 +159,8 @@ The probes used scratch copies of draft RTL, testbench and mutants, outside the 
 | F3 | Push when full while popping | **Accepted:** not accepted (`in_ready = !full`), even if a pop occurs in that cycle; no `out_ready -> in_ready` combinational path. |
 | F4 | Fall-through | **Accepted:** none; push into empty becomes visible on the following cycle. |
 | F5 | Depth constraint | **Accepted:** `WIDTH ≥ 1`, `DEPTH ≥ 1`, including non-power-of-two depths. |
-| F6 | Language | **Accepted for the engineering seed:** synthesizable Verilog-2005 subset with explicit future tool-profile language mode; this is not a permanent Sindri language restriction. |
-| F7 | Result protocol | **Accepted with strict completeness rules.** `tb/tests.json` is **configuration-scoped** and lists the exact expected `TestId`s for each configuration (R07 is absent at DEPTH=1). The transcript must contain each expected `TEST <TestId> PASS|FAIL` exactly once, no duplicates or unexpected IDs, plus exactly one terminal `RESULT PASS|FAIL`. `RESULT PASS` is valid only when every expected test is present exactly once and PASS and the final result agrees. Missing/duplicate/unexpected tests or disagreement fail closed. `$fatal(1,…)` remains a failure signal, but exit code is never the semantic oracle. |
+| F6 | Language | **Accepted for the engineering seed:** the RTL is a synthesizable Verilog-2005 subset, and the testbench uses Verilog-2005 simulation constructs (not synthesizable). A future tool-profile language mode will be explicit. This is not a permanent Sindri language restriction. |
+| F7 | Result protocol | **Accepted with strict completeness rules.** `tb/tests.json` is **configuration-scoped** and lists the exact expected `TestId`s for each configuration (R07 is absent at DEPTH=1). The transcript must contain each expected `TEST <TestId> PASS|FAIL` exactly once, no duplicates or unexpected IDs, plus exactly one terminal `RESULT PASS|FAIL`. `RESULT PASS` is valid only when every expected test is present exactly once and PASS and the final result agrees. Missing/duplicate/unexpected tests or disagreement fail closed. The testbench ends with `$finish` after `RESULT PASS|FAIL`; the exit code is never the semantic oracle. |
 | F8 | Tool provisioning for the requested Verilator/slang/Yosys evidence | **Coordinator decision: pinned OCI/container tooling.** No host-package installs. P1.3 owns provisioning/isolation and pins immutable digests. First execution/simulation profile: Icarus 12.x. Before a P1.4 compile/lint normalizer is considered stable, repeat diagnostics on pinned Verilator 5.x and slang/pyslang profiles. Yosys/SBY do not block this seed; provision them when synthesis/formal first enters the vertical slice and before P1.6/P1.7 certification claims depend on them. Do not invent image digests in this packet; P1.3 records the verified images. |
 | F9 | Task source for an in-house seed | **Accepted narrowly:** use `use_case` for this exact coordinator-approved internal engineering use case, with a stable intake ref such as `sindri:p1.6/fifo-seed-v1`. This is not precedent for all authored assets; if authored seeds recur, surface a real source-kind change later. |
 | F10 | Authority mode | **Accepted:** `engineering_intent`; the contract/requirements are authority, the reference RTL is a witness, and `golden_hash=None`. |
@@ -260,9 +260,9 @@ git diff --stat origin/main -- src/       # must be empty
   - **No `src/` change**, no schema or ID change, no tool installed or pulled.
 - Tests run/results:
   - `ruff` clean; `mypy --strict` clean.
-  - `pytest`, local with Icarus 12.0: 2019 passed, 8 skipped.
+  - `pytest`, local with Icarus 12.0: 2020 passed, 8 skipped.
   - `pytest -m eda tests/eda`: 71 passed.
-  - Without `iverilog` on `PATH`: 40 pure seed tests pass (24 protocol + 16 records) and 71 `eda` tests skip (the CI situation).
+  - Without `iverilog` on `PATH`: 41 pure seed tests pass (24 protocol + 17 records) and 71 `eda` tests skip (the CI situation).
 - Acceptance evidence:
   - **Controls:** `fifo_ref` and `fifo_alt` give protocol verdict PASS in all 5 configurations.
   - **Kill matrix**, reproduced exactly as in the packet (verdict FAIL = killed). Configurations in order (8,4) (8,3) (32,8) (1,2) (8,1):
@@ -294,6 +294,11 @@ git diff --stat origin/main -- src/       # must be empty
   - **No `$fatal`:** both testbenches print `RESULT PASS|FAIL` and then `$finish`. The X-blind copy is regenerated by the same mechanical transform, and the kill matrix and known-bad verdicts reproduce unchanged (71/71).
   - **Family and hash:** `family_id: fifo-seed-v1` for both tasks, lineage shared. The contract hash is recomputed (`sha256:66e76bb4…`) in both tasks and both policies; `check_records` is still `()`.
   - **Accepted by the coordinator:** `split: dev`; rights provisionally (P2.1 must resolve `LicenseRef-Chipforge-Internal`); the profile IDs as unresolved placeholders that no Observation may rely on until P1.3/P1.4.
+- **F6 clarification (coordinator follow-up):**
+  - The contract, packet (F6, S6, F7 rows; semantics) and README now say the RTL is a synthesizable Verilog-2005 subset and the testbench uses Verilog-2005 simulation constructs and is not synthesizable.
+  - Stale `$fatal` design claims are removed; P6 historical probe evidence is unchanged.
+  - The contract hash is recomputed (`sha256:43152c8e…`) in both tasks and both policies, and `check_records == ()` is re-proven.
+  - A new pure test fails if the contract calls the testbench synthesizable (plant caught).
 - Implementation notes (for review):
   - **X-blind testbench:** making only two check lines X-blind did **not** reproduce the probe's fake PASS. The strict testbench's flag and data checks use `===`, which turns X into a definite 0. The quarantined testbench is therefore the strict one with **every** `===` turned into `==`, plus the `!cond` failure test. A test pins this exact mechanical transform.
   - **Rights:** `split: dev`; `licence: LicenseRef-Chipforge-Internal`, `training_allowed: false`, `evaluation_allowed: true`, `redistribution_allowed: false`. Seed choices; the coordinator may revise.

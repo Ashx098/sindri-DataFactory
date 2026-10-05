@@ -222,6 +222,16 @@ def test_testbenches_finish_without_fatal() -> None:
         assert "$fatal" not in code and "$finish" in code, rel
 
 
+def test_contract_never_claims_the_testbench_is_synthesizable() -> None:
+    """F6: RTL is a synthesizable Verilog-2005 subset; testbenches are simulation-only."""
+    text = " ".join((SEED / "contract" / "contract.md").read_text().split())
+    sentences = re.split(r"(?<=[.!?])\s+", text)
+    tb_claims = [x for x in sentences if "testbench" in x.lower() and "synthesizable" in x.lower()]
+    assert tb_claims, "F6 must state the testbench's language status explicitly"
+    assert all("not synthesizable" in x for x in tb_claims), tb_claims
+    assert any("RTL" in x and "synthesizable Verilog-2005 subset" in x for x in sentences)
+
+
 def test_every_artifact_is_labelled_uncertified() -> None:
     for path in sorted(SEED.rglob("*")):
         if path.suffix in {".v", ".md"}:

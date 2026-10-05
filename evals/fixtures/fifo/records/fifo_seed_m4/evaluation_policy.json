@@ -4,7 +4,7 @@
   "policy_version": 1,
   "supersedes": null,
   "task_id": "fifo_seed_m4",
-  "contract_hash": "sha256:66e76bb4b85e1a32c047c9a6d66aba862a04b794341b5c7175de0b2e99d89b98",
+  "contract_hash": "sha256:43152c8ef18ab18e795e8d60091dd3d8583c9b1414385603b14e3de478845650",
   "configurations": [
     {
       "configuration_id": "cfg_w8_d4",

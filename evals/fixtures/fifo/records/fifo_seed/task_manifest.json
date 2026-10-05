@@ -23,7 +23,7 @@
   },
   "golden_hash": null,
   "contract_id": "ct_fifo_seed_v1",
-  "approved_contract_hash": "sha256:66e76bb4b85e1a32c047c9a6d66aba862a04b794341b5c7175de0b2e99d89b98",
+  "approved_contract_hash": "sha256:43152c8ef18ab18e795e8d60091dd3d8583c9b1414385603b14e3de478845650",
   "allowed_edit_paths": [
     "rtl/fifo.v"
   ],

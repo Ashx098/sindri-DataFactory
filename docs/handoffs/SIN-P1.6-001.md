@@ -20,7 +20,7 @@
   - the quarantined X-blind known-bad testbench and its manifest;
   - 22 P1.1 records: base `use_case` task and M4 mutation-debug task, each with R01–R09 and a policy.
 - Tests:
-  - `tests/contract/test_fifo_seed_records.py`: 16 pure checks;
+  - `tests/contract/test_fifo_seed_records.py`: 17 pure checks;
   - `tests/eda/_protocol.py`: the F7 verdict;
   - `tests/eda/test_protocol.py`: 24 pure checks;
   - `tests/eda/test_fifo_seed_icarus.py`: 71 `eda` checks that reproduce the kill matrix and the known-bad verdicts.
@@ -29,9 +29,9 @@
 | Command / check | Result |
 |---|---|
 | `uv run ruff check .`, `uv run mypy` | pass |
-| `uv run pytest -q` (local, Icarus 12.0) | 2019 passed, 8 skipped |
+| `uv run pytest -q` (local, Icarus 12.0) | 2020 passed, 8 skipped |
 | `uv run pytest -q -m eda tests/eda` | 71 passed |
-| `tests/eda` + record tests without `iverilog` on PATH | 40 passed, 71 skipped (the CI situation) |
+| `tests/eda` + record tests without `iverilog` on PATH | 41 passed, 71 skipped (the CI situation) |
 | `check_records` over the 22 seed records | `()` |
 | `git diff --stat origin/main -- src/` | empty |
 
@@ -48,6 +48,8 @@ The X-blind testbench fake-PASSes M4 in all 5 configurations.
 - **F7:** malformed protocol-looking lines make the transcript INVALID. The spoofing boundary (completeness/consistency, not provenance) is documented and pinned. It is a hard P1.4/P1.7 follow-up.
 - **No `$fatal`:** both testbenches end with `$finish`; the kill matrix and known-bad verdicts are unchanged.
 - **Family and hash:** `family_id: fifo-seed-v1`. The contract hash is recomputed everywhere.
+
+- **F6 clarified:** the RTL is synthesizable Verilog-2005; the testbench uses Verilog-2005 simulation constructs and is not synthesizable. Stale `$fatal` claims are removed (P6 history kept), the contract hash is recomputed, `check_records == ()`, and a regression test is added.
 
 ## Decisions
 None new. F1–F12 and the PR #33 record clarifications are implemented as decided: approved-but-uncertified, R07 exact `DEPTH ∈ {2,3,4,8}`, configuration-scoped inventory, quarantine.

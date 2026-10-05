@@ -22,8 +22,10 @@ allowed, including non-power-of-two depths. Ports: `clk`, `rst`, `in_valid`, `in
   happens in the same cycle. There is no combinational path from `out_ready` to `in_ready`.
 - **No fall-through (F4).** A word pushed into an empty FIFO is visible on `out_valid`/`out_data`
   from the following cycle.
-- **Language (F6).** The seed RTL and testbench use a synthesizable Verilog-2005 subset. This is a
-  compatibility choice for the seed, not a project-wide restriction.
+- **Language (F6).** The RTL (`rtl/`, `mutants/`) uses a synthesizable Verilog-2005 subset. The
+  testbenches (`tb/`, `known_bad/`) use Verilog-2005 simulation constructs (`initial` blocks,
+  delays, tasks, `$display`, `$finish`) and are not synthesizable. This is a compatibility choice
+  for the seed, not a project-wide restriction.
 
 ## Requirements (engineering-seed v1; all mandatory, disposition `approved`)
 Each requirement has an explicit anchor (`#r01` … `#r09`) that the Requirement records cite as
