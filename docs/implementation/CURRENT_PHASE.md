@@ -17,7 +17,10 @@ python scripts/show_ready_tasks.py --all
 - `SIN-P1.1-003` verified (coordinator, 2026-10-04). PR #10 merged as `3a51766`; merged-main CI `37183976957` passed.
 - `SIN-P1.1-004` verified (coordinator, 2026-10-04). PR #11 merged as `d465850`; merged-main CI `37184201021` passed after the deliberate 003+004 integration.
 - `SIN-P1.1-005 — Observation` verified (coordinator, 2026-10-04). PR #15 merged as `7f16bf3`; merged-main CI `37204008101` passed.
-- **`SIN-P1.1-006 — Finding` and `SIN-P1.1-007 — EpisodeState` are BLOCKED pending coordinator review fixes.** PR #17's readiness commit `1f50e904` was recorded after the final coordinator comment explicitly said not to merge/READY yet; that readiness transition was therefore invalid. Implementation already produced from `e70d4e4` is accepted for review rather than discarded, but only the review fixes on PRs #18/#19 are authorized. No other task is authorized.
+- `SIN-P1.1-006 — Finding` verified (coordinator, 2026-10-05). PR #18 merged as `0d19b0f`; merged-main CI `37244343777` passed.
+- `SIN-P1.1-007 — EpisodeState` verified (coordinator, 2026-10-05). PR #19 merged as `b6ced72`; merged-main CI `37256889064` passed on the deliberately integrated 006+007 state.
+- The PR #17 readiness deviation is resolved: PRs #18/#19 applied the omitted final coordinator rules before verification.
+- No task is currently READY. `SIN-P1.1-008 — Serialization and schema-versioning tests` is now eligible for **packet drafting only**. Implementation remains unauthorized until its packet is reviewed, merged and marked READY.
 - Process deviation (recorded at the coordinator's request, not precedent): implementation of 003 and 004 began from the **unmerged** readiness commit `62a7834`, under delegation. The coordinator accepted that work for review, but READY was not yet authoritative on `main`. Future implementation waits until readiness is merged.
 
 ## P1.1 order (coordinator sequencing refinement, 2026-10-04; not an ADR change)

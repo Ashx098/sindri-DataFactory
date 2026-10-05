@@ -32,7 +32,7 @@
 | Planted: mixed probe payload allowed | 1 failure | restored |
 
 ## Changed
-`src/sindri/schemas/finding.py`, `src/sindri/schemas/__init__.py`, `tests/contract/test_finding.py`, three fixtures, `components/schemas.yaml`, `docs/REPO_MAP.md`, task packet, this handoff. The board stays `blocked` (coordinator, PR #20).
+`src/sindri/schemas/finding.py`, `src/sindri/schemas/__init__.py`, `tests/contract/test_finding.py`, three fixtures, `components/schemas.yaml`, `docs/REPO_MAP.md`, task packet, this handoff. Coordinator verification is recorded after merge.
 
 ## Decisions
 None new. PR #18 review fixes applied:
@@ -48,14 +48,19 @@ None new. PR #18 review fixes applied:
 ## Open questions
 None. (The earlier `inspect_waveform` probe question is settled: v1 probes are `run_sim`/`run_formal` only.)
 
-## Blocked on
-- Coordinator re-review of PR #18 and clearing of the `blocked` status. Merge order (coordinator): **PR #18 first**, then `main` is merged into PR #19 for the manual shared-file resolution. **Integration with SIN-P1.1-007:** both edit `schemas/__init__.py`, `components/schemas.yaml`, `docs/REPO_MAP.md` and `implementation/task_board.yaml`. Whichever PR merges second needs a deliberate manual resolution, never "accept both", followed by the full gate on the combined state.
+## Coordinator verification
+- PR #18 merged to `main` as `0d19b0f`; merged-main CI `37244343777` passed.
+- PR #19 later integrated EpisodeState deliberately with this Finding state and merged as `b6ced72`; merged-main CI `37256889064` passed.
+- Task status: `verified` on 2026-10-05.
 
-## Next ready after approval
-After 006 and 007 are merged and verified: SIN-P1.1-008 serialization/versioning (the coordinator opens its packet).
+## Blocked on
+- None. This task is verified.
+
+## Next eligible for packet drafting
+- SIN-P1.1-008 serialization/versioning. Implementation remains unauthorized until its own packet is reviewed, merged and marked READY.
 
 ## Do not start
-- 008, 009, P1.1-G, P1.2+; no blackboard store, controller logic or probe promotion.
+- 008 implementation, 009, P1.1-G, P1.2+; 008 is packet-drafting only until separately authorized. No blackboard store, controller logic or probe promotion.
 
 ## Risks / things not to change casually
 - Never put `status`, `proposed_check` or `rank` back on Finding (FD1, FD7). Never add an `actor`/`direction` field (FD2, FD9).

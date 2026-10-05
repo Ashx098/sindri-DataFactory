@@ -184,7 +184,7 @@ uv run pytest -q tests/contract
 - This task alone edits `src/sindri/core/ids.py`.
 
 ## Status
-`blocked` (coordinator correction, 2026-10-05). PR #17 commit `1f50e904` recorded readiness even though final coordinator comment `5981249383` explicitly required additional fixes before merge/READY. Existing implementation work is accepted for review only; PR #19 must implement the final corrections above before merge (authoritative status: `implementation/task_board.yaml`).
+`verified` (coordinator, 2026-10-05). PR #19 merged as `b6ced72`; merged-main CI `37256889064` passed on the deliberately integrated 006+007 state (authoritative status: `implementation/task_board.yaml`).
 
 ## Completion evidence
 - Files changed: `src/sindri/core/ids.py` (additive `JobId`; only docstring lines edited), `src/sindri/schemas/episode.py` (new), `src/sindri/schemas/__init__.py` (exports), `tests/contract/test_episode_state.py` and two fixtures (new), `tests/unit/test_ids.py`, `components/schemas.yaml`, `docs/REPO_MAP.md`, this packet, handoff.
@@ -212,5 +212,5 @@ uv run pytest -q tests/contract
   - pending jobs need not match `active_candidate` at schema level (P1.5 decides per request/state);
   - `BudgetRemaining` may be negative to represent overrun;
   - `remaining()` rejects a mismatched budget hash.
-- Status: kept **`blocked`** on the board per the coordinator correction (PR #20); this PR is review-only until the coordinator clears it.
+- Coordinator verification: PR #19 merge `b6ced72`; merged-main CI `37256889064` passed. Task is **verified**.
 - Handoff/next action: `docs/handoffs/SIN-P1.1-007.md`.

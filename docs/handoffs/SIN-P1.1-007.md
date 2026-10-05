@@ -39,7 +39,7 @@
 | Planted: `action` field reintroduced | 2 failures | restored |
 
 ## Changed
-`src/sindri/core/ids.py` (additive), `src/sindri/schemas/episode.py`, `src/sindri/schemas/__init__.py`, `tests/contract/test_episode_state.py`, two fixtures, `tests/unit/test_ids.py`, `components/schemas.yaml`, `docs/REPO_MAP.md`, task packet, this handoff. The board stays `blocked` (coordinator, PR #20).
+`src/sindri/core/ids.py` (additive), `src/sindri/schemas/episode.py`, `src/sindri/schemas/__init__.py`, `tests/contract/test_episode_state.py`, two fixtures, `tests/unit/test_ids.py`, `components/schemas.yaml`, `docs/REPO_MAP.md`, task packet, this handoff. Coordinator verification is recorded after the integrated merge.
 
 ## Decisions
 None new. PR #19 review fixes applied:
@@ -56,8 +56,13 @@ The four implementation choices listed in the packet were approved as-is on PR #
 ## Open questions
 None. (Whether a pending job must match the active candidate is settled: P1.5 decides per request/state.)
 
+## Coordinator verification
+- PR #19 merged to `main` as `b6ced72`.
+- Merged-main CI run `37256889064` passed on the integrated 006+007 state.
+- Task status: `verified` on 2026-10-05.
+
 ## Blocked on
-- Coordinator final review and merge of PR #19, and clearing of the `blocked` status.
+- None. This task is verified.
 
 ## Integration with SIN-P1.1-006 (done, per the coordinator's merge order)
 `main` at `0d19b0f` (PR #18 merged) was merged into this branch. Three files were resolved **by hand**, not "accept both", in P1.1 order (006 before 007):
@@ -69,11 +74,11 @@ None. (Whether a pending job must match the active candidate is settled: P1.5 de
 
 **Combined gate:** ruff and mypy clean (18 files); **799 passed**, 8 skipped (= 707 on `main` + 694 here − 602 shared); 683 contract tests; Finding + EpisodeState tests 194; 29 unique invariants; all 74 exports resolve.
 
-## Next ready after approval
-After 006 and 007 are merged and verified: SIN-P1.1-008 serialization/versioning (the coordinator opens its packet).
+## Next eligible for packet drafting
+- SIN-P1.1-008 serialization/versioning. Implementation remains unauthorized until its own packet is reviewed, merged and marked READY.
 
 ## Do not start
-- 008, 009, P1.1-G, P1.2+; no controller, job runner, failure-signature constructor or solver-config record.
+- 008 implementation, 009, P1.1-G, P1.2+; 008 is packet-drafting only until separately authorized. No controller, job runner, failure-signature constructor or solver-config record.
 
 ## Risks / things not to change casually
 - Do not put wall-clock back into `BudgetVector` (concurrency makes it non-additive, ED7), and never store `remaining` (ED8).
