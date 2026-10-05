@@ -26,7 +26,7 @@ sindri-DataFactory/
   src/sindri/
     core/status.py               shared status taxonomy (ADR-0002)
     core/ids.py                  typed domain IDs, content IDs, canonical JSON hashing
-    schemas/                     boundary records: TaskManifest, Requirement, EvaluationPolicy, CandidateManifest, Observation, Finding (more per P1.1 order)
+    schemas/                     boundary records: TaskManifest, Requirement, EvaluationPolicy, CandidateManifest, Observation, Finding, EpisodeBudget, EpisodeState (P1.1 record set complete)
     judge/ solver/ verification_forge/ data/ tools/   local AGENTS.md only (rules bind before code)
   components/component.template.yaml  schemas.yaml
   agents/agent-card.template.yaml
@@ -40,7 +40,6 @@ sindri-DataFactory/
 
 | Path | Created by | Notes |
 |---|---|---|
-| `src/sindri/schemas/` (remaining records) | SIN-P1.1-007 | EpisodeState |
 | `src/sindri/evidence/` | P1.2 | |
 | sandbox / `src/sindri/tools/` | P1.3 / P1.4 | `tool_profiles/` arrives with P1.4 |
 | `src/sindri/controller/` | P1.5 | |

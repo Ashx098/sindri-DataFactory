@@ -1,0 +1,76 @@
+{
+  "schema_version": 1,
+  "episode_id": "e17",
+  "task_id": "pktfr_0193",
+  "sequence": 7,
+  "previous_state_hash": "sha256:e6e6e6e6e6e6e6e6e6e6e6e6e6e6e6e6e6e6e6e6e6e6e6e6e6e6e6e6e6e6e6e6",
+  "policy_id": "ep_pktfr_001",
+  "policy_hash": "sha256:b9b9b9b9b9b9b9b9b9b9b9b9b9b9b9b9b9b9b9b9b9b9b9b9b9b9b9b9b9b9b9b9",
+  "budget_hash": "sha256:eaad85a7943f9b42f7a965e1f86991e5788f80217060922969300f18d7cf52ae",
+  "solver_config_hash": "sha256:5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c",
+  "state": "WAITING",
+  "resume_state": "DEV_CHECK",
+  "abort_reason": null,
+  "active_candidate": {
+    "candidate_id": "c_pktfr_0193_e17_v3",
+    "candidate_manifest_hash": "sha256:c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3"
+  },
+  "best_candidate": {
+    "candidate_id": "c_pktfr_0193_e17_v2",
+    "candidate_manifest_hash": "sha256:c2c2c2c2c2c2c2c2c2c2c2c2c2c2c2c2c2c2c2c2c2c2c2c2c2c2c2c2c2c2c2c2"
+  },
+  "pending_jobs": [
+    {
+      "job_id": "job_771",
+      "request_hash": "sha256:7171717171717171717171717171717171717171717171717171717171717171",
+      "candidate": {
+        "candidate_id": "c_pktfr_0193_e17_v3",
+        "candidate_manifest_hash": "sha256:c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3"
+      },
+      "reserved": {
+        "tokens": 0,
+        "tool_calls": 0,
+        "candidate_versions": 0,
+        "sim_jobs": 0,
+        "formal_ms": 600000,
+        "repair_attempts": 0
+      }
+    },
+    {
+      "job_id": "job_772",
+      "request_hash": "sha256:7272727272727272727272727272727272727272727272727272727272727272",
+      "candidate": {
+        "candidate_id": "c_pktfr_0193_e17_v3",
+        "candidate_manifest_hash": "sha256:c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3"
+      },
+      "reserved": {
+        "tokens": 0,
+        "tool_calls": 0,
+        "candidate_versions": 0,
+        "sim_jobs": 1,
+        "formal_ms": 0,
+        "repair_attempts": 0
+      }
+    }
+  ],
+  "spent": {
+    "tokens": 84211,
+    "tool_calls": 23,
+    "candidate_versions": 3,
+    "sim_jobs": 9,
+    "formal_ms": 481000,
+    "repair_attempts": 2
+  },
+  "reserved": {
+    "tokens": 0,
+    "tool_calls": 0,
+    "candidate_versions": 0,
+    "sim_jobs": 1,
+    "formal_ms": 600000,
+    "repair_attempts": 0
+  },
+  "wall_clock_elapsed_ms": 611000,
+  "last_failure_signature": "sha256:f5f5f5f5f5f5f5f5f5f5f5f5f5f5f5f5f5f5f5f5f5f5f5f5f5f5f5f5f5f5f5f5",
+  "failure_repeat_count": 2,
+  "checkpoint_ref": "sha256:cbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcb"
+}

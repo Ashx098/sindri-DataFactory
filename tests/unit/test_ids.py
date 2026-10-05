@@ -19,6 +19,7 @@ from sindri.core.ids import (
     ExceptionId,
     FamilyId,
     FindingId,
+    JobId,
     LineageId,
     ObligationId,
     ObservationId,
@@ -160,6 +161,7 @@ VALID = [
     (SimTestId, "stall_stability_004"),
     (PropertyId, "R03_sva"),
     (PropertyId, "sva_stall_stable"),
+    (JobId, "job_771"),
 ]
 
 INVALID = [
@@ -197,6 +199,8 @@ INVALID = [
     (SimTestId, "4_stall"),
     (PropertyId, "R03-sva"),
     (PropertyId, "_R03"),
+    (JobId, "771"),
+    (JobId, "job-771"),
 ]
 
 

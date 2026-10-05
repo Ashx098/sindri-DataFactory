@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "limits": {
+    "tokens": 200000,
+    "tool_calls": 60,
+    "candidate_versions": 12,
+    "sim_jobs": 40,
+    "formal_ms": 1800000,
+    "repair_attempts": 6
+  },
+  "wall_clock_limit_ms": 3600000
+}
