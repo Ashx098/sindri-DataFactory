@@ -158,7 +158,7 @@ uv run pytest -q tests/contract
 `tests/contract/_record_catalog.py`, `tests/contract/test_round_trip.py`, `tests/contract/test_identity_encoding.py`, `tests/contract/test_schema_versioning.py`, `tests/contract/test_strict_deserialization.py`, plus doc updates (`components/schemas.yaml`, `docs/REPO_MAP.md`). No product files.
 
 ## Status
-`review` (authoritative status: `implementation/task_board.yaml`). Decisions S1–S17 implemented as written: tests and docs only.
+`verified` (coordinator, 2026-10-05). PR #24 merged to `main` as `23983db`; merged-main CI run `37262833634` passed. Decisions S1–S17 are verified as implemented; scope remained tests/docs only (authoritative status: `implementation/task_board.yaml`).
 
 ## Completion evidence
 - Files changed (tests and docs only): `tests/contract/_record_catalog.py`, `tests/contract/test_round_trip.py`, `tests/contract/test_identity_encoding.py`, `tests/contract/test_schema_versioning.py`, `tests/contract/test_strict_deserialization.py`, `tests/contract/test_canonical_key_order.py` (all new), `components/schemas.yaml` (INV-SER-001…004, related doc), `docs/REPO_MAP.md`, `implementation/task_board.yaml`, this packet, handoff. **No `src/` file changed.**
@@ -204,4 +204,5 @@ uv run pytest -q tests/contract
     - Plant counts 1–5 were measured at `a273845`; the review fix only adds tests.
 - Known limitations:
   - Duplicate-key, NaN and malformed-byte rejection at authoritative ingest, and integer storage range, are P1.2 requirements (see below).
+- Coordinator verification: PR #24 merge `23983db`; merged-main CI `37262833634` passed.
 - Handoff/next action: `docs/handoffs/SIN-P1.1-008.md`.
