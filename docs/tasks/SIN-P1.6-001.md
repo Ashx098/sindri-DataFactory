@@ -1,0 +1,253 @@
+# SIN-P1.6-001 — Minimal FIFO authority seed for the first vertical slice
+
+## Phase identity
+- Phase: `P1`
+- Subphase: `P1.6` (first task; it does **not** complete P1.6)
+- Architecture version: `master-architecture-v1`
+- Governance version: `governance-v1.1`
+- Implementation-plan version: `execution-v1.0`
+
+## Outcome
+A small, real hardware **engineering seed** under `evals/fixtures/fifo/` that the P1 vertical slice
+(P1.3 → P1.4 → P1.2 → P1.5 → P1.7 → P1.8) can drive. It contains:
+- one parameterized synchronous FIFO with documented semantics;
+- a canonical reference RTL and an independently written alternate-correct RTL;
+- a minimal machine-readable contract/requirements draft expressed in P1.1 records where possible;
+- a directed self-checking testbench;
+- 3–5 meaningful mutants of different bug classes, each with a recorded kill matrix.
+
+It is explicitly **not certified**. P1.6 authority certification (the reviewed contract, a 15–20
+critical-mutant set, and classification of every mutant) stays blocked on the RTL/DV/formal reviewer.
+
+## Why / architecture references
+- `docs/implementation/phases/P1_FOUNDATION_AND_JUDGE_V0.md` §P1.6: a reviewed FIFO contract, two correct implementations, a fixed parameter matrix, known-bad fixtures and 15–20 reviewed critical mutants. It depends on P1.1.
+- P1.1-G "Post-gate execution strategy" (`docs/tasks/SIN-P1.1-010.md`): one real FIFO through real tools before broadening abstractions.
+- `docs/PROJECT_STATE.md` risk: RTL/DV reviewer roles are unassigned, and P1.6 certification cannot complete without them.
+- `docs/REPO_MAP.md`: `evals/fixtures/fifo/` is created by P1.6.
+- AGENTS.md §3 (never infer PASS from exit code; TOOL_ERROR/TIMEOUT/INCONCLUSIVE/UNSUPPORTED/FAIL are distinct) and ADR-0002.
+
+## Owner / coordinator
+- Owner: assigned by coordinator when marked ready
+- Integrator: Avinash
+- Reviewers: Avinash (engineering); **RTL/DV/formal reviewer: unassigned** (required only for certification)
+
+## Base
+- Base branch: `main`
+- Base commit: `main` after this packet is merged and marked ready (drafted against `7a09c90`)
+- Worktree: `../worktrees/SIN-P1.6-001`
+
+## Dependencies
+- Required: P1.1 complete (SIN-P1.1-001…010 verified; P1.1-G approved).
+- **None of P1.2–P1.5.** The seed is pure fixture data, plus tests that validate the record drafts with the P1.1 models.
+
+## Two tracks
+| | **Engineering seed (this task)** | **Authority certification (later P1.6 task, blocked)** |
+|---|---|---|
+| Who | coding agent + coordinator | coding agent + **RTL/DV/formal reviewer** |
+| When | now | after a reviewer is assigned |
+| Contract | draft semantics (decisions F1–F6), revisable after real-tool contact | reviewed, signed-off contract; `approved_contract_hash` refers to the reviewed bytes |
+| Implementations | reference + alternate-correct, both passing the seed testbench | both reviewed; the alternate also reviewed for independence |
+| Mutants | 3–5 meaningful, different bug classes, a recorded kill matrix, labelled `seed`/`uncertified` | 15–20 critical mutants, each classified (killed/equivalent/out-of-scope) with reviewer sign-off |
+| Testbench | directed, self-checking, 4-state strict | reviewed coverage and expected-behaviour review; formal properties where applicable |
+| Use | drives the vertical slice; may be revised | required before P1.6 is declared complete and before P1.7 may claim "rejects predefined critical defects" |
+| Labels | every file and record says `engineering seed — uncertified` | `certified` only after review |
+
+## Draft FIFO semantics (for coordinator decision; F-rows below)
+- **Interface:** `clk`, `rst`, `in_valid`/`in_ready`/`in_data[WIDTH]`, `out_valid`/`out_ready`/`out_data[WIDTH]`, `full`, `empty`.
+- **Handshake:** valid/ready on both sides (F1). A push happens on a rising edge when `in_valid && in_ready`; a pop when `out_valid && out_ready`.
+- **Reset:** synchronous, active-high `rst` (F2). The reset must be held for ≥ 1 rising edge. After reset: `empty=1`, `full=0`, `out_valid=0`, `in_ready=1`. Stored data is not reset and is not observable.
+- **Flags:** `in_ready == !full`, `out_valid == !empty`, `full ⇔ occupancy == DEPTH`, `empty ⇔ occupancy == 0`.
+- **Overflow:** a push attempted while full is not accepted (backpressure); state is unchanged. **In particular, no push is accepted when full, even if a pop happens in the same cycle** (F3).
+- **Underflow:** a pop attempted while empty is ignored; state is unchanged.
+- **Simultaneous push + pop** (neither full nor empty): occupancy is unchanged, and order is preserved.
+- **Visibility:** there is no fall-through. A word written into an empty FIFO is first visible on `out_*` in the next cycle (F4). `out_data` is the oldest word whenever `out_valid=1`, and it is **unspecified** when `out_valid=0`.
+- **Stall stability:** while `out_valid && !out_ready`, `out_data` holds its value.
+- **Parameters:** `WIDTH ≥ 1`, `DEPTH ≥ 1`, any integer. Non-power-of-two depths are allowed (F5).
+- **Language:** synthesizable Verilog-2005 subset for RTL and testbench (F6), so the seed runs on Icarus without `-g2012`.
+
+### Requirement drafts (P1.1 `Requirement`, `disposition: proposed` until reviewed)
+| ID | Normalized semantics (draft) | Applicability |
+|---|---|---|
+| R01 | After reset: empty, not full, `out_valid=0`, `in_ready=1` | all configs |
+| R02 | `in_ready == !full` and `out_valid == !empty` at all times after reset | all |
+| R03 | Accepted words are popped in order (FIFO order) | all |
+| R04 | `full` iff occupancy == DEPTH; `empty` iff occupancy == 0 | all |
+| R05 | A push while full is not accepted, and state is unchanged | all |
+| R06 | A pop while empty is ignored, and state is unchanged | all |
+| R07 | Simultaneous push and pop keep occupancy and order | DEPTH ≥ 2 (impossible at DEPTH = 1, see P9) |
+| R08 | `out_data` stable while `out_valid && !out_ready` | all |
+| R09 | No fall-through: a write to empty is visible the next cycle | all |
+
+### Parameter matrix (proposed `EvaluationPolicy.configurations`)
+`(WIDTH, DEPTH)` ∈ {(8,4), (8,3), (32,8), (1,2), (8,1)}. Probe P8 shows that **a non-power-of-two depth is required**: mutant M2 is equivalent at every power-of-two depth. DEPTH = 1 and WIDTH = 1 are edge cases.
+
+## Facts established by read-only tool probes (local machine, 2026-10-05)
+The probes used scratch copies of draft RTL, testbench and mutants, outside the repository; nothing was committed.
+
+**Tool inventory**
+
+| # | Finding | Consequence |
+|---|---|---|
+| P1 | Installed: **Icarus Verilog 12.0 (stable)** (`iverilog`, `vvp`). **Not installed:** Verilator, slang/pyslang, Yosys, SBY, EQY, Verible, svlint. No HDL container images are present locally; Docker is available. | Only Icarus evidence was gathered. The Verilator/slang/Yosys diagnostics the coordinator asked for need tool provisioning, which is decision F8. I did not install or pull anything, because that is outside a read-only probe. |
+
+**Correct implementations**
+
+| # | Finding | Consequence |
+|---|---|---|
+| P2 | Reference and alternate-correct drafts (different structure: count register vs explicit full/empty flags) **compile and pass** the directed testbench in all 5 configurations. There are no errors; the only message is one timescale-inheritance warning on stderr. | Both controls are feasible now. |
+
+**Compile diagnostics**
+
+| # | Finding | Consequence |
+|---|---|---|
+| P3 | **Compile diagnostics go to stderr** as `file:line: error: …` / `file:line: warning: …`. A syntax error prints `file:line: syntax error` (no `error:` token) plus `I give up.`. An unknown `-P` parameter prints `:0: error: …` (no file). | The normalizer cannot rely on a single regex; diagnostics may lack a path. P1.1 `Diagnostic` already allows `path: None` and `code: None`; no schema change is needed. |
+| P4 | **The `iverilog` exit code equals the number of errors** (syntax error → 2; one bad port → 1; three elaboration errors → 3). | Exit-code *values* carry no category. An adapter may only use "non-zero means compile did not produce an executable" and must parse stderr. |
+| P5 | `-Wall` warns about implicit nets but **does not warn about width truncation** (assigning 8 bits to 4 bits is silent). SystemVerilog (`logic`, `always_ff`) **fails without `-g2012`** (exit 3). `` `default_nettype none `` turns implicit nets into errors. | Icarus is a weak lint. A real LINT check needs Verilator or slang (F8). The compile flags (`-g2005` vs `-g2012`, `` `default_nettype none ``) belong in the tool profile. |
+
+**Simulation exit behaviour**
+
+| # | Finding | Consequence |
+|---|---|---|
+| P6 | Under `vvp`: `$display` output, the `$finish called at …` line, and `ERROR:` / `FATAL:` messages **all go to stdout**. `$error` **exits 0**; `$fatal(1, …)` exits 1. A testbench that prints a fake `RESULT PASS` and finishes early exits 0, and so does one that never calls `$finish`. | This confirms AGENTS §3 and ADR-0002: **simulation PASS can never be inferred from the exit code.** The seed defines an explicit result protocol (F7). Completeness (every expected test reported) is what turns a run into PASS. |
+
+**Reset and X handling**
+
+| # | Finding | Consequence |
+|---|---|---|
+| P7 | At time 0, before the first reset edge, all state is `x`. Uninitialized memory makes `out_data = x` when empty. **An X-blind testbench (`if (!cond)`) silently passed mutant M4 (read pointer not reset) in all 5 configurations: `out_data = xx` while `out_valid = 1`.** After switching the checks to 4-state strict (`cond !== 1'b1` and `===` on data), M4 is killed in 5/5. | **X-pessimism can produce fake PASS.** The seed testbench must be 4-state strict. This becomes a permanent anti-fake-PASS fixture for P1.7 (an X-blind checker is a known-bad *testbench*). It is a strong argument for a 2-state simulator cross-check (Verilator) later. |
+
+**Mutant kill matrix**
+
+| # | Finding | Consequence |
+|---|---|---|
+| P8 | Mutant kill matrix with the strict testbench (table below): every mutant is killed in ≥ 1 configuration, and **M2 (read pointer without wrap) is equivalent at power-of-two depths** (4, 8, 2) because natural binary overflow wraps correctly. | The parameter matrix must include a non-power-of-two depth. Mutant classification is **per configuration**, which certification must record. |
+| P9 | **M3 (simultaneous push/pop count) and M5 (stale read) are equivalent at DEPTH = 1.** At DEPTH = 1 a push and a pop cannot both be enabled (`in_ready = !full`, `out_valid = !empty`), and the read pointer is always 0. | R07 is inapplicable at DEPTH = 1 (applicability scope). This is real evidence for `Requirement.applicability`. |
+
+**Performance and determinism**
+
+| # | Finding | Consequence |
+|---|---|---|
+| P10 | Simulation is deterministic: three runs gave byte-identical stdout (same sha256). Compile and simulation each take < 0.01 s and about 8 MB RSS per configuration. Timing printed in the `$finish` line depends on `timescale`. | This is cheap enough for every-push CI once a pinned Icarus exists in CI. Replay equality is feasible at the stdout level, but the `timescale` must be fixed in the profile. |
+
+### Mutant kill matrix (draft mutants of the reference; 4-state strict testbench)
+| Mutant | Bug class | (8,4) | (8,3) | (32,8) | (1,2) | (8,1) |
+|---|---|---|---|---|---|---|
+| M1 `full = (count == DEPTH-1)` | off-by-one full/empty | killed | killed | killed | killed | killed |
+| M2 `rd_ptr <= rd_ptr + 1` (no wrap) | broken pointer update | *equiv.* | killed | *equiv.* | *equiv.* | killed |
+| M3 `if (push) count++` (ignores simultaneous pop) | incorrect simultaneous push/pop | killed | killed | killed | killed | *equiv.* |
+| M4 `rd_ptr` not reset | reset-state defect | killed | killed | killed | killed | killed |
+| M5 `out_data = mem[rd_ptr_prev]` (one cycle stale) | stale read data | killed | killed | killed | killed | *equiv.* |
+| *(same matrix, X-blind testbench v1)* | | M4 survives in 5/5; M2 survives at (8,1) | | | | |
+
+## Mapping to P1.1 records, and mismatch evidence (for review; no schema change)
+| # | Observation | Proposed handling in the seed | Needs a coordinator decision? |
+|---|---|---|---|
+| S1 | `TaskManifest.source` kinds are `repo_cut`/`commit_feature`/`commit_fix`/`mutation`/`generator`/`use_case`; none means "hand-authored in-house seed". | Use `use_case` with `intake_ref: "sindri:p1.6-seed/fifo"` for the base task. Mutant **debug tasks** use `mutation` (parent = base task, operator = mutant id). | yes (F9) |
+| S2 | `authority_mode`: `reference_behavior` (needs `golden_hash` = reference RTL) vs `engineering_intent` (contract-first). | `engineering_intent` for the seed, because the contract is the authority and the reference is one witness; `golden_hash` stays null. | yes (F10) |
+| S3 | A mutant has no natural `CandidateManifest.producer_role` (`solver`/`reconstructor`/`architecture_explorer`), and there is **no P1.1 record for known-bad fixtures or mutant classification**. | In the seed, mutants and the kill matrix are **plain fixture data** (`mutants/manifest.json`), not records. When the slice needs a failing Observation, the mutant RTL is the *starting repo state of a mutation debug task*, not a candidate. | yes (F11). Possible future record type: surfaced, not invented. |
+| S4 | `approved_contract_hash` / `EvaluationPolicy.contract_hash` need *contract bytes*, but there is no Contract record (009 D6). | Hash the seed contract document (`contract/contract.md`) with `core.ids.content_id`. It is labelled draft; certification re-hashes the reviewed bytes. | no (consistent with D6) |
+| S5 | `Observation.expected_test_ids` should come from the evaluator-bundle inventory (005 R5, 009 D4), which has no record yet. | The seed publishes its test inventory (`tb/tests.json`: the TEST names) as fixture data, so P1.4/P1.6 can anchor expected tests to it. | no; the evidence bundle stays P1.4/P1.6 |
+| S6 | `TestId` pattern `[A-Za-z][A-Za-z0-9]*(_…)*` fits the testbench's `TEST <name>` lines; per-test PASS/FAIL maps to `SimulationReport.test_results`. Run-level `RESULT PASS/FAIL` plus `$fatal` on failure gives a TOOL_ERROR vs FAIL distinction by parsing, never by exit code. | Result protocol F7. | yes (F7) |
+| S7 | Compile diagnostics without a file (P3) and errors without codes map to `Diagnostic(path=None, code=None)`. | No change. | no |
+
+## Decisions requested (agent recommendations)
+| ID | Question | Recommendation |
+|---|---|---|
+| F1 | Handshake | valid/ready on both sides (closest to the §20 examples, e.g. stall stability). |
+| F2 | Reset | synchronous, active-high, ≥ 1 edge; data storage not reset. |
+| F3 | Push when full while popping | not accepted (`in_ready = !full`); simplest, no combinational path from `out_ready` to `in_ready`. |
+| F4 | Fall-through | none (registered visibility); simpler, and P9 shows its edge cases. |
+| F5 | Depth constraint | any `DEPTH ≥ 1`, including non-power-of-two (required by P8). |
+| F6 | Language | Verilog-2005 subset for the seed; SystemVerilog only once a pinned SV-capable tool exists (P5). |
+| F7 | Result protocol | Testbench prints `TEST <TestId> PASS|FAIL` per test and a final `RESULT PASS|FAIL`, then `$fatal(1, …)` on failure and `$finish` on success. The adapter derives status from the parsed protocol **and** completeness against `tb/tests.json`; it never uses the exit code alone. |
+| F8 | Tool provisioning for the requested Verilator/slang/Yosys evidence | **Coordinator approval needed.** Option (a): pin container images (e.g. a Verilator 5.x image, slang, Yosys/SBY) by digest in P1.3, and repeat P2–P10 on them before P1.4 designs its normalizer. Option (b): install via the system package manager (not reproducible). Recommend (a). The first P1.4 adapter could be Icarus (available now), with Verilator as the second. |
+| F9 | Task source for an in-house seed | `use_case` now. A dedicated `authored` source kind would be a schema change; surfaced only. |
+| F10 | Authority mode | `engineering_intent`. |
+| F11 | Mutant representation | fixture data plus mutation debug tasks in the seed; a known-bad/mutant record type is decided before certification (P1.6 later), not here. |
+| F12 | X-blind testbench as a P1.7 fixture | Keep the v1 X-blind testbench as a recorded **known-bad testbench** for P1.7 anti-fake-PASS work. |
+
+## Proposed vertical-slice dependency shape (sequencing proposal, not an architecture change)
+```text
+P1.6 minimal FIFO seed (this task; depends on P1.1 only)
+         ↓
+P1.3 minimal execution substrate (one sandboxed process run, wall limit, captured stdout/stderr)
+         ↓
+P1.4 one real compile/sim adapter (Icarus first per F8; golden-log tests from P3–P7)
+         ↓
+P1.2 minimal durable evidence for the slice (blobs + records + append-only events)
+         ↓
+P1.5 minimal controller path (fakes first, then the real adapter in P1.8)
+         ↓
+P1.7 judge v0
+         ↓
+P1.8 repair + replay
+```
+Dependencies that the existing phase graph requires, or that the probes make objectively necessary:
+1. **P1.6 does not need P1.3.** It can start now and may run in parallel with P1.3 (both depend only on P1.1).
+2. **G-B (the ID-encoding ADR) must land before P1.4 emits Observations, not only before P1.2.** The adapter mints `ObservationId`s. If P1.4 ships with sequential-style IDs, the pattern change for collision-resistant IDs would hit golden logs and fixtures. Recommend: the G-B ADR is the entry condition of the first P1.4 task.
+3. **P1.4 before P1.2 is sound** (P1.4 depends on P1.1 + P1.3 only), provided P1.4 hashes logs and evidence with `core.ids.content_id` and persists nothing. Durable storage of those blobs arrives with P1.2, before P1.5/P1.7 consume them. G-S and G-U remain P1.2 entry conditions.
+4. **P1.7 depends on P1.2 + P1.4 + P1.6** (phase file). P1.7 can be *engineered* against the seed, but its exit claim ("rejects predefined critical defects") needs the **certified** mutant set. So P1.7 completion, and therefore P1.8/P1.G, is gated on P1.6 certification and hence on the RTL/DV reviewer.
+5. **Tool provisioning (F8) is a P1.3 entry question.** The sandbox has to run a pinned toolchain; the Icarus-only environment is not reproducible as-is (it is a host install).
+
+No different ordering is objectively necessary beyond points 2 and 4.
+
+## Scope (engineering seed, once ready)
+- In scope, under `evals/fixtures/fifo/` (proposed layout):
+  - `README.md`: semantics F1–F6, an "engineering seed — uncertified" label, and the two-track table;
+  - `rtl/fifo_ref.v`, `rtl/fifo_alt.v`;
+  - `tb/tb_fifo.v` (4-state strict, protocol F7) and `tb/tests.json` (test inventory);
+  - `mutants/M1…M5.v` (or patch files) and `mutants/manifest.json` (bug class, intended defect, recorded kill matrix, `status: uncertified`);
+  - `known_bad/tb_fifo_xblind.v` (F12);
+  - `contract/contract.md` (draft contract text);
+  - `records/*.json`: a draft `TaskManifest` (base task + one mutation debug task), `Requirement` R01–R09 (`disposition: proposed`), and a draft `EvaluationPolicy` with the five-configuration matrix and directed-sim checks.
+- Tests:
+  - `tests/contract/test_fifo_seed_records.py`: the record drafts validate with the P1.1 models, `check_records` over the seed bundle returns `()` (or only documented, explained codes), and the contract hash matches `contract/contract.md`.
+  - `tests/eda/test_fifo_seed_icarus.py`, marked `eda` and skipped when `iverilog` is absent: both controls pass every configuration, and every mutant's kill matrix reproduces exactly.
+- Allowed paths: `evals/fixtures/fifo/**` (new), `tests/contract/test_fifo_seed_records.py` (new), `tests/eda/` (new, `eda` marker), `docs/REPO_MAP.md`, this packet, the handoff, and the task-board status.
+
+## Forbidden paths / authority boundaries
+- No Sindri adapters, sandbox, store, controller or judge code (P1.2–P1.5, P1.7).
+- No P1.1 schema change because a tool output is inconvenient: mismatches are recorded (S1–S7) for review.
+- No claim of certification. Every artifact is labelled `uncertified`. No hidden or final-evaluation material: the seed is development-visibility only.
+- No tool installation into the repository or CI in this task (F8 decides provisioning).
+
+## Non-goals
+- Completing P1.6: the 15–20 critical mutants, reviewer sign-off and formal properties.
+- Verilator/slang/Yosys/SBY evidence (blocked on F8), synthesis, formal, equivalence.
+- Any vertical-slice code; any CI change to install EDA tools.
+
+## Interfaces touched
+- None in `src/`. New fixture data and tests only. The P1.1 records are used as-is.
+
+## Acceptance criteria (engineering seed)
+- [ ] Reference and alternate RTL pass the 4-state strict testbench in all 5 configurations (`eda` test; reproduced locally with Icarus 12.0).
+- [ ] Each of M1–M5 compiles; its kill matrix reproduces exactly; each is killed in ≥ 1 configuration; equivalences are recorded per configuration (P8/P9).
+- [ ] The X-blind known-bad testbench is retained, and is shown to pass M4 (fake PASS) where the strict testbench kills it.
+- [ ] Record drafts validate with the P1.1 models; `check_records` over the seed bundle is clean or every code is explained.
+- [ ] Every artifact is labelled `engineering seed — uncertified`; the two-track table is in the README.
+- [ ] No `src/` change; no adapter, sandbox, store, controller or judge code.
+- [ ] Handoff written, with probe evidence and F-decisions; status → `review`.
+
+## Verification commands
+```bash
+uv run ruff check . && uv run mypy && uv run pytest -q
+uv run pytest -q -m eda tests/eda        # requires iverilog (Icarus 12.0); skipped otherwise
+git diff --stat origin/main -- src/       # must be empty
+```
+
+## Plan of record
+1. Write the semantics and contract draft (after F1–F7, F9–F12 decisions).
+2. Add the RTL controls, strict testbench, test inventory, mutants and manifest, and the known-bad testbench.
+3. Add the record drafts and the contract-hash test; run `check_records`.
+4. Add the `eda` reproduction tests; record the kill matrix and tool version.
+5. Handoff; status → `review`.
+
+## Status
+`planned` (authoritative status: `implementation/task_board.yaml`). Planning only; not ready. Open decisions F1–F12; F8 (tool provisioning) and dependency point 2 (G-B before P1.4) are the most consequential.
+
+## Completion evidence
+- Files changed:
+- Tests run/results:
+- Acceptance evidence:
+- Known limitations:
+- Handoff/next action:

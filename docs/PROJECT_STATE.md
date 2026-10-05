@@ -28,7 +28,7 @@ Roles must exist even when one person holds several. `unassigned` roles are real
 | Workstream | Status | Active task | Blocking decision |
 |---|---|---|---|
 | Governance/bootstrap | complete | — | — |
-| Foundation (P1) | active | P1.1 complete: SIN-P1.1-001…010 verified and P1.1-G approved; P1.2 entry/vertical-slice planning next | G-B exact ID encoding ADR before first P1.2 persistent write |
+| Foundation (P1) | active | P1.1 complete (SIN-P1.1-001…010 verified, P1.1-G approved); SIN-P1.6-001 FIFO seed packet drafted (planned); P1.2 entry/vertical-slice planning | G-B exact ID encoding ADR (recommended before the first P1.4 Observation, not only before P1.2); F8 EDA tool provisioning |
 | Task Forge | planned | — | P1.G |
 | Spec Forge | planned | — | P1.G + P2 assets |
 | Verification Forge | planned | — | P1.G + P3 contracts |
