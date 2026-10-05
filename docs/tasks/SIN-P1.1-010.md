@@ -222,7 +222,7 @@ git diff --stat <gate-base> -- src/sindri/core src/sindri/schemas/cross_record.p
 5. List open decisions (C) with owners; submit for coordinator decision.
 
 ## Status
-`review` (authoritative status: `implementation/task_board.yaml`). Gate executed from `main` `e055d7f`; coordinator approved P1.1-G on PR #31 comment `5990730575`. Evidence `docs/implementation/gates/P1.1-G.md` now records `APPROVED`. The task remains `review` until this PR merges and merged-main CI passes; the coordinator then records `verified`.
+`verified` (coordinator, 2026-10-05). P1.1-G was approved on PR #31 comment `5990730575`; PR #31 merged as `6bbdad2`; merged-main CI `37283109668` passed. Evidence: `docs/implementation/gates/P1.1-G.md` (authoritative task status: `implementation/task_board.yaml`).
 
 **Task ID.** The gate is registered on `implementation/task_board.yaml` as **`SIN-P1.1-010`** (title "P1.1-G — P1.1 foundation integration gate"). `tests/unit/test_governance.py` requires board IDs of the form `SIN-<phase>.<n>-<nnn>`, and requires every `docs/tasks/SIN-*.md` packet to be on the board, so `SIN-P1.1-G` cannot be a board ID. The gate's *decision* is still recorded like B0.G: a gate evidence packet (`docs/implementation/gates/P1.1-G.md`) carrying the coordinator's APPROVED/BLOCKED decision, followed by coordinator verification of `SIN-P1.1-010`. Coordinator confirmed this naming on PR #30. `SIN-P1.1-010` is the task-board wrapper; `P1.1-G` is the gate/evidence name. Because this is a **subphase** gate, approval does not change `implementation/current.yaml`; P1 remains ACTIVE until phase gate `P1.G`. Future P1.2 tasks depend on `SIN-P1.1-010` being coordinator-verified, not on a synthetic subphase gate dependency.
 
@@ -253,4 +253,5 @@ git diff --stat <gate-base> -- src/sindri/core src/sindri/schemas/cross_record.p
   - The JSON Schemas are structural projections, and their fidelity gaps are documented in the evidence.
   - G-B, G-S and G-U remain hard P1.2 entry requirements.
   - RTL/DV reviewer roles are unassigned, which blocks P1.6 certification but not this gate.
+- Coordinator verification: PR #31 merge `6bbdad2`; merged-main CI `37283109668` passed.
 - Handoff/next action: `docs/handoffs/SIN-P1.1-010.md`.
