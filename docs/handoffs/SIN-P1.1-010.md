@@ -34,9 +34,10 @@
 | `uv run python scripts/export_json_schemas.py --check` | 9 schemas match |
 | boundary diff (`core`, `cross_record.py`, examples, `current.yaml`) | empty |
 
-## Flagged for coordinator acceptance
-- **B5:** `src/sindri/schemas/__init__.py` exports `FindingProducerRole`, an alias of `finding.ProducerRole`, which was otherwise unreachable because of the name collision. This file is not on the packet's proposed path list. The change is additive with no semantic effect.
-- `tests/contract/test_gate_float_identity.py` (the A5 sweep) is not on the proposed path list either.
+## Coordinator scope decisions
+Accepted on PR #31 comment `5990730575`:
+- **B5:** `src/sindri/schemas/__init__.py` may export `FindingProducerRole`, an additive alias of `finding.ProducerRole`; the CandidateManifest `ProducerRole` name remains unchanged.
+- **A5 test path:** `tests/contract/test_gate_float_identity.py` is an approved bounded scope addition because it implements the packet's required whole-record float/identity sweep.
 
 ## Decisions
 None new. G-JS (a), G-F (a), G-R internal, G-O (guards + targeted step) and the B1/B2 forms are implemented as decided on PR #30.
@@ -45,7 +46,7 @@ None new. G-JS (a), G-F (a), G-R internal, G-O (guards + targeted step) and the 
 None.
 
 ## Blocked on
-- The coordinator's gate decision (APPROVED/BLOCKED) and verification of `SIN-P1.1-010`.
+- P1.1-G is coordinator-**APPROVED**. Remaining: merge PR #31, pass merged-main CI, then record coordinator verification of `SIN-P1.1-010`.
 
 ## Next after approval
 - **Hard P1.2 entry conditions:**
