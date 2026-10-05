@@ -222,7 +222,7 @@ git diff --stat <gate-base> -- src/sindri/core src/sindri/schemas/cross_record.p
 5. List open decisions (C) with owners; submit for coordinator decision.
 
 ## Status
-`review` (authoritative status: `implementation/task_board.yaml`). Gate executed from `main` `e055d7f`; evidence `docs/implementation/gates/P1.1-G.md` (`GATE_REVIEW`, decision `PENDING_HUMAN_APPROVAL`). The coordinator alone decides APPROVED/BLOCKED and verifies `SIN-P1.1-010`.
+`review` (authoritative status: `implementation/task_board.yaml`). Gate executed from `main` `e055d7f`; coordinator approved P1.1-G on PR #31 comment `5990730575`. Evidence `docs/implementation/gates/P1.1-G.md` now records `APPROVED`. The task remains `review` until this PR merges and merged-main CI passes; the coordinator then records `verified`.
 
 **Task ID.** The gate is registered on `implementation/task_board.yaml` as **`SIN-P1.1-010`** (title "P1.1-G — P1.1 foundation integration gate"). `tests/unit/test_governance.py` requires board IDs of the form `SIN-<phase>.<n>-<nnn>`, and requires every `docs/tasks/SIN-*.md` packet to be on the board, so `SIN-P1.1-G` cannot be a board ID. The gate's *decision* is still recorded like B0.G: a gate evidence packet (`docs/implementation/gates/P1.1-G.md`) carrying the coordinator's APPROVED/BLOCKED decision, followed by coordinator verification of `SIN-P1.1-010`. Coordinator confirmed this naming on PR #30. `SIN-P1.1-010` is the task-board wrapper; `P1.1-G` is the gate/evidence name. Because this is a **subphase** gate, approval does not change `implementation/current.yaml`; P1 remains ACTIVE until phase gate `P1.G`. Future P1.2 tasks depend on `SIN-P1.1-010` being coordinator-verified, not on a synthetic subphase gate dependency.
 
@@ -230,9 +230,9 @@ git diff --stat <gate-base> -- src/sindri/core src/sindri/schemas/cross_record.p
 - Files changed:
   - **Product:**
     - `src/sindri/schemas/observation.py` (B1, `bound_met` only);
-    - `src/sindri/schemas/__init__.py` (B5 additive alias `FindingProducerRole`; flagged).
+    - `src/sindri/schemas/__init__.py` (B5 additive alias `FindingProducerRole`; **accepted by the coordinator** on PR #31).
   - **Tests:**
-    - `tests/unit/test_no_runtime_asserts.py`, `tests/contract/test_optimized_mode.py`, `tests/contract/test_public_api.py`, `tests/contract/test_json_schema_export.py` and `tests/contract/test_gate_float_identity.py` (new; the last is flagged);
+    - `tests/unit/test_no_runtime_asserts.py`, `tests/contract/test_optimized_mode.py`, `tests/contract/test_public_api.py`, `tests/contract/test_json_schema_export.py` and `tests/contract/test_gate_float_identity.py` (new; A5 sweep path **accepted by the coordinator** on PR #31);
     - B2 explicit raises in `tests/contract/_record_catalog.py` and `tests/contract/cross_record/_case.py`.
   - **Export:** `scripts/export_json_schemas.py` and `schemas/json/v1/*.schema.json` (9, generated).
   - **CI:** `.github/workflows/ci.yml` (one targeted `-O` step).
@@ -246,6 +246,9 @@ git diff --stat <gate-base> -- src/sindri/core src/sindri/schemas/cross_record.p
   - A1–A12 and the planted checks are recorded in `docs/implementation/gates/P1.1-G.md`.
   - The B1 plant (old `assert` restored) is caught by the `-O` test and the AST guard.
   - The B2 plant fires under `-O` as an explicit raise (83 failed); as a plain `assert` it passes vacuously (138 passed).
+- Coordinator gate decision:
+  - P1.1-G **APPROVED** on PR #31 comment `5990730575`.
+  - B5 and the A5 test-file path expansion are accepted bounded scope additions.
 - Known limitations:
   - The JSON Schemas are structural projections, and their fidelity gaps are documented in the evidence.
   - G-B, G-S and G-U remain hard P1.2 entry requirements.
