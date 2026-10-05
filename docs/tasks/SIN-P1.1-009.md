@@ -79,7 +79,7 @@ with their owner rather than approximated.
 | X7 | **Accepted.** Exact path or POSIX segment prefix (`entry + "/"`) only; no raw prefix and no globbing. |
 | X8 | **Accepted as a current-bundle rule.** XR-K2/K3 use the set-head TaskManifest. This validates a candidate against the bundle's *current* task authority, not the revision in force when the candidate was created (L1). No field is added in 009. |
 | X9 | **Accepted.** Entering WAITING records the state actually paused: `cur.resume_state == prev.state`. WAITING exits only to that state or to ABORTED. |
-| X10 | **Per-dimension exemptions accepted, plus truthful abort reasons.** `budget_exhausted` exempts only additive-limit overflow; `wall_clock_exhausted` exempts only wall-clock overflow. `infrastructure_failure`, `stagnation` and `cancelled` exempt nothing. Additionally (XR-E11): a `budget_exhausted` ABORTED snapshot has ≥ 1 additive dimension at or beyond its limit, and a `wall_clock_exhausted` one has `wall_clock_elapsed_ms ≥ wall_clock_limit_ms`. |
+| X10 | **Per-dimension exemptions accepted, plus truthful abort reasons.** `budget_exhausted` exempts only additive-limit overflow; `wall_clock_exhausted` exempts only wall-clock overflow. `infrastructure_failure`, `stagnation` and `cancelled` exempt nothing. Additionally (XR-E11): for mixed zero/positive additive limits, `budget_exhausted` is truthful only when ≥ 1 **positive-limit** dimension has `spent + reserved ≥ limit`; zero-limit dimensions are disabled and do not trigger it. If **all** additive limits are zero, `budget_exhausted` is valid at zero usage because no additive budget is available. `wall_clock_exhausted` requires `wall_clock_elapsed_ms ≥ wall_clock_limit_ms`. |
 | X11 | **Head coverage accepted; historical matching amended.** A head policy matches the head task's `approved_contract_hash` (XR-P2B), and XR-P3/P6/P7 use the head task and head requirements. A **non-head** policy is not bound to an invented "highest matching revision". Instead: (a) its `contract_hash` appears on ≥ 1 revision of its task (XR-P2A); (b) each obligation requirement appears in ≥ 1 revision of that task carrying that contract hash (XR-P3, historical form). Exact historical policy→manifest binding is not representable (L2). |
 | X12 | **Accepted.** An approved mandatory requirement applying to zero configurations of a head policy is a violation (XR-P7). |
 | X13 | **Accepted for definite solver provenance.** A Finding with `producer.role == solver` cites no `hidden` Observation, in correctness or deciding citations (XR-F9). Provenance that cannot be classified as solver-side or judge-side from the record is **not guessed**; it is a P1.5 solver-safe-projection follow-up (D19). |
@@ -231,7 +231,7 @@ H1 + H2 + H3 = all 37 fields at `c1025af`.
 | XR-E6 | State, Policy | `policy.task_id == state.task_id` for the resolved policy (resolution and `policy_id` are B2). | Policy of another task | Policy resolved by id | 1 per state |
 | XR-E7 | consecutive pair | `spent` (each dimension) and `wall_clock_elapsed_ms` never decrease. | `tool_calls` 7 → 6 | Only the vector sum compared | 1 per (pair, dimension) |
 | XR-E8 | State, Budget | Per dimension, `spent + reserved ≤ limits`, and `wall_clock_elapsed_ms ≤ wall_clock_limit_ms`, except the per-dimension ABORTED exemptions (X10). | (a) `sim_jobs` overspend at TRIAGE; (b) additive overspend at ABORTED(`wall_clock_exhausted`) | `<` vs `≤`; exemption applied to all dimensions | 1 per (state, dimension) |
-| XR-E11 | ABORTED State, Budget | `budget_exhausted` ⇒ ∃ additive dimension with `spent + reserved ≥ limit`; `wall_clock_exhausted` ⇒ `wall_clock_elapsed_ms ≥ wall_clock_limit_ms` (X10). | ABORTED(`budget_exhausted`) with every dimension under its limit | Reason checked against the wrong dimension set | 1 per state |
+| XR-E11 | ABORTED State, Budget | `budget_exhausted` ⇒ if any additive limit is > 0, at least one **positive-limit** dimension has `spent + reserved ≥ limit`; if all additive limits are 0, the reason is valid at zero usage because no additive budget exists. `wall_clock_exhausted` ⇒ `wall_clock_elapsed_ms ≥ wall_clock_limit_ms` (X10/N3). | (a) Mixed zero/positive budget where only a zero-limit dimension is at limit and every positive-limit dimension is under; (b) `wall_clock_exhausted` below the wall limit | Zero-limit disabled dimensions incorrectly count as exhaustion in a mixed budget | 1 per state |
 | XR-E9 | State, Candidates | Every non-null `CandidateBinding` (active, best, pending) has `manifest.task_id == state.task_id` and, if `manifest.episode_id` is not `None`, `manifest.episode_id == state.episode_id`. Resolution is B2. A reconstructor/oracle-side seed candidate is valid; CandidateManifest's own F6 rule fixes solver vs reconstructor episodes. | (a) Solver candidate of another episode as `best_candidate`; (b) pending job bound to another task's candidate | Requires an episode on every candidate (false positive on a reconstructor seed) | 1 per binding |
 | XR-E10 | chain | A `JobId` keeps the same (`request_hash`, `candidate`, `reserved`) in every snapshot that lists it; once absent from a later snapshot it never reappears in that chain. | (a) Same `JobId`, new `request_hash`; (b) job reappears after removal | Reappearance not checked | 1 per (episode, job) |
 
@@ -263,13 +263,13 @@ None of these is approximated in 009. "New record?" marks a rule impossible with
 | D16 / L1 | Exact historical candidate → TaskManifest revision binding (X8, N2) | `CandidateManifest` has no manifest hash/version | schema change, coordinator | field, not record |
 | D17 / L2 | Exact historical policy → TaskManifest revision binding (X11) | `EvaluationPolicy` has `task_id` + `contract_hash` only | schema change, coordinator | field, not record |
 | D18 / L3 | Exact historical requirement semantics of a Finding | `Finding` carries a logical `requirement_id`, no Requirement content/version hash; invalidation of old Findings is D14 | schema change, coordinator / P1.5 / P4 | field, not record |
-| D19 | Hidden-evidence leakage by Findings whose provenance cannot be classified as solver-side vs judge-side. `Finding.producer.role` ∈ {solver, critic, triage, reviewer}; critic/triage/reviewer, and candidate-side `architecture_explorer` context, do not say which side produced them. (X13) | Needs the P1.5 solver-safe projection/context provenance | P1.5 | no |
+| D19 | Hidden-evidence leakage by Findings whose provenance cannot be classified as solver-side vs judge-side. `Finding.producer.role` ∈ {solver, critic, triage, reviewer}; critic/triage/reviewer do not by themselves say which side produced the Finding. (X13/N4) | Needs the P1.5 solver-safe projection/context provenance | P1.5 | no |
 
 ### Surfaced for coordinator review (not invented)
 - **N1:** contract parameter vocabulary needs a Contract record (D6). XR-P8/XR-P5 are in-bundle consistency only.
 - **N2:** `CandidateManifest` does not pin the task revision (L1). Neither does `EvaluationPolicy` (L2) or `Finding` → Requirement (L3). No fields are added in 009.
-- **N3 (new, raised while applying X10):** with a zero additive limit, which ED7 allows (e.g. `tokens = 0`), "a dimension at or beyond its limit" is satisfied trivially, so XR-E11 accepts *any* `budget_exhausted` abort of such an episode. **Agent recommendation:** count only dimensions with `limit > 0`, unless every additive limit is 0. Implemented as the coordinator wrote it unless amended.
-- **N4 (wording, no rule change):** the review's X13 note mentions `architecture_explorer`, which is a *CandidateManifest* producer role, not a Finding producer role. D19 records the general ambiguity of non-solver Finding roles; XR-F9 is limited to `role == solver` as decided.
+- **N3 — decided by coordinator in final PR #26 review.** Zero-valued additive dimensions are disabled and do not prove `budget_exhausted` when any additive dimension has a positive limit. In that mixed case, at least one positive-limit dimension must have `spent + reserved ≥ limit`. If **all** additive limits are zero, `budget_exhausted` is valid at zero usage because the episode has no additive budget available at all. XR-E11 tests both cases.
+- **N4 — clarified by coordinator, no rule change.** `Finding.producer.role` is `solver | critic | triage | reviewer`; `architecture_explorer` is a CandidateManifest producer role and is unrelated to Finding provenance. D19 covers the ambiguity of critic/triage/reviewer; XR-F9 remains limited to `role == solver`.
 
 ## Test design
 - **Coherent bundle builder** (`tests/contract/cross_record/_bundle.py`):
@@ -315,7 +315,7 @@ None of these is approximated in 009. "New record?" marks a rule impossible with
   - any store, event log, controller or judge code.
 
 ## Non-goals
-- No new record type, field or schema change (L1–L3, N1–N3 are surfaced only).
+- No new record type, field or schema change (L1–L3 and N1–N2 are surfaced only; N3/N4 are decided without schema changes).
 - No store, persistence, event log, ingest boundary, query layer or global uniqueness (D1, D2).
 - No controller transition logic, requalification or invalidation (D14), no judge verdicts, and no accounting truth (D11).
 - No evaluator-bundle, tool-profile, contract, dependency-bundle, job-request or solver-config records (D3–D9).
@@ -345,7 +345,7 @@ Tests:
 Documentation:
 - [ ] `components/schemas.yaml`: cross-record invariants, closed-bundle semantics (X4) and the public API.
 - [ ] `docs/REPO_MAP.md` updated.
-- [ ] Packet completion evidence and handoff written, with table D owners and L1–L3, N1–N4.
+- [ ] Packet completion evidence and handoff written, with table D owners and L1–L3, N1–N4 decisions/limitations.
 
 Boundaries:
 - [ ] `cross_record.py` imports concrete schema modules, not `sindri.schemas`; no I/O, clock or input mutation.
