@@ -158,7 +158,7 @@ uv run pytest -q tests/contract
 `tests/contract/_record_catalog.py`, `tests/contract/test_round_trip.py`, `tests/contract/test_identity_encoding.py`, `tests/contract/test_schema_versioning.py`, `tests/contract/test_strict_deserialization.py`, plus doc updates (`components/schemas.yaml`, `docs/REPO_MAP.md`). No product files.
 
 ## Status
-`planned`. PR #22 coordinator decisions S1–S17 applied: tests and docs only; awaiting merge and readiness (authoritative status: `implementation/task_board.yaml`).
+`ready` (coordinator, 2026-10-05). PR #22 merged to `main` as `2942b29`; merged-main CI run `37259050839` passed. This task is tests/docs only per S1–S17. Implementation is authorized only after this governance readiness PR itself is merged to `main` (authoritative status: `implementation/task_board.yaml`).
 
 ## Completion evidence
 - Files changed:
