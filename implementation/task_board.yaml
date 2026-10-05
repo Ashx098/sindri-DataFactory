@@ -95,6 +95,6 @@ tasks:
     title: Cross-record invariant tests
     phase: P1
     subphase: P1.1
-    status: planned
+    status: ready
     depends_on: [SIN-P1.1-008]
     packet: docs/tasks/SIN-P1.1-009.md
