@@ -24,6 +24,15 @@ python scripts/show_ready_tasks.py --all
 - **`SIN-P1.1-010 — P1.1-G foundation integration gate` is VERIFIED.** P1.1-G was coordinator-APPROVED on PR #31 (comment `5990730575`); PR #31 merged as `6bbdad2`; merged-main CI `37283109668` passed. The task-board ID is `SIN-P1.1-010`; the gate/evidence name remains `P1.1-G`. Approval does **not** change `implementation/current.yaml`; P1 remains ACTIVE until phase gate P1.G.
 - **`SIN-P1.6-001 — Minimal FIFO authority seed` is VERIFIED for development use** (coordinator, 2026-10-05). PR #35 merged as `0cfa365`; merged-main CI `37315346193` passed. The seed remains explicitly **uncertified** and does not complete P1.6; certification still requires RTL/DV/formal review and the later 15–20 critical-mutant authority package. Its Icarus evidence includes the exact five-configuration kill matrix, quarantined X-blind fake-PASS fixture, strict F7 completeness protocol, and the documented stdout-provenance spoofing boundary.
 - No task is currently READY. **P1.3 minimal execution-substrate planning is now the preferred next packet**, using pinned OCI tooling and the FIFO seed as the first real workload. P1.2 entry planning may proceed in parallel, but implementation remains unauthorized; G-B must land before any P1.4 Observation fixture/output, while G-S/G-U remain hard P1.2 persistence-entry requirements.
+- `SIN-P1.3-001 — Minimal isolated execution substrate` packet **drafted for coordinator review** (`planned`). Read-only Docker probes on this host found:
+  - `docker run` exit codes are ambiguous (create/start/inspect is needed);
+  - PID-1 signals are swallowed without `--init`;
+  - a child OOM can still exit 0, with OOM visible only in inspect;
+  - output is unbounded, and the default json-file logs are too;
+  - killing the CLI orphans the container;
+  - the daemon is rootful and docker-group access is root-equivalent (decision D7 before untrusted code).
+
+  No image was pulled or built.
 - Process deviation (recorded at the coordinator's request, not precedent): implementation of 003 and 004 began from the **unmerged** readiness commit `62a7834`, under delegation. The coordinator accepted that work for review, but READY was not yet authoritative on `main`. Future implementation waits until readiness is merged.
 
 ## P1.1 order (coordinator sequencing refinement, 2026-10-04; not an ADR change)

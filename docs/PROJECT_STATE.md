@@ -28,7 +28,7 @@ Roles must exist even when one person holds several. `unassigned` roles are real
 | Workstream | Status | Active task | Blocking decision |
 |---|---|---|---|
 | Governance/bootstrap | complete | — | — |
-| Foundation (P1) | active | P1.1 complete; SIN-P1.6-001 FIFO engineering seed verified (uncertified); P1.3 minimal execution-substrate packet next, P1.2 entry planning may run in parallel | G-B exact ID encoding ADR before any P1.4 Observation fixture/output; pinned EDA tool provisioning in P1.3 |
+| Foundation (P1) | active | P1.1 complete; SIN-P1.6-001 FIFO engineering seed verified (uncertified); P1.3 minimal execution-substrate packet next, P1.2 entry planning may run in parallel; SIN-P1.3-001 execution-substrate packet drafted (planned) | G-B exact ID encoding ADR before any P1.4 Observation fixture/output; pinned EDA tool provisioning in P1.3 |
 | Task Forge | planned | — | P1.G |
 | Spec Forge | planned | — | P1.G + P2 assets |
 | Verification Forge | planned | — | P1.G + P3 contracts |

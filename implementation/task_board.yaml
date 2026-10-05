@@ -114,3 +114,11 @@ tasks:
     status: verified
     depends_on: [SIN-P1.1-010]
     packet: docs/tasks/SIN-P1.6-001.md
+
+  - id: SIN-P1.3-001
+    title: Minimal isolated execution substrate for the FIFO vertical slice
+    phase: P1
+    subphase: P1.3
+    status: planned
+    depends_on: [SIN-P1.1-010, SIN-P1.6-001]
+    packet: docs/tasks/SIN-P1.3-001.md
