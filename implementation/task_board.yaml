@@ -98,3 +98,11 @@ tasks:
     status: verified
     depends_on: [SIN-P1.1-008]
     packet: docs/tasks/SIN-P1.1-009.md
+
+  - id: SIN-P1.1-G
+    title: P1.1 foundation integration gate
+    phase: P1
+    subphase: P1.1
+    status: planned
+    depends_on: [SIN-P1.1-009]
+    packet: docs/tasks/SIN-P1.1-G.md
