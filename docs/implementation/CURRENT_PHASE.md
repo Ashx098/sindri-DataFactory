@@ -21,7 +21,8 @@ python scripts/show_ready_tasks.py --all
 - `SIN-P1.1-007 — EpisodeState` verified (coordinator, 2026-10-05). PR #19 merged as `b6ced72`; merged-main CI `37256889064` passed on the deliberately integrated 006+007 state.
 - The PR #17 readiness deviation is resolved: PRs #18/#19 applied the omitted final coordinator rules before verification.
 - `SIN-P1.1-008 — Serialization and schema-versioning tests` verified (coordinator, 2026-10-05). PR #24 merged as `23983db`; merged-main CI `37262833634` passed. Scope remained tests/docs only.
-- **`SIN-P1.1-009 — Cross-record invariant tests` is the only READY task** (coordinator, 2026-10-05). PR #26 merged as `d48d6ad`; merged-main CI `37265160756` passed. Final decisions include the reusable pure validator, closed-bundle semantics, aggregate/no-cascade reporting, N3 zero-budget truthfulness and N4 Finding-provenance clarification. The adapted §20 examples remain untouched; 009 builds a coherent bundle by construction. Implementation is authorized only after this readiness transition is itself merged to `main`. No other task is authorized.
+- `SIN-P1.1-009 — Cross-record invariant tests` verified (coordinator, 2026-10-05). PR #28 merged as `a8b38c5`; merged-main CI `37269979595` passed. XR-T1 is a derived CT-4 property; the runtime validator carries 54 independently load-bearing codes with no-cascade ownership.
+- No task is currently READY. **P1.1-G** is now eligible for **packet drafting only**. Gate execution and P1.2 remain unauthorized until the gate packet is reviewed and explicitly authorized.
 - Process deviation (recorded at the coordinator's request, not precedent): implementation of 003 and 004 began from the **unmerged** readiness commit `62a7834`, under delegation. The coordinator accepted that work for review, but READY was not yet authoritative on `main`. Future implementation waits until readiness is merged.
 
 ## P1.1 order (coordinator sequencing refinement, 2026-10-04; not an ADR change)

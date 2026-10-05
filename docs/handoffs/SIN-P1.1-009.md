@@ -64,14 +64,19 @@ None new. X1–X13, OQ1–OQ4, N3 and N4 are implemented as decided on PR #26.
 ## Open questions
 None.
 
-## Blocked on
-- Coordinator review and merge of this task's PR.
+## Coordinator verification
+- PR #28 merged to `main` as `a8b38c5`.
+- Merged-main CI run `37269979595` passed.
+- Task status: `verified` on 2026-10-05.
 
-## Next ready after approval
-After 009 is merged and verified, the next step is **P1.1-G**, the subphase integration gate. The coordinator opens it.
+## Blocked on
+- None. This task is verified.
+
+## Next eligible for packet drafting
+- **P1.1-G**, the subphase integration gate. Gate execution remains unauthorized until the coordinator reviews and authorizes its packet.
 
 ## Do not start
-- P1.1-G, P1.2+.
+- P1.1-G execution or P1.2+ until separately authorized.
 - No schema field for L1–L3.
 - No Contract, ToolProfile, evaluator-bundle, dependency-bundle, job-request or solver-config records.
 
