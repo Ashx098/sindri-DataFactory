@@ -45,10 +45,16 @@ None new. G-JS (a), G-F (a), G-R internal, G-O (guards + targeted step) and the 
 ## Open questions
 None.
 
-## Blocked on
-- P1.1-G is coordinator-**APPROVED**. Remaining: merge PR #31, pass merged-main CI, then record coordinator verification of `SIN-P1.1-010`.
+## Coordinator verification
+- P1.1-G approved on PR #31 comment `5990730575`.
+- PR #31 merged to `main` as `6bbdad2`.
+- Merged-main CI run `37283109668` passed.
+- `SIN-P1.1-010` status: `verified` on 2026-10-05.
 
-## Next after approval
+## Blocked on
+- None. P1.1-G is approved and SIN-P1.1-010 is verified.
+
+## Next after verification
 - **Hard P1.2 entry conditions:**
   - G-B ID-encoding ADR before the first persistent write;
   - G-S strict ingest and integer range;
